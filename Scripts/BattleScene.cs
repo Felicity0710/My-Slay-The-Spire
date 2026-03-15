@@ -6,6 +6,20 @@ using System.Threading.Tasks;
 
 public partial class BattleScene : Control
 {
+    private sealed class EnemyUnit
+    {
+        public string Name = "Enemy";
+        public string VisualId = "cultist";
+        public int Hp;
+        public int MaxHp;
+        public int Block;
+        public int Strength;
+        public int Vulnerable;
+        public EnemyIntentType IntentType;
+        public int IntentValue;
+        public bool IsAlive => Hp > 0;
+    }
+
     private enum EnemyAnimState
     {
         Idle,
@@ -50,6 +64,11 @@ public partial class BattleScene : Control
     private Control _enemyIntentBadge = null!;
     private TextureRect _enemyIntentIcon = null!;
     private Label _enemyIntentValueLabel = null!;
+    private GridContainer _enemyRosterGrid = null!;
+    private Label _enemyIntentListLabel = null!;
+    private readonly Dictionary<int, Control> _enemyCardTargetByIndex = new();
+    private readonly Dictionary<int, Button> _enemyCardButtonByIndex = new();
+    private int _hoverEnemyIndex = -1;
     private Control _playerPanel = null!;
     private Control _enemyPanel = null!;
     private Control _turnBanner = null!;
@@ -74,18 +93,9 @@ public partial class BattleScene : Control
     private int _playerStrength;
     private int _playerVulnerable;
 
-    private int _enemyHp;
-    private int _enemyMaxHp;
-    private int _enemyBlock;
-    private int _enemyStrength;
-    private int _enemyVulnerable;
-
-    private string _enemyName = "Enemy";
-    private string _enemyVisualId = "cultist";
+    private readonly List<EnemyUnit> _enemies = new();
+    private int _selectedEnemyIndex;
     private bool _isElite;
-
-    private EnemyIntentType _enemyIntentType;
-    private int _enemyIntentValue;
 
     private int _energy;
     private bool _battleEnded;
@@ -173,10 +183,16 @@ public partial class BattleScene : Control
 
         _endTurnButton = GetNode<Button>("%EndTurnButton");
         SetupDragGuide();
+        SetupEnemyQuickUi();
 
         SetupDropZoneStyles();
 
         _state = GetNode<GameState>("/root/GameState");
+        if (_state.DeckCardIds.Count == 0)
+        {
+            _state.StartNewRun();
+            _state.BeginEncounter(MapNodeType.NormalBattle);
+        }
 
         _endTurnButton.Pressed += EndTurn;
         GetNode<Button>("%BackButton").Pressed += BackToMap;
@@ -261,6 +277,56 @@ public partial class BattleScene : Control
         _playerShadow.Size = _playerShadowBaseSize * (1f + Mathf.Sin(_animTime * 1.2f) * 0.02f);
     }
 
+    private EnemyUnit CurrentEnemy
+    {
+        get
+        {
+            if (_enemies.Count == 0)
+            {
+                throw new InvalidOperationException("No enemies available.");
+            }
+
+            _selectedEnemyIndex = Mathf.Clamp(_selectedEnemyIndex, 0, _enemies.Count - 1);
+            return _enemies[_selectedEnemyIndex];
+        }
+    }
+
+    private int AliveEnemyCount()
+    {
+        var alive = 0;
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            if (_enemies[i].IsAlive)
+            {
+                alive++;
+            }
+        }
+
+        return alive;
+    }
+
+    private void SelectNextAliveEnemy()
+    {
+        if (_enemies.Count == 0)
+        {
+            return;
+        }
+
+        if (CurrentEnemy.IsAlive)
+        {
+            return;
+        }
+
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            if (_enemies[i].IsAlive)
+            {
+                _selectedEnemyIndex = i;
+                return;
+            }
+        }
+    }
+
     public override void _ExitTree()
     {
         foreach (var view in _cardViewPool)
@@ -332,31 +398,119 @@ public partial class BattleScene : Control
         SetDropZoneHighlight(false);
     }
 
+    private void SetupEnemyQuickUi()
+    {
+        var dropVBox = _enemyDropArea.GetNodeOrNull<VBoxContainer>("DropVBox");
+        if (dropVBox != null)
+        {
+            var legacyBody = _enemyDropArea.GetNodeOrNull<Control>("DropVBox/EnemyBody");
+            var legacySprite = _enemyDropArea.GetNodeOrNull<Control>("DropVBox/EnemySprite");
+            var legacyStats = _enemyDropArea.GetNodeOrNull<Control>("DropVBox/EnemyStatRow");
+            if (legacyBody != null)
+            {
+                legacyBody.Visible = false;
+            }
+            if (legacySprite != null)
+            {
+                legacySprite.Visible = false;
+            }
+            if (legacyStats != null)
+            {
+                legacyStats.Visible = false;
+            }
+
+            _enemyRosterGrid = new GridContainer
+            {
+                Name = "EnemyRosterGrid",
+                Columns = 2,
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+            };
+            _enemyRosterGrid.AddThemeConstantOverride("h_separation", 6);
+            _enemyRosterGrid.AddThemeConstantOverride("v_separation", 6);
+            dropVBox.AddChild(_enemyRosterGrid);
+            dropVBox.MoveChild(_enemyRosterGrid, 1);
+        }
+
+        _enemyPanel.Visible = false;
+        _dropHintLabel.Visible = false;
+
+        var enemyInfo = _enemyPanel.GetNodeOrNull<VBoxContainer>("EnemyInfo");
+        if (enemyInfo == null)
+        {
+            return;
+        }
+
+        _enemyIntentListLabel = new Label
+        {
+            Name = "EnemyIntentListLabel",
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            Modulate = new Color("a5b4fc"),
+            Text = "Intents: -",
+            Visible = false
+        };
+        enemyInfo.AddChild(_enemyIntentListLabel);
+    }
+
     private void SetupFromGameState()
     {
         _playerHp = _state.PlayerHp;
         _playerMaxHp = _state.MaxHp;
 
         _isElite = _state.PendingEncounterType == MapNodeType.EliteBattle;
+        _enemies.Clear();
+        _selectedEnemyIndex = 0;
         if (_isElite)
         {
-            _enemyVisualId = "elite_sentinel";
-            _enemyHp = 85 + _state.Floor * 12;
-            _enemyMaxHp = _enemyHp;
-            _enemyStrength = Math.Max(_state.Floor / 2, 1);
+            _enemies.Add(new EnemyUnit
+            {
+                Name = "Elite Sentinel A",
+                VisualId = "elite_sentinel",
+                Hp = 78 + _state.Floor * 10,
+                MaxHp = 78 + _state.Floor * 10,
+                Strength = Math.Max(_state.Floor / 2, 1)
+            });
+            _enemies.Add(new EnemyUnit
+            {
+                Name = "Elite Sentinel B",
+                VisualId = "elite_sentinel",
+                Hp = 78 + _state.Floor * 10,
+                MaxHp = 78 + _state.Floor * 10,
+                Strength = Math.Max(_state.Floor / 2, 1)
+            });
         }
         else
         {
-            _enemyVisualId = "cultist";
-            _enemyHp = 50 + _state.Floor * 9;
-            _enemyMaxHp = _enemyHp;
-            _enemyStrength = Math.Max(_state.Floor - 1, 0);
+            _enemies.Add(new EnemyUnit
+            {
+                Name = "Cultist A",
+                VisualId = "cultist",
+                Hp = 36 + _state.Floor * 7,
+                MaxHp = 36 + _state.Floor * 7,
+                Strength = Math.Max(_state.Floor - 1, 0)
+            });
+            _enemies.Add(new EnemyUnit
+            {
+                Name = "Cultist B",
+                VisualId = "cultist",
+                Hp = 36 + _state.Floor * 7,
+                MaxHp = 36 + _state.Floor * 7,
+                Strength = Math.Max(_state.Floor - 1, 0)
+            });
+            if (_state.Floor >= 3)
+            {
+                _enemies.Add(new EnemyUnit
+                {
+                    Name = "Cultist C",
+                    VisualId = "cultist",
+                    Hp = 32 + _state.Floor * 6,
+                    MaxHp = 32 + _state.Floor * 6,
+                    Strength = Math.Max(_state.Floor - 1, 0)
+                });
+            }
         }
 
-        var visual = CombatVisualCatalog.GetEnemyVisual(_enemyVisualId);
-        _enemyName = visual.DisplayName;
-        _enemySprite.Color = visual.StageTint;
-        _enemyPortrait.Texture = LoadTextureCached(visual.PortraitPath);
+        UpdateEnemySelectionUi();
+        SyncEnemyVisualFromSelection();
 
         _drawPile.Clear();
         _discardPile.Clear();
@@ -404,38 +558,311 @@ public partial class BattleScene : Control
 
     private void RollEnemyIntent()
     {
-        var intent = IntentResolver.RollEnemyIntent(_isElite, _rng);
-        _enemyIntentType = intent.Type;
-        _enemyIntentValue = intent.Value;
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            var enemy = _enemies[i];
+            if (!enemy.IsAlive)
+            {
+                continue;
+            }
 
-        Log($"Turn {_turn}: Enemy intent -> {IntentText()}", "#94a3b8");
+            var intent = IntentResolver.RollEnemyIntent(_isElite, _rng);
+            enemy.IntentType = intent.Type;
+            enemy.IntentValue = intent.Value;
+        }
+
+        Log($"Turn {_turn}: Enemy intents prepared", "#94a3b8");
     }
 
-    private string IntentText()
+    private string IntentText(EnemyUnit enemy)
     {
-        return _enemyIntentType switch
+        return enemy.IntentType switch
         {
-            EnemyIntentType.Attack => $"Attack {_enemyIntentValue + _enemyStrength}",
-            EnemyIntentType.Defend => $"Gain {_enemyIntentValue} Block",
-            EnemyIntentType.Buff => $"Gain {_enemyIntentValue} Strength",
+            EnemyIntentType.Attack => $"Attack {enemy.IntentValue + enemy.Strength}",
+            EnemyIntentType.Defend => $"Gain {enemy.IntentValue} Block",
+            EnemyIntentType.Buff => $"Gain {enemy.IntentValue} Strength",
             _ => "-"
         };
     }
 
-    private string IntentBadgeText()
+    private string IntentBadgeText(EnemyUnit enemy)
     {
-        return _enemyIntentType switch
+        return enemy.IntentType switch
         {
-            EnemyIntentType.Attack => $"{_enemyIntentValue + _enemyStrength}",
-            EnemyIntentType.Defend => $"{_enemyIntentValue}",
-            EnemyIntentType.Buff => $"+{_enemyIntentValue}",
+            EnemyIntentType.Attack => $"{enemy.IntentValue + enemy.Strength}",
+            EnemyIntentType.Defend => $"{enemy.IntentValue}",
+            EnemyIntentType.Buff => $"+{enemy.IntentValue}",
             _ => "-"
         };
     }
 
-    private string IntentIconText()
+    private string IntentCompactText(EnemyUnit enemy)
     {
-        return CombatVisualCatalog.GetIntentIconPath(_enemyIntentType);
+        return enemy.IntentType switch
+        {
+            EnemyIntentType.Attack => $"ATK {enemy.IntentValue + enemy.Strength}",
+            EnemyIntentType.Defend => $"BLK {enemy.IntentValue}",
+            EnemyIntentType.Buff => $"STR +{enemy.IntentValue}",
+            _ => "-"
+        };
+    }
+
+    private string IntentIconText(EnemyUnit enemy)
+    {
+        return CombatVisualCatalog.GetIntentIconPath(enemy.IntentType);
+    }
+
+    private Color IntentTint(EnemyIntentType type)
+    {
+        return type switch
+        {
+            EnemyIntentType.Attack => new Color("fca5a5"),
+            EnemyIntentType.Defend => new Color("93c5fd"),
+            EnemyIntentType.Buff => new Color("d8b4fe"),
+            _ => new Color("cbd5e1")
+        };
+    }
+
+    private Control CreateStatusChip(string text, string tooltip, Color accent, bool muted)
+    {
+        var chip = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(56, 20),
+            TooltipText = tooltip
+        };
+        var style = new StyleBoxFlat
+        {
+            BgColor = muted ? new Color("1f2937") : new Color(accent.R * 0.18f, accent.G * 0.18f, accent.B * 0.18f, 1f),
+            BorderColor = muted ? new Color("4b5563") : accent,
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = 5,
+            CornerRadiusTopRight = 5,
+            CornerRadiusBottomLeft = 5,
+            CornerRadiusBottomRight = 5
+        };
+        chip.AddThemeStyleboxOverride("panel", style);
+
+        var label = new Label
+        {
+            Text = text,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        label.Modulate = muted ? new Color("9ca3af") : Colors.White;
+        chip.AddChild(label);
+        return chip;
+    }
+
+    private void UpdateEnemySelectionUi()
+    {
+        if (!IsInstanceValid(_enemyRosterGrid))
+        {
+            return;
+        }
+
+        _enemyRosterGrid.Columns = _enemies.Count >= 3 ? 3 : 2;
+        _enemyCardTargetByIndex.Clear();
+        _enemyCardButtonByIndex.Clear();
+        foreach (Node child in _enemyRosterGrid.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            var enemy = _enemies[i];
+            var enemyIndex = i;
+            var targetMode = IsInstanceValid(_draggingCard) && CardRequiresEnemyTarget(_draggingCard.Card);
+            var isHoveredTarget = targetMode && _hoverEnemyIndex == i;
+            var isSelectedTarget = i == _selectedEnemyIndex;
+            var selectableTarget = enemy.IsAlive && targetMode;
+            var cardButton = new Button
+            {
+                Text = string.Empty,
+                Flat = true,
+                FocusMode = FocusModeEnum.None,
+                Disabled = !enemy.IsAlive || IsInputLocked(),
+                CustomMinimumSize = new Vector2(196, 228),
+                ClipText = true
+            };
+            var cardStyle = new StyleBoxFlat
+            {
+                BgColor = enemy.IsAlive
+                    ? (isHoveredTarget ? new Color("1a2d2a") : (isSelectedTarget ? new Color("1a2b3b") : new Color("18212b")))
+                    : new Color("111827"),
+                BorderColor = !enemy.IsAlive
+                    ? new Color("374151")
+                    : isHoveredTarget
+                        ? new Color("86efac")
+                        : isSelectedTarget
+                            ? new Color("7dd3fc")
+                            : selectableTarget
+                                ? new Color("4ade80")
+                                : new Color("4b5563"),
+                BorderWidthLeft = isHoveredTarget || isSelectedTarget ? 3 : 2,
+                BorderWidthTop = isHoveredTarget || isSelectedTarget ? 3 : 2,
+                BorderWidthRight = isHoveredTarget || isSelectedTarget ? 3 : 2,
+                BorderWidthBottom = isHoveredTarget || isSelectedTarget ? 3 : 2,
+                CornerRadiusTopLeft = 8,
+                CornerRadiusTopRight = 8,
+                CornerRadiusBottomLeft = 8,
+                CornerRadiusBottomRight = 8
+            };
+            cardButton.AddThemeStyleboxOverride("normal", cardStyle);
+            cardButton.AddThemeStyleboxOverride("pressed", cardStyle);
+            cardButton.AddThemeStyleboxOverride("hover", cardStyle);
+
+            var margin = new MarginContainer();
+            margin.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            margin.AddThemeConstantOverride("margin_left", 8);
+            margin.AddThemeConstantOverride("margin_top", 6);
+            margin.AddThemeConstantOverride("margin_right", 8);
+            margin.AddThemeConstantOverride("margin_bottom", 6);
+            cardButton.AddChild(margin);
+
+            var vbox = new VBoxContainer();
+            vbox.AddThemeConstantOverride("separation", 5);
+            margin.AddChild(vbox);
+
+            var intentRow = new HBoxContainer();
+            intentRow.AddThemeConstantOverride("separation", 4);
+            vbox.AddChild(intentRow);
+
+            var intentLabel = new Label
+            {
+                Text = enemy.IsAlive ? IntentCompactText(enemy) : "KO",
+                HorizontalAlignment = HorizontalAlignment.Left,
+                AutowrapMode = TextServer.AutowrapMode.Off,
+                ClipText = true
+            };
+            intentLabel.Modulate = enemy.IsAlive ? IntentTint(enemy.IntentType) : new Color("6b7280");
+            intentLabel.TooltipText = enemy.IsAlive ? IntentText(enemy) : "Defeated";
+            intentRow.AddChild(intentLabel);
+
+            var visual = CombatVisualCatalog.GetEnemyVisual(enemy.VisualId);
+            var portraitBg = new ColorRect
+            {
+                Color = new Color(visual.StageTint.R, visual.StageTint.G, visual.StageTint.B, enemy.IsAlive ? 1f : 0.45f),
+                CustomMinimumSize = new Vector2(0, 112)
+            };
+            vbox.AddChild(portraitBg);
+
+            var portrait = new TextureRect
+            {
+                Texture = LoadTextureCached(visual.PortraitPath),
+                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
+            };
+            portrait.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            portraitBg.AddChild(portrait);
+
+            var hpText = new Label
+            {
+                Text = $"{enemy.Hp}/{enemy.MaxHp}",
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            hpText.Modulate = new Color("fecaca");
+            vbox.AddChild(hpText);
+
+            var hpBar = new ProgressBar
+            {
+                MinValue = 0,
+                MaxValue = Math.Max(enemy.MaxHp, 1),
+                Value = Math.Max(enemy.Hp, 0),
+                ShowPercentage = false,
+                CustomMinimumSize = new Vector2(0, 12)
+            };
+            vbox.AddChild(hpBar);
+
+            var nameLabel = new Label
+            {
+                Text = enemy.Name,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                AutowrapMode = TextServer.AutowrapMode.WordSmart
+            };
+            nameLabel.Modulate = enemy.IsAlive ? Colors.White : new Color("6b7280");
+            vbox.AddChild(nameLabel);
+
+            var statusRow = new HBoxContainer();
+            statusRow.AddThemeConstantOverride("separation", 4);
+            vbox.AddChild(statusRow);
+
+            statusRow.AddChild(CreateStatusChip(
+                $"BLK {enemy.Block}",
+                "Block: absorbs incoming damage.",
+                new Color("93c5fd"),
+                !enemy.IsAlive || enemy.Block <= 0));
+            statusRow.AddChild(CreateStatusChip(
+                $"STR {enemy.Strength}",
+                "Strength: increases attack damage.",
+                new Color("fca5a5"),
+                !enemy.IsAlive || enemy.Strength <= 0));
+            statusRow.AddChild(CreateStatusChip(
+                $"VUL {enemy.Vulnerable}",
+                "Vulnerable: takes 50% more damage.",
+                new Color("d8b4fe"),
+                !enemy.IsAlive || enemy.Vulnerable <= 0));
+
+            cardButton.Pressed += () =>
+            {
+                _selectedEnemyIndex = enemyIndex;
+                SyncEnemyVisualFromSelection();
+                RefreshUi();
+            };
+
+            _enemyRosterGrid.AddChild(cardButton);
+            _enemyCardTargetByIndex[enemyIndex] = portraitBg;
+            _enemyCardButtonByIndex[enemyIndex] = cardButton;
+        }
+    }
+
+    private void SyncEnemyVisualFromSelection()
+    {
+        if (_enemies.Count == 0)
+        {
+            return;
+        }
+
+        SelectNextAliveEnemy();
+        var enemy = CurrentEnemy;
+        var visual = CombatVisualCatalog.GetEnemyVisual(enemy.VisualId);
+        _enemySprite.Color = visual.StageTint;
+        _enemyPortrait.Texture = LoadTextureCached(visual.PortraitPath);
+    }
+
+    private Control EnemyEffectTarget(int enemyIndex)
+    {
+        if (_enemyCardTargetByIndex.TryGetValue(enemyIndex, out var target) && IsInstanceValid(target))
+        {
+            return target;
+        }
+
+        return _enemyDropArea;
+    }
+
+    private bool TryGetEnemyIndexAt(Vector2 mouseGlobal, out int enemyIndex)
+    {
+        enemyIndex = -1;
+        foreach (var kv in _enemyCardButtonByIndex)
+        {
+            var idx = kv.Key;
+            var button = kv.Value;
+            if (!_enemies[idx].IsAlive || !IsInstanceValid(button))
+            {
+                continue;
+            }
+
+            if (button.GetGlobalRect().Grow(3f).HasPoint(mouseGlobal))
+            {
+                enemyIndex = idx;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void EndTurn()
@@ -460,7 +887,10 @@ public partial class BattleScene : Control
         await ShowTurnBanner("Enemy Turn", new Color("f87171"));
 
         // Enemy block expires when their turn begins.
-        _enemyBlock = TurnFlowResolver.ResolveEnemyTurnStartBlock(_enemyBlock);
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            _enemies[i].Block = TurnFlowResolver.ResolveEnemyTurnStartBlock(_enemies[i].Block);
+        }
         ExecuteEnemyTurn();
         if (_battleEnded)
         {
@@ -477,61 +907,80 @@ public partial class BattleScene : Control
 
     private void ExecuteEnemyTurn()
     {
-        switch (_enemyIntentType)
+        for (var i = 0; i < _enemies.Count; i++)
         {
-            case EnemyIntentType.Attack:
+            var enemy = _enemies[i];
+            if (!enemy.IsAlive)
             {
-                var resolution = CombatResolver.ResolveHit(
-                    _enemyIntentValue,
-                    _enemyStrength,
-                    _playerVulnerable,
-                    _playerBlock,
-                    _playerHp);
-                _playerBlock = resolution.RemainingBlock;
-                _playerHp = resolution.RemainingHp;
-                Log($"Enemy attacks {resolution.FinalDamage}, blocked {resolution.Blocked}, took {resolution.Taken}", "#f87171");
-                if (resolution.Taken > 0)
-                {
-                    TriggerHitStop(0.045f);
-                    SpawnFloatingText(_playerPanel, $"-{resolution.Taken}", new Color("fca5a5"));
-                    SpawnSlashEffect(_playerPanel, new Color("fecaca"));
-                    FlashPanel(_playerPanel, new Color(1f, 0.5f, 0.5f, 1f));
-                    PunchPanel(_playerPanel, -8f);
-                    PulseImpact(_playerPanel, 1.045f);
-                }
-
-                break;
+                continue;
             }
-            case EnemyIntentType.Defend:
-                _enemyBlock += _enemyIntentValue;
-                Log($"Enemy gains {_enemyIntentValue} Block", "#60a5fa");
-                SpawnFloatingText(_enemyPanel, $"+{_enemyIntentValue} Block", new Color("93c5fd"));
-                SpawnShieldEffect(_enemyDropArea, new Color("93c5fd"));
-                break;
-            case EnemyIntentType.Buff:
-                _enemyStrength += _enemyIntentValue;
-                Log($"Enemy gains {_enemyIntentValue} Strength", "#c084fc");
-                SpawnFloatingText(_enemyPanel, $"+{_enemyIntentValue} STR", new Color("d8b4fe"));
-                SpawnRuneEffect(_enemyDropArea, new Color("d8b4fe"));
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
 
-        if (_playerHp <= 0)
-        {
-            _playerHp = 0;
-            _battleEnded = true;
-            Log("Defeat", "#ef4444");
-            GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+            switch (enemy.IntentType)
+            {
+                case EnemyIntentType.Attack:
+                {
+                    var resolution = CombatResolver.ResolveHit(
+                        enemy.IntentValue,
+                        enemy.Strength,
+                        _playerVulnerable,
+                        _playerBlock,
+                        _playerHp);
+                    _playerBlock = resolution.RemainingBlock;
+                    _playerHp = resolution.RemainingHp;
+                    Log($"{enemy.Name} attacks {resolution.FinalDamage}, blocked {resolution.Blocked}, took {resolution.Taken}", "#f87171");
+                    if (resolution.Taken > 0)
+                    {
+                        TriggerHitStop(0.045f);
+                        SpawnFloatingText(_playerPanel, $"-{resolution.Taken}", new Color("fca5a5"));
+                        SpawnSlashEffect(_playerPanel, new Color("fecaca"));
+                        FlashPanel(_playerPanel, new Color(1f, 0.5f, 0.5f, 1f));
+                        PunchPanel(_playerPanel, -8f);
+                        PulseImpact(_playerPanel, 1.045f);
+                    }
+
+                    break;
+                }
+                case EnemyIntentType.Defend:
+                    enemy.Block += enemy.IntentValue;
+                    Log($"{enemy.Name} gains {enemy.IntentValue} Block", "#60a5fa");
+                    SpawnFloatingText(_enemyPanel, $"+{enemy.IntentValue} Block", new Color("93c5fd"));
+                    if (i == _selectedEnemyIndex)
+                    {
+                        SpawnShieldEffect(EnemyEffectTarget(i), new Color("93c5fd"));
+                    }
+                    break;
+                case EnemyIntentType.Buff:
+                    enemy.Strength += enemy.IntentValue;
+                    Log($"{enemy.Name} gains {enemy.IntentValue} Strength", "#c084fc");
+                    SpawnFloatingText(_enemyPanel, $"+{enemy.IntentValue} STR", new Color("d8b4fe"));
+                    if (i == _selectedEnemyIndex)
+                    {
+                        SpawnRuneEffect(EnemyEffectTarget(i), new Color("d8b4fe"));
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (_playerHp <= 0)
+            {
+                _playerHp = 0;
+                _battleEnded = true;
+                Log("Defeat", "#ef4444");
+                GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+                return;
+            }
         }
     }
 
     private void TickStatuses()
     {
-        var statuses = TurnFlowResolver.ResolveEndOfRoundStatuses(_playerVulnerable, _enemyVulnerable);
-        _playerVulnerable = statuses.PlayerVulnerable;
-        _enemyVulnerable = statuses.EnemyVulnerable;
+        _playerVulnerable = Math.Max(_playerVulnerable - 1, 0);
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            var enemy = _enemies[i];
+            enemy.Vulnerable = Math.Max(enemy.Vulnerable - 1, 0);
+        }
     }
 
     private async Task DrawCards(int count)
@@ -577,25 +1026,34 @@ public partial class BattleScene : Control
 
         if (card.Damage > 0)
         {
+            var targetEnemy = CurrentEnemy;
+            if (!targetEnemy.IsAlive)
+            {
+                Log("Target is already defeated", "#f59e0b");
+                return false;
+            }
+            var targetIndex = _selectedEnemyIndex;
+            var effectTarget = EnemyEffectTarget(targetIndex);
+
             var resolution = CombatResolver.ResolveHit(
                 card.Damage,
                 _playerStrength,
-                _enemyVulnerable,
-                _enemyBlock,
-                _enemyHp,
+                targetEnemy.Vulnerable,
+                targetEnemy.Block,
+                targetEnemy.Hp,
                 relicAttackBonus);
-            _enemyBlock = resolution.RemainingBlock;
-            _enemyHp = resolution.RemainingHp;
+            targetEnemy.Block = resolution.RemainingBlock;
+            targetEnemy.Hp = resolution.RemainingHp;
             Log($"Play {card.Name}: damage {resolution.FinalDamage} ({resolution.Taken} HP)", "#f87171");
             if (resolution.Taken > 0)
             {
                 TriggerHitStop(0.045f);
-                SpawnFloatingText(_enemyDropArea, $"-{resolution.Taken}", new Color("fda4af"));
-                SpawnSlashEffect(_enemyDropArea, new Color("fda4af"));
+                SpawnFloatingText(effectTarget, $"-{resolution.Taken}", new Color("fda4af"));
+                SpawnSlashEffect(effectTarget, new Color("fda4af"));
                 TriggerEnemyHit();
-                FlashPanel(_enemyDropArea, new Color(1f, 0.55f, 0.55f, 1f));
-                PunchPanel(_enemyDropArea, 8f);
-                PulseImpact(_enemyDropArea, 1.05f);
+                FlashPanel(effectTarget, new Color(1f, 0.55f, 0.55f, 1f));
+                PunchPanel(effectTarget, 8f);
+                PulseImpact(effectTarget, 1.05f);
             }
         }
 
@@ -609,10 +1067,18 @@ public partial class BattleScene : Control
 
         if (card.ApplyVulnerable > 0)
         {
-            _enemyVulnerable += card.ApplyVulnerable;
+            var targetEnemy = CurrentEnemy;
+            if (!targetEnemy.IsAlive)
+            {
+                Log("Target is already defeated", "#f59e0b");
+                return false;
+            }
+            var effectTarget = EnemyEffectTarget(_selectedEnemyIndex);
+
+            targetEnemy.Vulnerable += card.ApplyVulnerable;
             Log($"Play {card.Name}: apply {card.ApplyVulnerable} Vulnerable", "#c084fc");
-            SpawnFloatingText(_enemyDropArea, $"VUL+{card.ApplyVulnerable}", new Color("d8b4fe"));
-            SpawnRuneEffect(_enemyDropArea, new Color("d8b4fe"));
+            SpawnFloatingText(effectTarget, $"VUL+{card.ApplyVulnerable}", new Color("d8b4fe"));
+            SpawnRuneEffect(effectTarget, new Color("d8b4fe"));
         }
 
         _hand.Remove(card);
@@ -628,11 +1094,17 @@ public partial class BattleScene : Control
             await RenderHand();
         }
 
-        if (_enemyHp <= 0)
+        if (CurrentEnemy.Hp <= 0)
         {
-            _enemyHp = 0;
-            await OnVictoryAsync();
-            return true;
+            CurrentEnemy.Hp = 0;
+            Log($"{CurrentEnemy.Name} defeated", "#34d399");
+            SelectNextAliveEnemy();
+            SyncEnemyVisualFromSelection();
+            if (AliveEnemyCount() <= 0)
+            {
+                await OnVictoryAsync();
+                return true;
+            }
         }
 
         RefreshUi();
@@ -647,12 +1119,14 @@ public partial class BattleScene : Control
     private async Task OnCardDropAttemptAsync(CardView view, Vector2 mouseGlobal)
     {
         _draggingCard = null;
+        _hoverEnemyIndex = -1;
         view.LockPositionWhileDragging = false;
         SetDragGuideVisible(false);
 
         if (_battleEnded || IsInputLocked())
         {
             SetDropZoneHighlight(false);
+            UpdateEnemySelectionUi();
             if (IsInstanceValid(view))
             {
                 await view.AnimateBackToHand();
@@ -683,10 +1157,24 @@ public partial class BattleScene : Control
             return;
         }
 
-        var canPlayZone = _enemyDropArea.GetGlobalRect().HasPoint(mouseGlobal);
-        if (!canPlayZone)
+        if (!TryGetEnemyIndexAt(mouseGlobal, out var targetEnemyIndex))
         {
             EmitUiSfx("card_cancel");
+            UpdateEnemySelectionUi();
+            await view.AnimateBackToHand();
+            LayoutHandCards(true);
+            return;
+        }
+
+        _selectedEnemyIndex = targetEnemyIndex;
+        SyncEnemyVisualFromSelection();
+        UpdateEnemySelectionUi();
+
+        if (!CurrentEnemy.IsAlive)
+        {
+            Log("Select a living enemy target", "#f59e0b");
+            EmitUiSfx("error");
+            UpdateEnemySelectionUi();
             await view.AnimateBackToHand();
             LayoutHandCards(true);
             return;
@@ -696,6 +1184,7 @@ public partial class BattleScene : Control
         {
             Log($"Not enough energy for {view.Card.Name}", "#f59e0b");
             EmitUiSfx("error");
+            UpdateEnemySelectionUi();
             await view.AnimateBackToHand();
             LayoutHandCards(true);
             return;
@@ -703,7 +1192,7 @@ public partial class BattleScene : Control
 
         PushInputLock();
 
-        var dropRect = _enemyDropArea.GetGlobalRect();
+        var dropRect = EnemyEffectTarget(_selectedEnemyIndex).GetGlobalRect();
         var fromPos = view.GlobalPosition + view.Size * 0.5f;
         var target = new Vector2(
             dropRect.Position.X + dropRect.Size.X * 0.5f - view.Size.X * 0.5f,
@@ -740,6 +1229,11 @@ public partial class BattleScene : Control
 
         if (CardRequiresEnemyTarget(view.Card))
         {
+            if (!CurrentEnemy.IsAlive)
+            {
+                Log("Select a living enemy target", "#f59e0b");
+                return;
+            }
             Log($"Drag {view.Card.Name} to enemy to play", "#94a3b8");
             EmitUiSfx("ui_hint");
             if (IsInstanceValid(view))
@@ -780,7 +1274,20 @@ public partial class BattleScene : Control
             return;
         }
 
-        var hot = _enemyDropArea.GetGlobalRect().HasPoint(mouseGlobal);
+        var previousHover = _hoverEnemyIndex;
+        var hot = TryGetEnemyIndexAt(mouseGlobal, out var hoverEnemyIndex);
+        if (hot && hoverEnemyIndex != _selectedEnemyIndex)
+        {
+            _selectedEnemyIndex = hoverEnemyIndex;
+            SyncEnemyVisualFromSelection();
+        }
+        _hoverEnemyIndex = hot ? hoverEnemyIndex : -1;
+
+        if (previousHover != _hoverEnemyIndex || hot)
+        {
+            UpdateEnemySelectionUi();
+        }
+
         SetDropZoneHighlight(hot);
         UpdateDragGuide(card, mouseGlobal);
     }
@@ -789,6 +1296,7 @@ public partial class BattleScene : Control
     {
         _hoveredCard = null;
         _draggingCard = card;
+        _hoverEnemyIndex = -1;
         var requiresTarget = CardRequiresEnemyTarget(card.Card);
         card.LockPositionWhileDragging = requiresTarget;
         HideKeywordTooltip();
@@ -798,6 +1306,7 @@ public partial class BattleScene : Control
         {
             UpdateDragGuide(card, card.GlobalPosition + card.Size * 0.5f);
             card.Scale = new Vector2(1.1f, 1.1f);
+            UpdateEnemySelectionUi();
         }
         EmitUiSfx("card_grab");
     }
@@ -805,9 +1314,11 @@ public partial class BattleScene : Control
     private void OnCardDragEnded(CardView card)
     {
         _draggingCard = null;
+        _hoverEnemyIndex = -1;
         card.LockPositionWhileDragging = false;
         SetDragGuideVisible(false);
         SetDropZoneHighlight(false);
+        UpdateEnemySelectionUi();
     }
 
     private void OnCardHoverChanged(CardView card, bool hovered)
@@ -829,7 +1340,10 @@ public partial class BattleScene : Control
         }
 
         _dropZoneHighlighted = highlight;
-        _enemyDropArea.AddThemeStyleboxOverride("panel", highlight ? _dropHotStyle : _dropNormalStyle);
+        if (!IsInstanceValid(_enemyRosterGrid))
+        {
+            _enemyDropArea.AddThemeStyleboxOverride("panel", highlight ? _dropHotStyle : _dropNormalStyle);
+        }
         _dropHintLabel.Modulate = highlight ? new Color("bbf7d0") : new Color("d1d5db");
     }
 
@@ -968,10 +1482,7 @@ public partial class BattleScene : Control
             return;
         }
 
-        if (panel == _enemyDropArea || panel == _enemyPanel)
-        {
-            _enemyPunchX += offsetX;
-        }
+        _enemyPunchX += offsetX;
     }
 
     private async void ShakeMain(float intensity, int steps)
@@ -1461,20 +1972,29 @@ public partial class BattleScene : Control
 
     private void RefreshUi()
     {
+        if (_enemies.Count == 0)
+        {
+            return;
+        }
+
+        SelectNextAliveEnemy();
+        SyncEnemyVisualFromSelection();
+        var enemy = CurrentEnemy;
+
         _playerHpLabel.Text = $"HP: {_playerHp}";
         _playerBlockLabel.Text = $"Block: {_playerBlock}";
         _playerStatusLabel.Text = $"Status: STR {_playerStrength}, VUL {_playerVulnerable}";
 
-        _enemyNameLabel.Text = _enemyName;
-        _enemyBodyLabel.Text = _enemyName.ToUpperInvariant();
-        _enemyHpLabel.Text = $"Enemy HP: {_enemyHp}";
-        _enemyBlockLabel.Text = $"Enemy Block: {_enemyBlock}";
-        _enemyStatusLabel.Text = $"Enemy Status: STR {_enemyStrength}, VUL {_enemyVulnerable}";
-        _enemyHpBar.MaxValue = Math.Max(_enemyMaxHp, 1);
-        _enemyHpBar.Value = Math.Max(_enemyHp, 0);
-        _enemyIntentIcon.Texture = _battleEnded ? null : LoadTextureCached(IntentIconText());
-        _enemyIntentValueLabel.Text = _battleEnded ? "-" : IntentBadgeText();
-        _enemyIntentBadge.Modulate = _enemyIntentType switch
+        _enemyNameLabel.Text = $"{enemy.Name} ({_selectedEnemyIndex + 1}/{_enemies.Count})";
+        _enemyBodyLabel.Text = enemy.Name.ToUpperInvariant();
+        _enemyHpLabel.Text = $"Enemy HP: {enemy.Hp}";
+        _enemyBlockLabel.Text = $"Enemy Block: {enemy.Block}";
+        _enemyStatusLabel.Text = $"Enemy Status: STR {enemy.Strength}, VUL {enemy.Vulnerable}";
+        _enemyHpBar.MaxValue = Math.Max(enemy.MaxHp, 1);
+        _enemyHpBar.Value = Math.Max(enemy.Hp, 0);
+        _enemyIntentIcon.Texture = _battleEnded || !enemy.IsAlive ? null : LoadTextureCached(IntentIconText(enemy));
+        _enemyIntentValueLabel.Text = _battleEnded || !enemy.IsAlive ? "-" : IntentBadgeText(enemy);
+        _enemyIntentBadge.Modulate = enemy.IntentType switch
         {
             EnemyIntentType.Attack => new Color("fecaca"),
             EnemyIntentType.Defend => new Color("bfdbfe"),
@@ -1482,14 +2002,26 @@ public partial class BattleScene : Control
             _ => Colors.White
         };
 
-        _enemyIntentLabel.Text = _battleEnded ? "Intent: -" : $"Intent: {IntentText()}";
+        _enemyIntentLabel.Text = _battleEnded || !enemy.IsAlive ? "Intent: -" : $"Intent: {IntentText(enemy)}";
+        if (IsInstanceValid(_enemyIntentListLabel))
+        {
+            var intentParts = new List<string>();
+            for (var i = 0; i < _enemies.Count; i++)
+            {
+                var e = _enemies[i];
+                var status = e.IsAlive ? IntentText(e) : "Defeated";
+                intentParts.Add($"{i + 1}.{e.Name}: {status}");
+            }
+
+            _enemyIntentListLabel.Text = $"Intents: {string.Join(" | ", intentParts)}";
+        }
         _topHpLabel.Text = $"HP {_playerHp}/{_playerMaxHp}";
         _turnLabel.Text = $"Turn {_turn}";
         _energyLabel.Text = $"Energy {_energy}/{MaxEnergy}";
-        _handCountLabel.Text = $"Hand: {_hand.Count} | Draw: {_drawPile.Count} | Discard: {_discardPile.Count}";
+        _handCountLabel.Text = $"Hand: {_hand.Count} | Draw: {_drawPile.Count} | Discard: {_discardPile.Count} | Enemies: {AliveEnemyCount()}";
         _relicBarLabel.Text = BuildRelicBarText();
         RefreshRelicIcons();
-
+        UpdateEnemySelectionUi();
         UpdateInputControls();
         RefreshCardPlayableStates();
     }
@@ -1712,7 +2244,7 @@ public partial class BattleScene : Control
             Antialiased = true,
             TopLevel = true,
             Visible = false,
-            ZIndex = 160
+            ZIndex = 5000
         };
         _dragArrowHead = new Line2D
         {
@@ -1721,10 +2253,10 @@ public partial class BattleScene : Control
             Antialiased = true,
             TopLevel = true,
             Visible = false,
-            ZIndex = 161
+            ZIndex = 5001
         };
-        _effectsLayer.AddChild(_dragGuide);
-        _effectsLayer.AddChild(_dragArrowHead);
+        _overlayCanvas.AddChild(_dragGuide);
+        _overlayCanvas.AddChild(_dragArrowHead);
     }
 
     private void SetDragGuideVisible(bool visible)
@@ -1754,6 +2286,12 @@ public partial class BattleScene : Control
 
         var cardCenter = card.GlobalPosition + card.Size * 0.5f;
         var target = mouseGlobal;
+        var active = TryGetEnemyIndexAt(mouseGlobal, out var hoverEnemyIndex);
+        if (active)
+        {
+            var rect = EnemyEffectTarget(hoverEnemyIndex).GetGlobalRect();
+            target = rect.Position + rect.Size * 0.5f;
+        }
         var controlLift = Mathf.Clamp(cardCenter.DistanceTo(target) * 0.22f, 54f, 140f);
         var control = (cardCenter + target) * 0.5f + new Vector2(0f, -controlLift);
 
@@ -1768,7 +2306,6 @@ public partial class BattleScene : Control
             _dragGuide.AddPoint(p);
         }
 
-        var active = _enemyDropArea.GetGlobalRect().HasPoint(mouseGlobal);
         var color = active ? new Color("86efac") : new Color("7dd3fc");
         _dragGuide.DefaultColor = color;
         _dragGuide.Width = active ? 4.5f : 3f;

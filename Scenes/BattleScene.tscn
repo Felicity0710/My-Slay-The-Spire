@@ -285,14 +285,14 @@ text = "Status: STR 0, VUL 0"
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.6
-anchor_top = 0.22
-anchor_right = 0.98
-anchor_bottom = 0.88
-offset_left = 69.599976
-offset_top = 18.320007
-offset_right = -46.32007
-offset_bottom = -100.71997
+anchor_left = 0.64
+anchor_top = 0.26
+anchor_right = 0.96
+anchor_bottom = 0.84
+offset_left = -29.76001
+offset_top = 1.5599976
+offset_right = -91.76001
+offset_bottom = -42.440002
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
@@ -316,7 +316,7 @@ vertical_alignment = 1
 
 [node name="EnemySprite" type="ColorRect" parent="MainMargin/MainVBox/Arena/EnemyDropArea/DropVBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 170)
+custom_minimum_size = Vector2(0, 104)
 layout_mode = 2
 color = Color(0.17, 0.24, 0.31, 1)
 
@@ -377,6 +377,10 @@ anchor_left = 0.64
 anchor_top = 0.03
 anchor_right = 0.99
 anchor_bottom = 0.2
+offset_left = -46.76001
+offset_top = -11.32
+offset_right = -46.76001
+offset_bottom = 12.199997
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="EnemyInfo" type="VBoxContainer" parent="MainMargin/MainVBox/Arena/EnemyPanel"]
@@ -502,6 +506,7 @@ vertical_alignment = 1
 
 [node name="EffectsLayer" type="Control" parent="."]
 unique_name_in_owner = true
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
