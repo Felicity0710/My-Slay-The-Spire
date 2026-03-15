@@ -6,24 +6,14 @@ public partial class MapScene : Control
     private Label _runInfoLabel = null!;
     private Label _statusLabel = null!;
     private Label _relicLabel = null!;
-
-    private Button _nodeButton1 = null!;
-    private Button _nodeButton2 = null!;
-    private Button _nodeButton3 = null!;
+    private VBoxContainer _mapRows = null!;
 
     public override void _Ready()
     {
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
-
-        _nodeButton1 = GetNode<Button>("%NodeButton1");
-        _nodeButton2 = GetNode<Button>("%NodeButton2");
-        _nodeButton3 = GetNode<Button>("%NodeButton3");
-
-        _nodeButton1.Pressed += () => OnNodePressed(0);
-        _nodeButton2.Pressed += () => OnNodePressed(1);
-        _nodeButton3.Pressed += () => OnNodePressed(2);
+        _mapRows = GetNode<VBoxContainer>("%MapRows");
 
         GetNode<Button>("%MenuButton").Pressed += OnMenuPressed;
 
@@ -34,15 +24,10 @@ public partial class MapScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
 
-        if (state.CurrentMapOptions.Count == 0)
-        {
-            state.GenerateMapOptions();
-        }
-
         _runInfoLabel.Text =
             $"Floor: {state.Floor}    HP: {state.PlayerHp}/{state.MaxHp}    Deck: {state.DeckCardIds.Count}    Wins: {state.BattlesWon}";
 
-        _statusLabel.Text = "Choose your next node.";
+        _statusLabel.Text = "选择一条路线向上爬塔。当前可选节点会高亮。";
 
         var relicText = new StringBuilder("Relics: ");
         if (state.RelicIds.Count == 0)
@@ -64,33 +49,67 @@ public partial class MapScene : Control
 
         _relicLabel.Text = relicText.ToString();
 
-        BindNodeButton(_nodeButton1, state, 0);
-        BindNodeButton(_nodeButton2, state, 1);
-        BindNodeButton(_nodeButton3, state, 2);
+        BuildMapRows(state);
     }
 
-    private void BindNodeButton(Button button, GameState state, int index)
+    private void BuildMapRows(GameState state)
     {
-        if (index >= state.CurrentMapOptions.Count)
+        foreach (var child in _mapRows.GetChildren())
         {
-            button.Visible = false;
-            return;
+            child.QueueFree();
         }
 
-        button.Visible = true;
-        var nodeType = state.CurrentMapOptions[index];
-        button.Text = state.MapNodeLabel(nodeType);
+        for (var row = state.MapLayout.Count - 1; row >= 0; row--)
+        {
+            var rowBox = new HBoxContainer();
+            rowBox.Alignment = BoxContainer.AlignmentMode.Center;
+            rowBox.AddThemeConstantOverride("separation", 8);
+
+            var rowLabel = new Label();
+            rowLabel.Text = $"{row + 1:00}";
+            rowLabel.CustomMinimumSize = new Vector2(36, 0);
+            rowBox.AddChild(rowLabel);
+
+            for (var col = 0; col < state.MapLayout[row].Count; col++)
+            {
+                var nodeType = state.GetMapNodeType(row, col);
+                var button = new Button();
+                button.CustomMinimumSize = new Vector2(64, 44);
+                button.Text = $"{state.MapNodeSymbol(nodeType)}\n{state.MapNodeLabel(nodeType)}";
+
+                var isCurrentRow = row == state.CurrentMapRow;
+                var canSelect = state.CanChooseMapNode(row, col);
+
+                button.Disabled = !canSelect;
+                if (!isCurrentRow)
+                {
+                    button.Modulate = new Color(0.55f, 0.55f, 0.55f, 0.95f);
+                }
+                else if (canSelect)
+                {
+                    button.Modulate = new Color(1f, 0.9f, 0.45f, 1f);
+                }
+
+                if (canSelect)
+                {
+                    var captureCol = col;
+                    button.Pressed += () => OnNodePressed(captureCol);
+                }
+
+                rowBox.AddChild(button);
+            }
+
+            _mapRows.AddChild(rowBox);
+        }
     }
 
-    private void OnNodePressed(int index)
+    private void OnNodePressed(int column)
     {
         var state = GetNode<GameState>("/root/GameState");
-        if (index >= state.CurrentMapOptions.Count)
+        if (!state.ChooseMapNode(column, out var nodeType))
         {
             return;
         }
-
-        var nodeType = state.CurrentMapOptions[index];
 
         switch (nodeType)
         {
@@ -105,7 +124,12 @@ public partial class MapScene : Control
                 break;
             case MapNodeType.Rest:
                 state.ResolveRestNode();
-                _statusLabel.Text = "You rest and recover 18 HP.";
+                _statusLabel.Text = "你在篝火休息，恢复了 18 点生命。";
+                RefreshUi();
+                break;
+            case MapNodeType.Shop:
+                state.ResolveShopNode();
+                _statusLabel.Text = "你进入商店补给，获得了恢复或额外卡牌。";
                 RefreshUi();
                 break;
         }

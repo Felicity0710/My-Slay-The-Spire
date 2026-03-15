@@ -34,7 +34,7 @@ theme_override_constants/margin_bottom = 24
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Margin/VBox"]
 layout_mode = 2
@@ -55,27 +55,19 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Choose your next node."
 
-[node name="NodeButtons" type="HBoxContainer" parent="Margin/VBox"]
+[node name="Legend" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 10
+text = "⚔ 普通战斗   ☠ 精英战   ? 事件   ✚ 休息   $ 商店"
 
-[node name="NodeButton1" type="Button" parent="Margin/VBox/NodeButtons"]
+[node name="MapScroll" type="ScrollContainer" parent="Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MapRows" type="VBoxContainer" parent="Margin/VBox/MapScroll"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(210, 80)
-text = "Node 1"
-
-[node name="NodeButton2" type="Button" parent="Margin/VBox/NodeButtons"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(210, 80)
-text = "Node 2"
-
-[node name="NodeButton3" type="Button" parent="Margin/VBox/NodeButtons"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(210, 80)
-text = "Node 3"
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
 [node name="MenuButton" type="Button" parent="Margin/VBox"]
 unique_name_in_owner = true
