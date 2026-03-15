@@ -16,7 +16,9 @@ public partial class MainMenu : Control
 
     private void OnStartPressed()
     {
-        GetTree().ChangeSceneToFile("res://Scenes/BattleScene.tscn");
+        var state = GetNode<GameState>("/root/GameState");
+        state.StartNewRun();
+        GetTree().ChangeSceneToFile("res://Scenes/MapScene.tscn");
     }
 
     private void OnQuitPressed()

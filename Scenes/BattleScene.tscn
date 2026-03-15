@@ -1,6 +1,30 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://Scripts/BattleScene.cs" id="1_fh80r"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_log"]
+bg_color = Color(0.04, 0.07, 0.1, 0.72)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.62, 0.72, 0.4)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_banner"]
+bg_color = Color(0.12, 0.18, 0.26, 0.86)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.7, 0.88, 0.8)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="BattleScene" type="Control"]
 layout_mode = 3
@@ -18,131 +42,244 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.08, 0.1, 0.12, 1)
+color = Color(0.07, 0.09, 0.12, 1)
 
-[node name="RootMargin" type="MarginContainer" parent="."]
+[node name="MainMargin" type="MarginContainer" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
 
-[node name="VBox" type="VBoxContainer" parent="RootMargin"]
+[node name="MainVBox" type="VBoxContainer" parent="MainMargin"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 14
+theme_override_constants/separation = 12
 
-[node name="TopRow" type="HBoxContainer" parent="RootMargin/VBox"]
+[node name="TopSection" type="VBoxContainer" parent="MainMargin/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="TopRow" type="HBoxContainer" parent="MainMargin/MainVBox/TopSection"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="PlayerPanel" type="PanelContainer" parent="RootMargin/VBox/TopRow"]
+[node name="PlayerPanel" type="PanelContainer" parent="MainMargin/MainVBox/TopSection/TopRow"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="PlayerInfo" type="VBoxContainer" parent="RootMargin/VBox/TopRow/PlayerPanel"]
+[node name="PlayerInfo" type="VBoxContainer" parent="MainMargin/MainVBox/TopSection/TopRow/PlayerPanel"]
 layout_mode = 2
 
-[node name="PlayerTitle" type="Label" parent="RootMargin/VBox/TopRow/PlayerPanel/PlayerInfo"]
+[node name="PlayerTitle" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/PlayerPanel/PlayerInfo"]
 layout_mode = 2
 text = "Player"
 
-[node name="PlayerHpLabel" type="Label" parent="RootMargin/VBox/TopRow/PlayerPanel/PlayerInfo"]
+[node name="PlayerHpLabel" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/PlayerPanel/PlayerInfo"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "HP: 80"
 
-[node name="PlayerBlockLabel" type="Label" parent="RootMargin/VBox/TopRow/PlayerPanel/PlayerInfo"]
+[node name="PlayerBlockLabel" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/PlayerPanel/PlayerInfo"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Block: 0"
 
-[node name="EnemyPanel" type="PanelContainer" parent="RootMargin/VBox/TopRow"]
+[node name="PlayerStatusLabel" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/PlayerPanel/PlayerInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Status: STR 0, VUL 0"
+
+[node name="EnemyPanel" type="PanelContainer" parent="MainMargin/MainVBox/TopSection/TopRow"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="EnemyInfo" type="VBoxContainer" parent="RootMargin/VBox/TopRow/EnemyPanel"]
+[node name="EnemyInfo" type="VBoxContainer" parent="MainMargin/MainVBox/TopSection/TopRow/EnemyPanel"]
 layout_mode = 2
 
-[node name="EnemyTitle" type="Label" parent="RootMargin/VBox/TopRow/EnemyPanel/EnemyInfo"]
+[node name="EnemyNameLabel" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/EnemyPanel/EnemyInfo"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Enemy"
 
-[node name="EnemyHpLabel" type="Label" parent="RootMargin/VBox/TopRow/EnemyPanel/EnemyInfo"]
+[node name="EnemyHpLabel" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/EnemyPanel/EnemyInfo"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Enemy HP: 65"
 
-[node name="EnemyIntentLabel" type="Label" parent="RootMargin/VBox/TopRow/EnemyPanel/EnemyInfo"]
+[node name="EnemyBlockLabel" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/EnemyPanel/EnemyInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Enemy Block: 0"
+
+[node name="EnemyStatusLabel" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/EnemyPanel/EnemyInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Enemy Status: STR 0, VUL 0"
+
+[node name="EnemyIntentLabel" type="Label" parent="MainMargin/MainVBox/TopSection/TopRow/EnemyPanel/EnemyInfo"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Intent: -"
 
-[node name="StatsRow" type="HBoxContainer" parent="RootMargin/VBox"]
+[node name="EnemyDropArea" type="PanelContainer" parent="MainMargin/MainVBox/TopSection"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 120)
+
+[node name="DropVBox" type="VBoxContainer" parent="MainMargin/MainVBox/TopSection/EnemyDropArea"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="EnemyBody" type="PanelContainer" parent="MainMargin/MainVBox/TopSection/EnemyDropArea/DropVBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(220, 64)
+
+[node name="EnemyBodyLabel" type="Label" parent="MainMargin/MainVBox/TopSection/EnemyDropArea/DropVBox/EnemyBody"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ENEMY"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DropHintLabel" type="Label" parent="MainMargin/MainVBox/TopSection/EnemyDropArea/DropVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Drag card here to play"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TopSpacer" type="Control" parent="MainMargin/MainVBox/TopSection"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatsRow" type="HBoxContainer" parent="MainMargin/MainVBox"]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="TurnLabel" type="Label" parent="RootMargin/VBox/StatsRow"]
+[node name="TurnLabel" type="Label" parent="MainMargin/MainVBox/StatsRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Turn: 1"
 
-[node name="EnergyLabel" type="Label" parent="RootMargin/VBox/StatsRow"]
+[node name="EnergyLabel" type="Label" parent="MainMargin/MainVBox/StatsRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Energy: 3/3"
 
-[node name="HandCountLabel" type="Label" parent="RootMargin/VBox/StatsRow"]
+[node name="HandCountLabel" type="Label" parent="MainMargin/MainVBox/StatsRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Hand: 0 | Draw: 0 | Discard: 0"
 
-[node name="LogPanel" type="PanelContainer" parent="RootMargin/VBox"]
+[node name="HandPanel" type="PanelContainer" parent="MainMargin/MainVBox"]
 layout_mode = 2
-size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 260)
 
-[node name="LogText" type="RichTextLabel" parent="RootMargin/VBox/LogPanel"]
+[node name="HandContainer" type="Control" parent="MainMargin/MainVBox/HandPanel"]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-bbcode_enabled = false
-fit_content = false
-scroll_active = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="HandPanel" type="PanelContainer" parent="RootMargin/VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 210)
-
-[node name="HandScroll" type="ScrollContainer" parent="RootMargin/VBox/HandPanel"]
-layout_mode = 2
-horizontal_scroll_mode = 1
-vertical_scroll_mode = 0
-
-[node name="HandContainer" type="HBoxContainer" parent="RootMargin/VBox/HandPanel/HandScroll"]
+[node name="DrawAnchor" type="Control" parent="MainMargin/MainVBox/HandPanel"]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 8
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -80.0
+offset_top = -70.0
+offset_right = -20.0
+offset_bottom = -10.0
 
-[node name="ButtonsRow" type="HBoxContainer" parent="RootMargin/VBox"]
+[node name="ButtonsRow" type="HBoxContainer" parent="MainMargin/MainVBox"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="EndTurnButton" type="Button" parent="RootMargin/VBox/ButtonsRow"]
+[node name="EndTurnButton" type="Button" parent="MainMargin/MainVBox/ButtonsRow"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "End Turn"
 
-[node name="RestartButton" type="Button" parent="RootMargin/VBox/ButtonsRow"]
+[node name="BackButton" type="Button" parent="MainMargin/MainVBox/ButtonsRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Restart"
+text = "Back To Map"
 
-[node name="BackButton" type="Button" parent="RootMargin/VBox/ButtonsRow"]
+[node name="LogOverlay" type="PanelContainer" parent="."]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 460.0
+offset_bottom = 380.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_log")
+
+[node name="LogMargin" type="MarginContainer" parent="LogOverlay"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="LogVBox" type="VBoxContainer" parent="LogOverlay/LogMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogTitle" type="Label" parent="LogOverlay/LogMargin/LogVBox"]
+layout_mode = 2
+text = "Action Log"
+
+[node name="LogText" type="RichTextLabel" parent="LogOverlay/LogMargin/LogVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Back To Menu"
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = false
+scroll_active = true
+
+[node name="TurnBanner" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 30.0
+offset_right = 150.0
+offset_bottom = 78.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_banner")
+
+[node name="TurnBannerLabel" type="Label" parent="TurnBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Player Turn"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EffectsLayer" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

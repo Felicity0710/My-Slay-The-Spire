@@ -1,0 +1,83 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/MapScene.cs" id="1_3a1rv"]
+
+[node name="MapScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_3a1rv")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.08, 0.07, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "Map / Route"
+
+[node name="RunInfoLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Floor: 1 HP: 80/80 Deck: 11"
+
+[node name="RelicLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Relics: None"
+
+[node name="StatusLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose your next node."
+
+[node name="NodeButtons" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NodeButton1" type="Button" parent="Margin/VBox/NodeButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(210, 80)
+text = "Node 1"
+
+[node name="NodeButton2" type="Button" parent="Margin/VBox/NodeButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(210, 80)
+text = "Node 2"
+
+[node name="NodeButton3" type="Button" parent="Margin/VBox/NodeButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(210, 80)
+text = "Node 3"
+
+[node name="MenuButton" type="Button" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Back To Menu"

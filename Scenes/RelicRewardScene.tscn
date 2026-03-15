@@ -1,0 +1,63 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/RelicRewardScene.cs" id="1_rel"]
+
+[node name="RelicRewardScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_rel")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.09, 0.1, 0.06, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Margin/VBox"]
+layout_mode = 2
+text = "Choose An Elite Relic"
+
+[node name="Options" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="OptionButton1" type="Button" parent="Margin/VBox/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(220, 220)
+autowrap_mode = 3
+
+[node name="OptionButton2" type="Button" parent="Margin/VBox/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(220, 220)
+autowrap_mode = 3
+
+[node name="OptionButton3" type="Button" parent="Margin/VBox/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(220, 220)
+autowrap_mode = 3
