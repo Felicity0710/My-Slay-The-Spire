@@ -126,7 +126,13 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Relics: None"
 
-[node name="RelicIcons" type="HBoxContainer" parent="MainMargin/MainVBox/TopHud/TopHudRow"]
+[node name="RelicScroll" type="ScrollContainer" parent="MainMargin/MainVBox/TopHud/TopHudRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 0)
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="RelicIcons" type="HBoxContainer" parent="MainMargin/MainVBox/TopHud/TopHudRow/RelicScroll"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
@@ -135,19 +141,56 @@ theme_override_constants/separation = 6
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="TopHpLabel" type="Label" parent="MainMargin/MainVBox/TopHud/TopHudRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "❤ 80/80"
+
 [node name="TurnLabel" type="Label" parent="MainMargin/MainVBox/TopHud/TopHudRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Turn: 1"
+text = "⏳ 1"
 
 [node name="EnergyLabel" type="Label" parent="MainMargin/MainVBox/TopHud/TopHudRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Energy: 3/3"
+text = "◆ 3/3"
 
 [node name="Arena" type="Control" parent="MainMargin/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="ArenaFarBg" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.07, 0.09, 0.9)
+
+[node name="ArenaMidBg" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.08
+anchor_right = 1.0
+anchor_bottom = 0.92
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.14, 0.16, 0.52)
+
+[node name="ArenaFrontFog" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.64
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.12, 0.2, 0.18, 0.25)
 
 [node name="ArenaBackdrop" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
 layout_mode = 1
@@ -160,6 +203,7 @@ color = Color(0.05, 0.11, 0.13, 0.45)
 
 [node name="ArenaGlowLeft" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
 layout_mode = 1
+anchors_preset = -1
 anchor_right = 0.44
 anchor_bottom = 0.86
 offset_right = -18.0
@@ -168,6 +212,7 @@ color = Color(0.12, 0.2, 0.18, 0.35)
 
 [node name="ArenaGlowRight" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
 layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.56
 anchor_right = 1.0
 anchor_bottom = 0.86
@@ -177,6 +222,7 @@ color = Color(0.16, 0.13, 0.22, 0.35)
 
 [node name="GroundLine" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
 layout_mode = 1
+anchors_preset = -1
 anchor_top = 0.84
 anchor_right = 1.0
 anchor_bottom = 0.87
@@ -184,6 +230,7 @@ color = Color(0.18, 0.23, 0.28, 0.6)
 
 [node name="PlayerShadow" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
 layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.09
 anchor_top = 0.76
 anchor_right = 0.34
@@ -192,6 +239,7 @@ color = Color(0, 0, 0, 0.35)
 
 [node name="EnemyShadow" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
 layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.66
 anchor_top = 0.78
 anchor_right = 0.94
@@ -294,7 +342,6 @@ show_percentage = false
 [node name="EnemyIntentBadge" type="PanelContainer" parent="MainMargin/MainVBox/Arena/EnemyDropArea/DropVBox/EnemyStatRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_chip")
 
 [node name="EnemyIntentHBox" type="HBoxContainer" parent="MainMargin/MainVBox/Arena/EnemyDropArea/DropVBox/EnemyStatRow/EnemyIntentBadge"]
 layout_mode = 2
@@ -302,8 +349,8 @@ theme_override_constants/separation = 4
 
 [node name="EnemyIntentIcon" type="TextureRect" parent="MainMargin/MainVBox/Arena/EnemyDropArea/DropVBox/EnemyStatRow/EnemyIntentBadge/EnemyIntentHBox"]
 unique_name_in_owner = true
-layout_mode = 2
 custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
@@ -400,10 +447,10 @@ text = "Back To Map"
 
 [node name="LogOverlay" type="PanelContainer" parent="."]
 layout_mode = 1
-offset_left = 213.0
-offset_top = 82.0
-offset_right = 613.0
-offset_bottom = 302.0
+offset_left = 1505.0
+offset_top = 693.0
+offset_right = 1905.0
+offset_bottom = 913.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_log")
 
@@ -459,3 +506,26 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="KeywordTooltip" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+offset_right = 270.0
+offset_bottom = 150.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="KeywordTooltipMargin" type="MarginContainer" parent="KeywordTooltip"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="KeywordTooltipText" type="RichTextLabel" parent="KeywordTooltip/KeywordTooltipMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false

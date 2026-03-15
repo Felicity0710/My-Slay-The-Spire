@@ -6,9 +6,11 @@ public partial class CardView : PanelContainer
 {
     private Label _nameLabel = null!;
     private Label _costLabel = null!;
-    private Label _descLabel = null!;
+    private RichTextLabel _descLabel = null!;
 
     private bool _dragging;
+    private bool _playable = true;
+    private Tween _poseTween = null!;
     private Vector2 _dragOffset;
     private Vector2 _pressStartMouse;
     private Vector2 _homeGlobalPosition;
@@ -68,18 +70,44 @@ public partial class CardView : PanelContainer
 
         if (!animate)
         {
+            if (_poseTween != null && _poseTween.IsValid())
+            {
+                _poseTween.Kill();
+            }
             GlobalPosition = globalPosition;
             RotationDegrees = rotationDegrees;
             Scale = poseScale;
             return;
         }
 
-        var tween = CreateTween();
-        tween.SetEase(Tween.EaseType.Out);
-        tween.SetTrans(Tween.TransitionType.Cubic);
-        tween.TweenProperty(this, "global_position", globalPosition, 0.12f);
-        tween.Parallel().TweenProperty(this, "rotation_degrees", rotationDegrees, 0.12f);
-        tween.Parallel().TweenProperty(this, "scale", poseScale, 0.12f);
+        if (_poseTween != null && _poseTween.IsValid())
+        {
+            _poseTween.Kill();
+        }
+
+        _poseTween = CreateTween();
+        _poseTween.SetEase(Tween.EaseType.Out);
+        _poseTween.SetTrans(Tween.TransitionType.Cubic);
+        _poseTween.TweenProperty(this, "global_position", globalPosition, 0.08f);
+        _poseTween.Parallel().TweenProperty(this, "rotation_degrees", rotationDegrees, 0.08f);
+        _poseTween.Parallel().TweenProperty(this, "scale", poseScale, 0.08f);
+    }
+
+    public void SetPlayable(bool playable)
+    {
+        _playable = playable;
+        if (_dragging)
+        {
+            return;
+        }
+
+        if (_playable)
+        {
+            Modulate = Colors.White;
+            return;
+        }
+
+        Modulate = new Color(0.62f, 0.62f, 0.68f, 0.92f);
     }
 
     public override void _GuiInput(InputEvent @event)
@@ -88,9 +116,19 @@ public partial class CardView : PanelContainer
         {
             if (mb.Pressed)
             {
+                if (!_playable)
+                {
+                    AcceptEvent();
+                    return;
+                }
+
                 _pressStartMouse = GetGlobalMousePosition();
                 _dragging = true;
                 _dragOffset = GetGlobalMousePosition() - GlobalPosition;
+                if (_poseTween != null && _poseTween.IsValid())
+                {
+                    _poseTween.Kill();
+                }
                 RotationDegrees = 0;
                 Scale = Vector2.One;
                 ZIndex = 100;
@@ -242,8 +280,15 @@ public partial class CardView : PanelContainer
         _costLabel.AddThemeColorOverride("font_color", new Color("93c5fd"));
         costBadge.AddChild(_costLabel);
 
-        _descLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        _descLabel.AddThemeColorOverride("font_color", new Color("cbd5e1"));
+        _descLabel = new RichTextLabel
+        {
+            BbcodeEnabled = true,
+            FitContent = true,
+            ScrollActive = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            CustomMinimumSize = new Vector2(0, 96)
+        };
+        _descLabel.AddThemeColorOverride("default_color", new Color("cbd5e1"));
 
         vbox.AddChild(_nameLabel);
         vbox.AddChild(costBadge);
@@ -256,6 +301,13 @@ public partial class CardView : PanelContainer
     {
         _nameLabel.Text = Card.Name;
         _costLabel.Text = $"Cost: {Card.Cost}";
-        _descLabel.Text = Card.Description;
+        var text = Card.Description
+            .Replace("Deal", "[color=#fca5a5]Deal[/color]")
+            .Replace("Gain", "[color=#93c5fd]Gain[/color]")
+            .Replace("Block", "[color=#93c5fd]Block[/color]")
+            .Replace("Vulnerable", "[color=#e9d5ff]Vulnerable[/color]")
+            .Replace("Draw", "[color=#a5f3fc]Draw[/color]")
+            .Replace("damage", "[color=#fda4af]damage[/color]");
+        _descLabel.Text = text;
     }
 }
