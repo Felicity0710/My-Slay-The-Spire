@@ -120,9 +120,11 @@ public partial class BattleScene : Control
     private Line2D _dragArrowHead = null!;
     private CardView _draggingCard = null!;
     private float _dragGuidePulseTime;
+    private CanvasLayer _overlayCanvas = null!;
 
     private CardView _hoveredCard = null!;
     public Action<string> UiSfxRequested = _ => { };
+    private const float HoverSwitchDeadzone = 18f;
 
     public override void _Ready()
     {
@@ -166,6 +168,12 @@ public partial class BattleScene : Control
         _keywordTooltipText = GetNode<RichTextLabel>("%KeywordTooltipText");
         _enemyShadow = GetNode<ColorRect>("MainMargin/MainVBox/Arena/EnemyShadow");
         _playerShadow = GetNode<ColorRect>("MainMargin/MainVBox/Arena/PlayerShadow");
+        _overlayCanvas = new CanvasLayer { Layer = 20 };
+        AddChild(_overlayCanvas);
+        _keywordTooltip.Reparent(_overlayCanvas);
+        _keywordTooltip.TopLevel = false;
+        _keywordTooltip.ZIndex = 100;
+        _keywordTooltip.MouseFilter = MouseFilterEnum.Ignore;
 
         _endTurnButton = GetNode<Button>("%EndTurnButton");
         SetupDragGuide();
@@ -206,6 +214,7 @@ public partial class BattleScene : Control
         var mouse = GetViewport().GetMousePosition();
         var nx = (mouse.X / viewport.X - 0.5f) * 2f;
         var ny = (mouse.Y / viewport.Y - 0.5f) * 2f;
+        UpdateHandHoverFromMouse(mouse);
 
         if (IsInstanceValid(_dragGuide) && _dragGuide.Visible)
         {
@@ -799,21 +808,8 @@ public partial class BattleScene : Control
 
     private void OnCardHoverChanged(CardView card, bool hovered)
     {
-        if (card.IsDragging)
-        {
-            return;
-        }
-
-        _hoveredCard = hovered ? card : (_hoveredCard == card ? null : _hoveredCard);
-        if (hovered)
-        {
-            EmitUiSfx("card_hover");
-            ShowKeywordTooltip(card);
-        }
-        else if (_hoveredCard == null)
-        {
-            HideKeywordTooltip();
-        }
+        // Hover is driven by mouse-position sampling in _Process to avoid
+        // enter/exit thrash while cards scale and overlap.
     }
 
     private bool CardRequiresEnemyTarget(CardData card)
@@ -1163,11 +1159,10 @@ public partial class BattleScene : Control
 
     private async Task RenderHand(HashSet<CardData> entering = null)
     {
-        var oldChildren = _handContainer.GetChildren();
-        foreach (Node child in oldChildren)
+        foreach (Node child in _handContainer.GetChildren())
         {
             _handContainer.RemoveChild(child);
-            child.Free();
+            child.QueueFree();
         }
 
         _hoveredCard = null;
@@ -1260,8 +1255,9 @@ public partial class BattleScene : Control
             var t = count == 1 ? 0.5f : i / (float)(count - 1);
             var x = startX + spread * t;
             var normalized = t * 2f - 1f;
-            var curveY = Mathf.Abs(normalized) * 26f;
-            var rot = normalized * 14f;
+            var centerDepth = 1f - Mathf.Abs(normalized);
+            var curveY = -(1f - Mathf.Pow(Mathf.Abs(normalized), 1.35f)) * 22f;
+            var rot = normalized * 13f;
 
             if (!anyDragging && hoveredIndex >= 0)
             {
@@ -1269,13 +1265,14 @@ public partial class BattleScene : Control
                 var direction = i < hoveredIndex ? -1f : 1f;
                 if (i == hoveredIndex)
                 {
-                    curveY -= 14f;
+                    curveY += 2f;
                     rot *= 0.22f;
                 }
                 else if (distance == 1)
                 {
                     x += direction * 20f;
                     rot *= 0.65f;
+                    curveY -= 2f;
                 }
                 else if (distance == 2)
                 {
@@ -1289,15 +1286,108 @@ public partial class BattleScene : Control
 
             if (!anyDragging && hoveredIndex == i)
             {
-                pos.Y -= 18f;
+                pos.Y -= 30f;
                 scale = new Vector2(1.08f, 1.08f);
                 finalRot = 0f;
             }
 
-            cards[i].ZIndex = hoveredIndex == i ? count + 10 : i;
+            cards[i].ZIndex = hoveredIndex == i ? 2000 : i;
             cards[i].SetPose(pos, finalRot, scale, animate);
             cards[i].SetFocusState(hoveredIndex == i, hoveredIndex >= 0 && hoveredIndex != i && !anyDragging);
         }
+    }
+
+    private void UpdateHandHoverFromMouse(Vector2 mouseGlobal)
+    {
+        if (!IsInstanceValid(_handContainer) || _battleEnded || IsInputLocked() || _draggingCard != null)
+        {
+            SetHoveredCard(null);
+            return;
+        }
+
+        var handRect = _handContainer.GetGlobalRect().Grow(20f);
+        if (!handRect.HasPoint(mouseGlobal))
+        {
+            SetHoveredCard(null);
+            return;
+        }
+
+        var cards = new List<CardView>();
+        foreach (Node node in _handContainer.GetChildren())
+        {
+            if (node is CardView card && !card.IsDragging)
+            {
+                cards.Add(card);
+            }
+        }
+        if (cards.Count == 0)
+        {
+            SetHoveredCard(null);
+            return;
+        }
+
+        CardView best = null;
+        var bestScore = float.MaxValue;
+        foreach (var card in cards)
+        {
+            var rect = card.GetGlobalRect().Grow(8f);
+            if (!rect.HasPoint(mouseGlobal))
+            {
+                continue;
+            }
+
+            var center = card.GlobalPosition + card.Size * 0.5f;
+            var score = center.DistanceTo(mouseGlobal);
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = card;
+            }
+        }
+
+        if (best == null)
+        {
+            SetHoveredCard(null);
+            return;
+        }
+
+        if (IsInstanceValid(_hoveredCard) && _hoveredCard == best)
+        {
+            return;
+        }
+
+        if (IsInstanceValid(_hoveredCard))
+        {
+            var currentCenter = _hoveredCard.GlobalPosition + _hoveredCard.Size * 0.5f;
+            var currentScore = currentCenter.DistanceTo(mouseGlobal);
+            if (currentScore <= bestScore + HoverSwitchDeadzone)
+            {
+                return;
+            }
+        }
+
+        SetHoveredCard(best);
+    }
+
+    private void SetHoveredCard(CardView next)
+    {
+        if (_hoveredCard == next)
+        {
+            return;
+        }
+
+        _hoveredCard = next;
+        if (IsInstanceValid(_hoveredCard))
+        {
+            EmitUiSfx("card_hover");
+            ShowKeywordTooltip(_hoveredCard);
+        }
+        else
+        {
+            HideKeywordTooltip();
+        }
+
+        RequestHandLayout(true);
     }
 
     private void BackToMap()

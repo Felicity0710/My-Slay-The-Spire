@@ -133,7 +133,7 @@ public partial class CardView : PanelContainer
 
     public override void _Input(InputEvent @event)
     {
-        if (!_dragging)
+        if (!_dragging || !IsInsideTree())
         {
             return;
         }
@@ -150,14 +150,22 @@ public partial class CardView : PanelContainer
                 GlobalPosition = GetGlobalMousePosition() - _dragOffset;
             }
             DragMoved(this, GetGlobalMousePosition());
-            GetViewport().SetInputAsHandled();
+            var viewport = GetViewport();
+            if (viewport != null)
+            {
+                viewport.SetInputAsHandled();
+            }
             return;
         }
 
         if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && !mb.Pressed)
         {
             ResolveDragRelease();
-            GetViewport().SetInputAsHandled();
+            var viewport = GetViewport();
+            if (viewport != null)
+            {
+                viewport.SetInputAsHandled();
+            }
         }
     }
 
@@ -333,6 +341,7 @@ public partial class CardView : PanelContainer
         AddThemeStyleboxOverride("panel", style);
 
         var margin = new MarginContainer();
+        margin.MouseFilter = MouseFilterEnum.Ignore;
         margin.AddThemeConstantOverride("margin_left", 10);
         margin.AddThemeConstantOverride("margin_top", 10);
         margin.AddThemeConstantOverride("margin_right", 10);
@@ -340,6 +349,7 @@ public partial class CardView : PanelContainer
         AddChild(margin);
 
         var vbox = new VBoxContainer();
+        vbox.MouseFilter = MouseFilterEnum.Ignore;
         vbox.AddThemeConstantOverride("separation", 6);
         margin.AddChild(vbox);
 
@@ -348,9 +358,11 @@ public partial class CardView : PanelContainer
             HorizontalAlignment = HorizontalAlignment.Center,
             AutowrapMode = TextServer.AutowrapMode.WordSmart
         };
+        _nameLabel.MouseFilter = MouseFilterEnum.Ignore;
         _nameLabel.AddThemeColorOverride("font_color", new Color("e2e8f0"));
 
         var costBadge = new PanelContainer();
+        costBadge.MouseFilter = MouseFilterEnum.Ignore;
         var costStyle = new StyleBoxFlat
         {
             BgColor = new Color("0d2538"),
@@ -367,6 +379,7 @@ public partial class CardView : PanelContainer
         costBadge.AddThemeStyleboxOverride("panel", costStyle);
 
         _costLabel = new Label { HorizontalAlignment = HorizontalAlignment.Center };
+        _costLabel.MouseFilter = MouseFilterEnum.Ignore;
         _costLabel.AddThemeColorOverride("font_color", new Color("93c5fd"));
         costBadge.AddChild(_costLabel);
 
@@ -378,6 +391,7 @@ public partial class CardView : PanelContainer
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(0, 96)
         };
+        _descLabel.MouseFilter = MouseFilterEnum.Ignore;
         _descLabel.AddThemeColorOverride("default_color", new Color("cbd5e1"));
 
         vbox.AddChild(_nameLabel);
