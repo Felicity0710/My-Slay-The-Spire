@@ -1,0 +1,130 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Godot 4 files
+.godot/
+.godot/mono/temp/
+.godot/mono/metadata/
+
+# Godot-specific
+*.translation
+*.import
+
+# .NET / Mono
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Rider
+.idea/
+*.sln.iml
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.DotSettings.user
+
+# Visual Studio cache/options
+.vs/
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# FMOD Cache
+.cache/
+.unsaved/
+fmod_editor.log
+
+# Steamworks
+steam_appid.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+
+
+# ============================================================
+# Slay the Spire 2 - GDRE 反编译项目 .gitignore
+# 只追踪代码 & 配置，忽略所有二进制资源
+# ============================================================
+
+# === Godot 引擎缓存 ===
+.godot/
+
+# === 二进制资源（大文件） ===
+images/
+models/
+animations/
+materials/
+fonts/
+shaders/
+themes/
+banks/
+debug_audio/
+icudt_godot.dat
+
+# === 原生 DLL / 引用程序集 ===
+bin/
+_mono_referenced_assemblies/
+steam/
+
+# === .NET 构建产物 ===
+packages.lock.json
+
+# === JetBrains Rider ===
+.idea/
+*.DotSettings.user
+RiderTestRunner/
+
+# === GDRE 转换缓存 ===
+.autoconverted/
+
+# === OS 垃圾 ===
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+localization
+addons

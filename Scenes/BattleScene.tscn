@@ -1,0 +1,148 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/BattleScene.cs" id="1_fh80r"]
+
+[node name="BattleScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fh80r")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.1, 0.12, 1)
+
+[node name="RootMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="RootMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="TopRow" type="HBoxContainer" parent="RootMargin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PlayerPanel" type="PanelContainer" parent="RootMargin/VBox/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PlayerInfo" type="VBoxContainer" parent="RootMargin/VBox/TopRow/PlayerPanel"]
+layout_mode = 2
+
+[node name="PlayerTitle" type="Label" parent="RootMargin/VBox/TopRow/PlayerPanel/PlayerInfo"]
+layout_mode = 2
+text = "Player"
+
+[node name="PlayerHpLabel" type="Label" parent="RootMargin/VBox/TopRow/PlayerPanel/PlayerInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "HP: 80"
+
+[node name="PlayerBlockLabel" type="Label" parent="RootMargin/VBox/TopRow/PlayerPanel/PlayerInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Block: 0"
+
+[node name="EnemyPanel" type="PanelContainer" parent="RootMargin/VBox/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EnemyInfo" type="VBoxContainer" parent="RootMargin/VBox/TopRow/EnemyPanel"]
+layout_mode = 2
+
+[node name="EnemyTitle" type="Label" parent="RootMargin/VBox/TopRow/EnemyPanel/EnemyInfo"]
+layout_mode = 2
+text = "Enemy"
+
+[node name="EnemyHpLabel" type="Label" parent="RootMargin/VBox/TopRow/EnemyPanel/EnemyInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Enemy HP: 65"
+
+[node name="EnemyIntentLabel" type="Label" parent="RootMargin/VBox/TopRow/EnemyPanel/EnemyInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Intent: -"
+
+[node name="StatsRow" type="HBoxContainer" parent="RootMargin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TurnLabel" type="Label" parent="RootMargin/VBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Turn: 1"
+
+[node name="EnergyLabel" type="Label" parent="RootMargin/VBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Energy: 3/3"
+
+[node name="HandCountLabel" type="Label" parent="RootMargin/VBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Hand: 0 | Draw: 0 | Discard: 0"
+
+[node name="LogPanel" type="PanelContainer" parent="RootMargin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LogText" type="RichTextLabel" parent="RootMargin/VBox/LogPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = false
+fit_content = false
+scroll_active = true
+
+[node name="HandPanel" type="PanelContainer" parent="RootMargin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 210)
+
+[node name="HandScroll" type="ScrollContainer" parent="RootMargin/VBox/HandPanel"]
+layout_mode = 2
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="HandContainer" type="HBoxContainer" parent="RootMargin/VBox/HandPanel/HandScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ButtonsRow" type="HBoxContainer" parent="RootMargin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="EndTurnButton" type="Button" parent="RootMargin/VBox/ButtonsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "End Turn"
+
+[node name="RestartButton" type="Button" parent="RootMargin/VBox/ButtonsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Restart"
+
+[node name="BackButton" type="Button" parent="RootMargin/VBox/ButtonsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Back To Menu"
