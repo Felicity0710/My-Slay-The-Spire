@@ -9,8 +9,11 @@
   <ItemGroup>
     <Compile Include="..\..\Scripts\CombatResolver.cs" Link="CombatResolver.cs" />
     <Compile Include="..\..\Scripts\DeckFlowResolver.cs" Link="DeckFlowResolver.cs" />
+    <Compile Include="..\..\Scripts\EnemyEncounterBuilder.cs" Link="EnemyEncounterBuilder.cs" />
     <Compile Include="..\..\Scripts\EnemyIntentType.cs" Link="EnemyIntentType.cs" />
+    <Compile Include="..\..\Scripts\EnemyUnit.cs" Link="EnemyUnit.cs" />
     <Compile Include="..\..\Scripts\IntentResolver.cs" Link="IntentResolver.cs" />
+    <Compile Include="..\..\Scripts\MapNodeType.cs" Link="MapNodeType.cs" />
     <Compile Include="..\..\Scripts\TurnFlowResolver.cs" Link="TurnFlowResolver.cs" />
   </ItemGroup>
 </Project>
