@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://Scripts/MapScene.cs" id="1_3a1rv"]
+[ext_resource type="Script" path="res://Scripts/MapCanvas.cs" id="2_4m1kd"]
 
 [node name="MapScene" type="Control"]
 layout_mode = 3
@@ -18,7 +19,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.12, 0.08, 0.07, 1)
+color = Color(0.09, 0.07, 0.05, 1)
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -27,18 +28,18 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 18
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-text = "Map / Route"
+text = "Ancient Route Map"
 
 [node name="RunInfoLabel" type="Label" parent="Margin/VBox"]
 unique_name_in_owner = true
@@ -62,12 +63,14 @@ text = "⚔ 普通战斗   ☠ 精英战   ? 事件   ✚ 休息   $ 商店"
 [node name="MapScroll" type="ScrollContainer" parent="Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="MapRows" type="VBoxContainer" parent="Margin/VBox/MapScroll"]
+[node name="MapCanvas" type="Control" parent="Margin/VBox/MapScroll"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(760, 980)
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 6
+script = ExtResource("2_4m1kd")
 
 [node name="MenuButton" type="Button" parent="Margin/VBox"]
 unique_name_in_owner = true
