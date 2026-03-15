@@ -23,6 +23,9 @@ internal static class Program
             ("Normal intent values stay in expected ranges", TestNormalIntentRanges),
             ("Elite intent values stay in expected ranges", TestEliteIntentRanges),
             ("Elite attack rate is higher than normal", TestEliteAttackRateHigher),
+            ("Normal encounter roster scales by floor", TestNormalEncounterRoster),
+            ("Elite encounter roster uses sentinel archetype", TestEliteEncounterRoster)
+            ("Elite attack rate is higher than normal", TestEliteAttackRateHigher),
             ("Card effects aggregate into legacy fields", TestCardEffectsAggregateLegacyFields),
             ("Card supports complex configurable effects", TestComplexCardEffectConfiguration)
         };
@@ -334,6 +337,29 @@ internal static class Program
             throw new InvalidOperationException(
                 $"elite attack rate should be higher than normal: elite={eliteRate:F3}, normal={normalRate:F3}");
         }
+    }
+
+    private static void TestNormalEncounterRoster()
+    {
+        var early = EnemyEncounterBuilder.BuildEncounter(MapNodeType.NormalBattle, floor: 1);
+        ExpectEqual(2, early.Count, "early.Count");
+        ExpectEqual("Cultist A", early[0].Name, "early[0].Name");
+        ExpectEqual(43, early[0].Hp, "early[0].Hp");
+
+        var later = EnemyEncounterBuilder.BuildEncounter(MapNodeType.NormalBattle, floor: 3);
+        ExpectEqual(3, later.Count, "later.Count");
+        ExpectEqual("Cultist C", later[2].Name, "later[2].Name");
+        ExpectEqual(50, later[2].Hp, "later[2].Hp");
+    }
+
+    private static void TestEliteEncounterRoster()
+    {
+        var roster = EnemyEncounterBuilder.BuildEncounter(MapNodeType.EliteBattle, floor: 4);
+        ExpectEqual(2, roster.Count, "roster.Count");
+        ExpectEqual("Elite Sentinel A", roster[0].Name, "roster[0].Name");
+        ExpectEqual("elite_sentinel", roster[0].VisualId, "roster[0].VisualId");
+        ExpectEqual(118, roster[0].Hp, "roster[0].Hp");
+        ExpectEqual(2, roster[0].Strength, "roster[0].Strength");
     }
 
     private static void ExpectEqual(int expected, int actual, string label)
