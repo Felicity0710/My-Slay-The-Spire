@@ -43,13 +43,6 @@ public partial class BattleScene : Control
     private Control _handContainer = null!;
     private Control _enemyDropArea = null!;
     private Label _dropHintLabel = null!;
-    private Label _enemyBodyLabel = null!;
-    private ColorRect _enemySprite = null!;
-    private TextureRect _enemyPortrait = null!;
-    private ProgressBar _enemyHpBar = null!;
-    private Control _enemyIntentBadge = null!;
-    private TextureRect _enemyIntentIcon = null!;
-    private Label _enemyIntentValueLabel = null!;
     private GridContainer _enemyRosterGrid = null!;
     private Label _enemyIntentListLabel = null!;
     private readonly Dictionary<int, Control> _enemyCardTargetByIndex = new();
@@ -141,13 +134,6 @@ public partial class BattleScene : Control
         _handContainer = GetNode<Control>("%HandContainer");
         _enemyDropArea = GetNode<Control>("%EnemyDropArea");
         _dropHintLabel = GetNode<Label>("%DropHintLabel");
-        _enemyBodyLabel = GetNode<Label>("%EnemyBodyLabel");
-        _enemySprite = GetNode<ColorRect>("%EnemySprite");
-        _enemyPortrait = GetNode<TextureRect>("%EnemyPortrait");
-        _enemyHpBar = GetNode<ProgressBar>("%EnemyHpBar");
-        _enemyIntentBadge = GetNode<Control>("%EnemyIntentBadge");
-        _enemyIntentIcon = GetNode<TextureRect>("%EnemyIntentIcon");
-        _enemyIntentValueLabel = GetNode<Label>("%EnemyIntentValue");
         _playerPanel = GetNode<Control>("%PlayerPanel");
         _enemyPanel = GetNode<Control>("%EnemyPanel");
         _turnBanner = GetNode<Control>("%TurnBanner");
@@ -390,22 +376,6 @@ public partial class BattleScene : Control
         var dropVBox = _enemyDropArea.GetNodeOrNull<VBoxContainer>("DropVBox");
         if (dropVBox != null)
         {
-            var legacyBody = _enemyDropArea.GetNodeOrNull<Control>("DropVBox/EnemyBody");
-            var legacySprite = _enemyDropArea.GetNodeOrNull<Control>("DropVBox/EnemySprite");
-            var legacyStats = _enemyDropArea.GetNodeOrNull<Control>("DropVBox/EnemyStatRow");
-            if (legacyBody != null)
-            {
-                legacyBody.Visible = false;
-            }
-            if (legacySprite != null)
-            {
-                legacySprite.Visible = false;
-            }
-            if (legacyStats != null)
-            {
-                legacyStats.Visible = false;
-            }
-
             _enemyRosterGrid = _enemyDropArea.GetNodeOrNull<GridContainer>("DropVBox/EnemyRosterGrid");
             if (_enemyRosterGrid == null)
             {
@@ -528,17 +498,6 @@ public partial class BattleScene : Control
         };
     }
 
-    private string IntentBadgeText(EnemyUnit enemy)
-    {
-        return enemy.IntentType switch
-        {
-            EnemyIntentType.Attack => $"{enemy.IntentValue + enemy.Strength}",
-            EnemyIntentType.Defend => $"{enemy.IntentValue}",
-            EnemyIntentType.Buff => $"+{enemy.IntentValue}",
-            _ => "-"
-        };
-    }
-
     private string IntentCompactText(EnemyUnit enemy)
     {
         return enemy.IntentType switch
@@ -548,11 +507,6 @@ public partial class BattleScene : Control
             EnemyIntentType.Buff => $"STR +{enemy.IntentValue}",
             _ => "-"
         };
-    }
-
-    private string IntentIconText(EnemyUnit enemy)
-    {
-        return CombatVisualCatalog.GetIntentIconPath(enemy.IntentType);
     }
 
     private Color IntentTint(EnemyIntentType type)
@@ -626,10 +580,6 @@ public partial class BattleScene : Control
         }
 
         SelectNextAliveEnemy();
-        var enemy = CurrentEnemy;
-        var visual = CombatVisualCatalog.GetEnemyVisual(enemy.VisualId);
-        _enemySprite.Color = visual.StageTint;
-        _enemyPortrait.Texture = LoadTextureCached(visual.PortraitPath);
     }
 
     private Control EnemyEffectTarget(int enemyIndex)
@@ -1802,22 +1752,9 @@ public partial class BattleScene : Control
         _playerStatusLabel.Text = $"Status: STR {_playerStrength}, VUL {_playerVulnerable}";
 
         _enemyNameLabel.Text = $"{enemy.Name} ({_selectedEnemyIndex + 1}/{_enemies.Count})";
-        _enemyBodyLabel.Text = enemy.Name.ToUpperInvariant();
         _enemyHpLabel.Text = $"Enemy HP: {enemy.Hp}";
         _enemyBlockLabel.Text = $"Enemy Block: {enemy.Block}";
         _enemyStatusLabel.Text = $"Enemy Status: STR {enemy.Strength}, VUL {enemy.Vulnerable}";
-        _enemyHpBar.MaxValue = Math.Max(enemy.MaxHp, 1);
-        _enemyHpBar.Value = Math.Max(enemy.Hp, 0);
-        _enemyIntentIcon.Texture = _battleEnded || !enemy.IsAlive ? null : LoadTextureCached(IntentIconText(enemy));
-        _enemyIntentValueLabel.Text = _battleEnded || !enemy.IsAlive ? "-" : IntentBadgeText(enemy);
-        _enemyIntentBadge.Modulate = enemy.IntentType switch
-        {
-            EnemyIntentType.Attack => new Color("fecaca"),
-            EnemyIntentType.Defend => new Color("bfdbfe"),
-            EnemyIntentType.Buff => new Color("e9d5ff"),
-            _ => Colors.White
-        };
-
         _enemyIntentLabel.Text = _battleEnded || !enemy.IsAlive ? "Intent: -" : $"Intent: {IntentText(enemy)}";
         if (IsInstanceValid(_enemyIntentListLabel))
         {
