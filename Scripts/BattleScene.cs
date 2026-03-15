@@ -117,7 +117,9 @@ public partial class BattleScene : Control
     private bool _dropZoneHighlighted;
     private float _hitStopTimer;
     private Line2D _dragGuide = null!;
+    private Line2D _dragArrowHead = null!;
     private CardView _draggingCard = null!;
+    private float _dragGuidePulseTime;
 
     private CardView _hoveredCard = null!;
     public Action<string> UiSfxRequested = _ => { };
@@ -204,6 +206,16 @@ public partial class BattleScene : Control
         var mouse = GetViewport().GetMousePosition();
         var nx = (mouse.X / viewport.X - 0.5f) * 2f;
         var ny = (mouse.Y / viewport.Y - 0.5f) * 2f;
+
+        if (IsInstanceValid(_dragGuide) && _dragGuide.Visible)
+        {
+            _dragGuidePulseTime += (float)delta;
+            var pulse = 0.5f + 0.5f * Mathf.Sin(_dragGuidePulseTime * 9f);
+            var alpha = 0.6f + pulse * 0.4f;
+            var baseColor = _dragGuide.DefaultColor;
+            _dragGuide.DefaultColor = new Color(baseColor.R, baseColor.G, baseColor.B, alpha);
+            _dragArrowHead.DefaultColor = new Color(baseColor.R, baseColor.G, baseColor.B, alpha);
+        }
 
         _arenaFarBg.Position = new Vector2(nx * -6f, ny * -4f);
         _arenaMidBg.Position = new Vector2(nx * -10f, ny * -6f);
@@ -627,6 +639,7 @@ public partial class BattleScene : Control
     private async void OnCardDropAttempt(CardView view, Vector2 mouseGlobal)
     {
         _draggingCard = null;
+        view.LockPositionWhileDragging = false;
         SetDragGuideVisible(false);
 
         if (_battleEnded || IsInputLocked())
@@ -747,32 +760,41 @@ public partial class BattleScene : Control
 
     private void OnCardDragMoved(CardView card, Vector2 mouseGlobal)
     {
+        if (!CardRequiresEnemyTarget(card.Card))
+        {
+            SetDropZoneHighlight(false);
+            SetDragGuideVisible(false);
+            return;
+        }
+
         var hot = _enemyDropArea.GetGlobalRect().HasPoint(mouseGlobal);
         SetDropZoneHighlight(hot);
-        UpdateDragGuide(card, mouseGlobal, hot);
+        UpdateDragGuide(card, mouseGlobal);
     }
 
     private void OnCardDragStarted(CardView card)
     {
         _hoveredCard = null;
         _draggingCard = card;
+        var requiresTarget = CardRequiresEnemyTarget(card.Card);
+        card.LockPositionWhileDragging = requiresTarget;
         HideKeywordTooltip();
         SetDropZoneHighlight(false);
-        SetDragGuideVisible(CardRequiresEnemyTarget(card.Card));
-        UpdateDragGuide(card, card.GlobalPosition + card.Size * 0.5f, false);
+        SetDragGuideVisible(requiresTarget);
+        if (requiresTarget)
+        {
+            UpdateDragGuide(card, card.GlobalPosition + card.Size * 0.5f);
+            card.Scale = new Vector2(1.1f, 1.1f);
+        }
         EmitUiSfx("card_grab");
-        card.Scale = Vector2.One;
     }
 
     private void OnCardDragEnded(CardView card)
     {
         _draggingCard = null;
+        card.LockPositionWhileDragging = false;
         SetDragGuideVisible(false);
         SetDropZoneHighlight(false);
-        if (IsInstanceValid(card) && _hand.Contains(card.Card))
-        {
-            RequestHandLayout(true);
-        }
     }
 
     private void OnCardHoverChanged(CardView card, bool hovered)
@@ -1141,9 +1163,11 @@ public partial class BattleScene : Control
 
     private async Task RenderHand(HashSet<CardData> entering = null)
     {
-        foreach (Node child in _handContainer.GetChildren())
+        var oldChildren = _handContainer.GetChildren();
+        foreach (Node child in oldChildren)
         {
-            child.QueueFree();
+            _handContainer.RemoveChild(child);
+            child.Free();
         }
 
         _hoveredCard = null;
@@ -1545,46 +1569,89 @@ public partial class BattleScene : Control
             Visible = false,
             ZIndex = 160
         };
+        _dragArrowHead = new Line2D
+        {
+            Width = 3f,
+            DefaultColor = new Color("7dd3fc"),
+            Antialiased = true,
+            TopLevel = true,
+            Visible = false,
+            ZIndex = 161
+        };
         _effectsLayer.AddChild(_dragGuide);
+        _effectsLayer.AddChild(_dragArrowHead);
     }
 
     private void SetDragGuideVisible(bool visible)
     {
-        if (!IsInstanceValid(_dragGuide))
+        if (!IsInstanceValid(_dragGuide) || !IsInstanceValid(_dragArrowHead))
         {
             return;
         }
 
         _dragGuide.Visible = visible;
+        _dragArrowHead.Visible = visible;
         if (!visible)
         {
             _dragGuide.ClearPoints();
+            _dragArrowHead.ClearPoints();
+            _dragGuidePulseTime = 0f;
         }
     }
 
-    private void UpdateDragGuide(CardView card, Vector2 mouseGlobal, bool hot)
+    private void UpdateDragGuide(CardView card, Vector2 mouseGlobal)
     {
-        if (!IsInstanceValid(card) || !IsInstanceValid(_dragGuide) || !CardRequiresEnemyTarget(card.Card))
+        if (!IsInstanceValid(card) || !IsInstanceValid(_dragGuide) || !IsInstanceValid(_dragArrowHead) || !CardRequiresEnemyTarget(card.Card))
         {
             SetDragGuideVisible(false);
             return;
         }
 
         var cardCenter = card.GlobalPosition + card.Size * 0.5f;
-        var dropRect = _enemyDropArea.GetGlobalRect();
-        var enemyCenter = dropRect.Position + dropRect.Size * 0.5f;
-        var control = (cardCenter + enemyCenter) * 0.5f + new Vector2(0f, -64f);
+        var target = mouseGlobal;
+        var controlLift = Mathf.Clamp(cardCenter.DistanceTo(target) * 0.22f, 54f, 140f);
+        var control = (cardCenter + target) * 0.5f + new Vector2(0f, -controlLift);
 
         _dragGuide.ClearPoints();
-        _dragGuide.AddPoint(cardCenter);
-        _dragGuide.AddPoint(control);
-        _dragGuide.AddPoint(enemyCenter);
+        const int segments = 20;
+        for (var i = 0; i <= segments; i++)
+        {
+            var t = i / (float)segments;
+            var a = cardCenter.Lerp(control, t);
+            var b = control.Lerp(target, t);
+            var p = a.Lerp(b, t);
+            _dragGuide.AddPoint(p);
+        }
 
-        var nearTarget = enemyCenter.DistanceTo(mouseGlobal) < 240f;
-        var active = hot || nearTarget;
-        _dragGuide.DefaultColor = active ? new Color("86efac") : new Color("7dd3fc");
+        var active = _enemyDropArea.GetGlobalRect().HasPoint(mouseGlobal);
+        var color = active ? new Color("86efac") : new Color("7dd3fc");
+        _dragGuide.DefaultColor = color;
         _dragGuide.Width = active ? 4.5f : 3f;
+
+        var tHead = 0.94f;
+        var headA = cardCenter.Lerp(control, tHead);
+        var headB = control.Lerp(target, tHead);
+        var from = headA.Lerp(headB, tHead);
+        var tangent = (target - from).Normalized();
+        if (tangent.Length() < 0.01f)
+        {
+            tangent = Vector2.Right;
+        }
+        var normal = new Vector2(-tangent.Y, tangent.X);
+        var headLen = active ? 20f : 16f;
+        var headWidth = active ? 11f : 9f;
+        var tip = target;
+        var left = tip - tangent * headLen + normal * headWidth;
+        var right = tip - tangent * headLen - normal * headWidth;
+
+        _dragArrowHead.ClearPoints();
+        _dragArrowHead.AddPoint(left);
+        _dragArrowHead.AddPoint(tip);
+        _dragArrowHead.AddPoint(right);
+        _dragArrowHead.DefaultColor = color;
+        _dragArrowHead.Width = active ? 4.5f : 3f;
         _dragGuide.Visible = true;
+        _dragArrowHead.Visible = true;
     }
 
     private async Task AnimateDrawEntry(CardView card, Vector2 from, int index)

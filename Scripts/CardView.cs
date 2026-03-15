@@ -21,8 +21,14 @@ public partial class CardView : PanelContainer
     private float _dragTilt;
     private bool _hoverFocused;
     private bool _hoverDimmed;
+    private bool _lockPositionWhileDragging;
 
     public bool IsDragging => _dragging;
+    public bool LockPositionWhileDragging
+    {
+        get => _lockPositionWhileDragging;
+        set => _lockPositionWhileDragging = value;
+    }
 
     public CardData Card { get; private set; } = CardData.CreateById("strike");
 
@@ -73,10 +79,12 @@ public partial class CardView : PanelContainer
 
     public void SetPose(Vector2 globalPosition, float rotationDegrees, Vector2 poseScale, bool animate)
     {
+        var uniform = (poseScale.X + poseScale.Y) * 0.5f;
+        var uniformScale = new Vector2(uniform, uniform);
         _homeGlobalPosition = globalPosition;
         _targetGlobalPosition = globalPosition;
         _targetRotationDegrees = rotationDegrees;
-        _targetScale = poseScale;
+        _targetScale = uniformScale;
         Size = CustomMinimumSize;
         if (_dragging)
         {
@@ -87,7 +95,7 @@ public partial class CardView : PanelContainer
         {
             GlobalPosition = globalPosition;
             RotationDegrees = rotationDegrees;
-            Scale = poseScale;
+            Scale = uniformScale;
         }
     }
 
@@ -137,7 +145,10 @@ public partial class CardView : PanelContainer
                 _dragTilt = Mathf.Clamp(motion.Relative.X * 0.45f, -14f, 14f);
                 RotationDegrees = Mathf.Lerp(RotationDegrees, _dragTilt, 0.42f);
             }
-            GlobalPosition = GetGlobalMousePosition() - _dragOffset;
+            if (!_lockPositionWhileDragging)
+            {
+                GlobalPosition = GetGlobalMousePosition() - _dragOffset;
+            }
             DragMoved(this, GetGlobalMousePosition());
             GetViewport().SetInputAsHandled();
             return;
@@ -152,6 +163,11 @@ public partial class CardView : PanelContainer
 
     public override void _Process(double delta)
     {
+        if (Size != CustomMinimumSize)
+        {
+            Size = CustomMinimumSize;
+        }
+
         if (_dragging || _manualAnimating)
         {
             return;
@@ -357,7 +373,7 @@ public partial class CardView : PanelContainer
         _descLabel = new RichTextLabel
         {
             BbcodeEnabled = true,
-            FitContent = true,
+            FitContent = false,
             ScrollActive = false,
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(0, 96)
