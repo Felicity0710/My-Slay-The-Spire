@@ -114,12 +114,12 @@ public sealed class CardData
     {
         if (Catalog.CardsById.TryGetValue(id, out var card))
         {
-            return card;
+            return CloneCard(card);
         }
 
         if (Catalog.CardsById.TryGetValue("strike", out var fallback))
         {
-            return fallback;
+            return CloneCard(fallback);
         }
 
         throw new InvalidOperationException("No fallback card 'strike' configured in cards.json.");
@@ -133,6 +133,28 @@ public sealed class CardData
     public static List<string> RewardPoolIds()
     {
         return new List<string>(Catalog.RewardPool);
+    }
+
+    private static CardData CloneCard(CardData source)
+    {
+        var effects = source.Effects
+            .Select(effect => new CardEffectData(
+                effect.Type,
+                effect.Target,
+                effect.Amount,
+                effect.Repeat,
+                effect.UseAttackerStrength,
+                effect.UseTargetVulnerable,
+                effect.FlatBonus))
+            .ToList();
+
+        return new CardData(
+            source.Id,
+            source.Name,
+            source.Description,
+            source.Kind,
+            source.Cost,
+            effects);
     }
 
     private sealed class CardCatalog

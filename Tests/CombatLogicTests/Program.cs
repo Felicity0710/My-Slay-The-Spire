@@ -27,7 +27,8 @@ internal static class Program
             ("Elite encounter roster uses sentinel archetype", TestEliteEncounterRoster)
             ("Elite attack rate is higher than normal", TestEliteAttackRateHigher),
             ("Card effects aggregate into legacy fields", TestCardEffectsAggregateLegacyFields),
-            ("Card supports complex configurable effects", TestComplexCardEffectConfiguration)
+            ("Card supports complex configurable effects", TestComplexCardEffectConfiguration),
+            ("CreateById returns independent card instances", TestCreateByIdReturnsIndependentInstances)
         };
 
         var failed = 0;
@@ -305,6 +306,17 @@ internal static class Program
         ExpectEqual(CardEffectTarget.AllEnemies, effect.Target, nameof(effect.Target));
         ExpectEqual(4, effect.Amount, nameof(effect.Amount));
         ExpectEqual(2, effect.Repeat, nameof(effect.Repeat));
+    }
+
+    private static void TestCreateByIdReturnsIndependentInstances()
+    {
+        var a = CardData.CreateById("strike");
+        var b = CardData.CreateById("strike");
+
+        if (ReferenceEquals(a, b))
+        {
+            throw new InvalidOperationException("CreateById should return independent instances for duplicate cards in deck/hand.");
+        }
     }
 
     private static void TestEliteAttackRateHigher()

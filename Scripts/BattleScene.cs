@@ -2139,7 +2139,7 @@ public partial class BattleScene : Control
             Antialiased = true,
             TopLevel = true,
             Visible = false,
-            ZIndex = 5000
+            ZIndex = 1000
         };
         _dragArrowHead = new Line2D
         {
@@ -2148,7 +2148,7 @@ public partial class BattleScene : Control
             Antialiased = true,
             TopLevel = true,
             Visible = false,
-            ZIndex = 5001
+            ZIndex = 1001
         };
         _overlayCanvas.AddChild(_dragGuide);
         _overlayCanvas.AddChild(_dragArrowHead);
