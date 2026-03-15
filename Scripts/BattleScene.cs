@@ -592,6 +592,7 @@ public partial class BattleScene : Control
 
             var cardButton = _enemyCardScene.Instantiate<EnemyCardView>();
             var visual = CombatVisualCatalog.GetEnemyVisual(enemy.VisualId);
+            _enemyRosterGrid.AddChild(cardButton);
             cardButton.Configure(
                 enemy,
                 IntentCompactText(enemy),
@@ -611,7 +612,6 @@ public partial class BattleScene : Control
                 RefreshUi();
             };
 
-            _enemyRosterGrid.AddChild(cardButton);
             _enemyCardTargetByIndex[enemyIndex] = cardButton.EffectTarget();
             _enemyCardButtonByIndex[enemyIndex] = cardButton;
         }
