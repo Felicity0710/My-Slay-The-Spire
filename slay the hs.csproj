@@ -13,4 +13,8 @@
     <Content Include="Scenes\RelicRewardScene.tscn" />
     <Content Include="Scenes\RewardScene.tscn" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
+    <Compile Remove=".godot\**\*.cs" />
+  </ItemGroup>
 </Project>

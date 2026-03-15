@@ -4,13 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-public enum EnemyIntentType
-{
-    Attack,
-    Defend,
-    Buff
-}
-
 public partial class BattleScene : Control
 {
     private enum EnemyAnimState
@@ -27,6 +20,8 @@ public partial class BattleScene : Control
     private readonly List<CardData> _drawPile = new();
     private readonly List<CardData> _discardPile = new();
     private readonly List<CardData> _hand = new();
+    private readonly Dictionary<CardData, CardView> _handViews = new();
+    private readonly Stack<CardView> _cardViewPool = new();
 
     private Label _playerHpLabel = null!;
     private Label _playerBlockLabel = null!;
@@ -123,6 +118,7 @@ public partial class BattleScene : Control
     private CanvasLayer _overlayCanvas = null!;
 
     private CardView _hoveredCard = null!;
+    private GameState _state = null!;
     public Action<string> UiSfxRequested = _ => { };
     private const float HoverSwitchDeadzone = 18f;
 
@@ -180,6 +176,8 @@ public partial class BattleScene : Control
 
         SetupDropZoneStyles();
 
+        _state = GetNode<GameState>("/root/GameState");
+
         _endTurnButton.Pressed += EndTurn;
         GetNode<Button>("%BackButton").Pressed += BackToMap;
         _handContainer.Resized += () => LayoutHandCards(false);
@@ -192,7 +190,7 @@ public partial class BattleScene : Control
         _playerShadowBaseSize = _playerShadow.Size;
 
         Log("Battle start", "#cbd5e1");
-        StartBattleFlow();
+        _ = StartBattleFlow();
     }
 
     public override void _Process(double delta)
@@ -263,7 +261,20 @@ public partial class BattleScene : Control
         _playerShadow.Size = _playerShadowBaseSize * (1f + Mathf.Sin(_animTime * 1.2f) * 0.02f);
     }
 
-    private async void StartBattleFlow()
+    public override void _ExitTree()
+    {
+        foreach (var view in _cardViewPool)
+        {
+            if (IsInstanceValid(view))
+            {
+                view.QueueFree();
+            }
+        }
+        _cardViewPool.Clear();
+        _handViews.Clear();
+    }
+
+    private async Task StartBattleFlow()
     {
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         _playerPanelBasePos = _playerPanel.Position;
@@ -272,7 +283,7 @@ public partial class BattleScene : Control
         _enemyShadowBaseSize = _enemyShadow.Size;
         _playerShadowBaseSize = _playerShadow.Size;
         await PlayEnemyEntrance();
-        StartPlayerTurn();
+        await StartPlayerTurn();
     }
 
     private async Task PlayEnemyEntrance()
@@ -323,25 +334,23 @@ public partial class BattleScene : Control
 
     private void SetupFromGameState()
     {
-        var state = GetNode<GameState>("/root/GameState");
+        _playerHp = _state.PlayerHp;
+        _playerMaxHp = _state.MaxHp;
 
-        _playerHp = state.PlayerHp;
-        _playerMaxHp = state.MaxHp;
-
-        _isElite = state.PendingEncounterType == MapNodeType.EliteBattle;
+        _isElite = _state.PendingEncounterType == MapNodeType.EliteBattle;
         if (_isElite)
         {
             _enemyVisualId = "elite_sentinel";
-            _enemyHp = 85 + state.Floor * 12;
+            _enemyHp = 85 + _state.Floor * 12;
             _enemyMaxHp = _enemyHp;
-            _enemyStrength = Math.Max(state.Floor / 2, 1);
+            _enemyStrength = Math.Max(_state.Floor / 2, 1);
         }
         else
         {
             _enemyVisualId = "cultist";
-            _enemyHp = 50 + state.Floor * 9;
+            _enemyHp = 50 + _state.Floor * 9;
             _enemyMaxHp = _enemyHp;
-            _enemyStrength = Math.Max(state.Floor - 1, 0);
+            _enemyStrength = Math.Max(_state.Floor - 1, 0);
         }
 
         var visual = CombatVisualCatalog.GetEnemyVisual(_enemyVisualId);
@@ -353,11 +362,11 @@ public partial class BattleScene : Control
         _discardPile.Clear();
         _hand.Clear();
 
-        _drawPile.AddRange(state.CreateDeckCards());
-        Shuffle(_drawPile);
+        _drawPile.AddRange(_state.CreateDeckCards());
+        DeckFlowResolver.ShuffleInPlace(_drawPile, _rng);
     }
 
-    private async void StartPlayerTurn()
+    private async Task StartPlayerTurn()
     {
         if (_battleEnded)
         {
@@ -368,20 +377,20 @@ public partial class BattleScene : Control
         ClearRelicTurnMarkers();
         await ShowTurnBanner("Player Turn", new Color("38bdf8"));
 
-        var state = GetNode<GameState>("/root/GameState");
+        var hasLantern = _state.HasRelic("lantern");
+        var hasAnchor = _state.HasRelic("anchor");
+        var turnStart = TurnFlowResolver.ResolvePlayerTurnStart(_turn, MaxEnergy, hasLantern, hasAnchor);
 
-        _energy = MaxEnergy;
-        if (_turn == 1 && state.HasRelic("lantern"))
+        _energy = turnStart.Energy;
+        if (_turn == 1 && hasLantern)
         {
-            _energy += 1;
             Log("Lantern grants +1 energy", "#facc15");
             FlashRelic("lantern");
         }
 
-        _playerBlock = 0;
-        if (_turn == 1 && state.HasRelic("anchor"))
+        _playerBlock = turnStart.PlayerBlock;
+        if (_turn == 1 && hasAnchor)
         {
-            _playerBlock += 8;
             Log("Anchor grants 8 block", "#60a5fa");
             FlashRelic("anchor");
         }
@@ -395,22 +404,9 @@ public partial class BattleScene : Control
 
     private void RollEnemyIntent()
     {
-        var roll = _rng.Next(100);
-        if (roll < (_isElite ? 70 : 60))
-        {
-            _enemyIntentType = EnemyIntentType.Attack;
-            _enemyIntentValue = _isElite ? _rng.Next(9, 15) : _rng.Next(6, 11);
-        }
-        else if (roll < 85)
-        {
-            _enemyIntentType = EnemyIntentType.Defend;
-            _enemyIntentValue = _isElite ? 10 : 6;
-        }
-        else
-        {
-            _enemyIntentType = EnemyIntentType.Buff;
-            _enemyIntentValue = _isElite ? 3 : 2;
-        }
+        var intent = IntentResolver.RollEnemyIntent(_isElite, _rng);
+        _enemyIntentType = intent.Type;
+        _enemyIntentValue = intent.Value;
 
         Log($"Turn {_turn}: Enemy intent -> {IntentText()}", "#94a3b8");
     }
@@ -442,7 +438,12 @@ public partial class BattleScene : Control
         return CombatVisualCatalog.GetIntentIconPath(_enemyIntentType);
     }
 
-    private async void EndTurn()
+    private void EndTurn()
+    {
+        _ = EndTurnAsync();
+    }
+
+    private async Task EndTurnAsync()
     {
         if (_battleEnded || IsInputLocked())
         {
@@ -452,16 +453,14 @@ public partial class BattleScene : Control
         EmitUiSfx("turn_end");
         PushInputLock();
 
-        foreach (var card in _hand)
-        {
-            _discardPile.Add(card);
-        }
-        _hand.Clear();
+        TurnFlowResolver.MoveHandToDiscard(_hand, _discardPile);
 
         await RenderHand();
 
         await ShowTurnBanner("Enemy Turn", new Color("f87171"));
 
+        // Enemy block expires when their turn begins.
+        _enemyBlock = TurnFlowResolver.ResolveEnemyTurnStartBlock(_enemyBlock);
         ExecuteEnemyTurn();
         if (_battleEnded)
         {
@@ -473,7 +472,7 @@ public partial class BattleScene : Control
         _turn += 1;
         TickStatuses();
         PopInputLock();
-        StartPlayerTurn();
+        await StartPlayerTurn();
     }
 
     private void ExecuteEnemyTurn()
@@ -482,17 +481,19 @@ public partial class BattleScene : Control
         {
             case EnemyIntentType.Attack:
             {
-                var rawDamage = _enemyIntentValue + _enemyStrength;
-                var finalDamage = ApplyVulnerable(rawDamage, _playerVulnerable);
-                var blocked = Math.Min(_playerBlock, finalDamage);
-                var taken = finalDamage - blocked;
-                _playerBlock -= blocked;
-                _playerHp -= taken;
-                Log($"Enemy attacks {finalDamage}, blocked {blocked}, took {taken}", "#f87171");
-                if (taken > 0)
+                var resolution = CombatResolver.ResolveHit(
+                    _enemyIntentValue,
+                    _enemyStrength,
+                    _playerVulnerable,
+                    _playerBlock,
+                    _playerHp);
+                _playerBlock = resolution.RemainingBlock;
+                _playerHp = resolution.RemainingHp;
+                Log($"Enemy attacks {resolution.FinalDamage}, blocked {resolution.Blocked}, took {resolution.Taken}", "#f87171");
+                if (resolution.Taken > 0)
                 {
                     TriggerHitStop(0.045f);
-                    SpawnFloatingText(_playerPanel, $"-{taken}", new Color("fca5a5"));
+                    SpawnFloatingText(_playerPanel, $"-{resolution.Taken}", new Color("fca5a5"));
                     SpawnSlashEffect(_playerPanel, new Color("fecaca"));
                     FlashPanel(_playerPanel, new Color(1f, 0.5f, 0.5f, 1f));
                     PunchPanel(_playerPanel, -8f);
@@ -528,41 +529,31 @@ public partial class BattleScene : Control
 
     private void TickStatuses()
     {
-        _playerVulnerable = Math.Max(_playerVulnerable - 1, 0);
-        _enemyVulnerable = Math.Max(_enemyVulnerable - 1, 0);
-        _enemyBlock = 0;
+        var statuses = TurnFlowResolver.ResolveEndOfRoundStatuses(_playerVulnerable, _enemyVulnerable);
+        _playerVulnerable = statuses.PlayerVulnerable;
+        _enemyVulnerable = statuses.EnemyVulnerable;
     }
 
     private async Task DrawCards(int count)
     {
-        var entering = new HashSet<CardData>();
+        var drawResult = DeckFlowResolver.DrawIntoHand(
+            _drawPile,
+            _discardPile,
+            _hand,
+            count,
+            HandLimit,
+            _rng);
 
-        for (var i = 0; i < count; i++)
+        if (drawResult.HandLimitReached)
         {
-            if (_hand.Count >= HandLimit)
-            {
-                Log("Hand is full", "#f59e0b");
-                break;
-            }
-
-            if (_drawPile.Count == 0)
-            {
-                if (_discardPile.Count == 0)
-                {
-                    break;
-                }
-
-                _drawPile.AddRange(_discardPile);
-                _discardPile.Clear();
-                Shuffle(_drawPile);
-                Log("Shuffled discard into draw pile", "#94a3b8");
-            }
-
-            var card = _drawPile[0];
-            _drawPile.RemoveAt(0);
-            _hand.Add(card);
-            entering.Add(card);
+            Log("Hand is full", "#f59e0b");
         }
+        for (var i = 0; i < drawResult.ReshuffleCount; i++)
+        {
+            Log("Shuffled discard into draw pile", "#94a3b8");
+        }
+
+        var entering = new HashSet<CardData>(drawResult.DrawnCards);
 
         await RenderHand(entering);
     }
@@ -582,21 +573,24 @@ public partial class BattleScene : Control
 
         _energy -= card.Cost;
 
-        var state = GetNode<GameState>("/root/GameState");
-        var relicAttackBonus = state.HasRelic("whetstone") ? 1 : 0;
+        var relicAttackBonus = _state.HasRelic("whetstone") ? 1 : 0;
 
         if (card.Damage > 0)
         {
-            var rawDamage = card.Damage + _playerStrength + relicAttackBonus;
-            var finalDamage = ApplyVulnerable(rawDamage, _enemyVulnerable);
-            var damageToHp = Math.Max(finalDamage - _enemyBlock, 0);
-            _enemyBlock = Math.Max(_enemyBlock - finalDamage, 0);
-            _enemyHp -= damageToHp;
-            Log($"Play {card.Name}: damage {finalDamage} ({damageToHp} HP)", "#f87171");
-            if (damageToHp > 0)
+            var resolution = CombatResolver.ResolveHit(
+                card.Damage,
+                _playerStrength,
+                _enemyVulnerable,
+                _enemyBlock,
+                _enemyHp,
+                relicAttackBonus);
+            _enemyBlock = resolution.RemainingBlock;
+            _enemyHp = resolution.RemainingHp;
+            Log($"Play {card.Name}: damage {resolution.FinalDamage} ({resolution.Taken} HP)", "#f87171");
+            if (resolution.Taken > 0)
             {
                 TriggerHitStop(0.045f);
-                SpawnFloatingText(_enemyDropArea, $"-{damageToHp}", new Color("fda4af"));
+                SpawnFloatingText(_enemyDropArea, $"-{resolution.Taken}", new Color("fda4af"));
                 SpawnSlashEffect(_enemyDropArea, new Color("fda4af"));
                 TriggerEnemyHit();
                 FlashPanel(_enemyDropArea, new Color(1f, 0.55f, 0.55f, 1f));
@@ -637,7 +631,7 @@ public partial class BattleScene : Control
         if (_enemyHp <= 0)
         {
             _enemyHp = 0;
-            OnVictory();
+            await OnVictoryAsync();
             return true;
         }
 
@@ -645,7 +639,12 @@ public partial class BattleScene : Control
         return true;
     }
 
-    private async void OnCardDropAttempt(CardView view, Vector2 mouseGlobal)
+    private void OnCardDropAttempt(CardView view, Vector2 mouseGlobal)
+    {
+        _ = OnCardDropAttemptAsync(view, mouseGlobal);
+    }
+
+    private async Task OnCardDropAttemptAsync(CardView view, Vector2 mouseGlobal)
     {
         _draggingCard = null;
         view.LockPositionWhileDragging = false;
@@ -727,7 +726,12 @@ public partial class BattleScene : Control
         PopInputLock();
     }
 
-    private async void OnCardClicked(CardView view)
+    private void OnCardClicked(CardView view)
+    {
+        _ = OnCardClickedAsync(view);
+    }
+
+    private async Task OnCardClickedAsync(CardView view)
     {
         if (_battleEnded || IsInputLocked())
         {
@@ -1119,27 +1123,26 @@ public partial class BattleScene : Control
         tween.TweenProperty(target, "scale", originalScale, 0.11f);
     }
 
-    private async void OnVictory()
+    private async Task OnVictoryAsync()
     {
         _battleEnded = true;
         PushInputLock();
         await TriggerEnemyDeath();
         Log("Victory", "#22c55e");
 
-        var state = GetNode<GameState>("/root/GameState");
-        state.PlayerHp = _playerHp;
-        var hpBeforeResolve = state.PlayerHp;
-        state.ResolveBattleVictory();
-        if (state.PlayerHp > hpBeforeResolve && state.HasRelic("charm"))
+        _state.PlayerHp = _playerHp;
+        var hpBeforeResolve = _state.PlayerHp;
+        _state.ResolveBattleVictory();
+        if (_state.PlayerHp > hpBeforeResolve && _state.HasRelic("charm"))
         {
-            Log($"Lucky Charm heals {state.PlayerHp - hpBeforeResolve} HP", "#86efac");
+            Log($"Lucky Charm heals {_state.PlayerHp - hpBeforeResolve} HP", "#86efac");
             FlashRelic("charm");
         }
-        state.RollRewardOptions(3);
+        _state.RollRewardOptions(3);
 
         if (_isElite)
         {
-            state.RollRelicOptions(3);
+            _state.RollRelicOptions(3);
             GetTree().ChangeSceneToFile("res://Scenes/RelicRewardScene.tscn");
             return;
         }
@@ -1147,44 +1150,51 @@ public partial class BattleScene : Control
         GetTree().ChangeSceneToFile("res://Scenes/RewardScene.tscn");
     }
 
-    private int ApplyVulnerable(int baseDamage, int vulnerableTurns)
-    {
-        if (vulnerableTurns <= 0)
-        {
-            return baseDamage;
-        }
-
-        return Mathf.CeilToInt(baseDamage * 1.5f);
-    }
-
     private async Task RenderHand(HashSet<CardData> entering = null)
     {
-        foreach (Node child in _handContainer.GetChildren())
-        {
-            _handContainer.RemoveChild(child);
-            child.QueueFree();
-        }
-
-        _hoveredCard = null;
+        var previousViews = new Dictionary<CardData, CardView>(_handViews);
+        _handViews.Clear();
         var entrants = new List<CardView>();
 
-        foreach (var card in _hand)
+        for (var i = 0; i < _hand.Count; i++)
         {
-            var cardView = new CardView();
+            var card = _hand[i];
+            CardView cardView;
+            if (previousViews.TryGetValue(card, out var existingView) && IsInstanceValid(existingView))
+            {
+                cardView = existingView;
+                previousViews.Remove(card);
+            }
+            else
+            {
+                cardView = AcquireCardView();
+            }
+
             cardView.Setup(card);
             cardView.SetPlayable(!IsInputLocked() && card.Cost <= _energy);
-            cardView.DropAttempted += OnCardDropAttempt;
-            cardView.Clicked += OnCardClicked;
-            cardView.DragMoved += OnCardDragMoved;
-            cardView.DragStarted += OnCardDragStarted;
-            cardView.DragEnded += OnCardDragEnded;
-            cardView.HoverChanged += OnCardHoverChanged;
-            _handContainer.AddChild(cardView);
+            if (cardView.GetParent() != _handContainer)
+            {
+                _handContainer.AddChild(cardView);
+            }
+            _handContainer.MoveChild(cardView, i);
+            _handViews[card] = cardView;
 
             if (entering != null && entering.Contains(card))
             {
                 entrants.Add(cardView);
             }
+        }
+
+        foreach (var stale in previousViews.Values)
+        {
+            RecycleCardView(stale);
+        }
+        previousViews.Clear();
+
+        if (IsInstanceValid(_hoveredCard) && !_handViews.ContainsValue(_hoveredCard))
+        {
+            _hoveredCard = null;
+            HideKeywordTooltip();
         }
 
         LayoutHandCards(false);
@@ -1205,6 +1215,54 @@ public partial class BattleScene : Control
 
         await Task.WhenAll(tasks);
         LayoutHandCards(true);
+    }
+
+    private CardView AcquireCardView()
+    {
+        CardView cardView;
+        while (_cardViewPool.Count > 0)
+        {
+            cardView = _cardViewPool.Pop();
+            if (!IsInstanceValid(cardView))
+            {
+                continue;
+            }
+
+            cardView.Visible = true;
+            cardView.PrepareForReuse();
+            return cardView;
+        }
+
+        cardView = new CardView();
+        cardView.DropAttempted += OnCardDropAttempt;
+        cardView.Clicked += OnCardClicked;
+        cardView.DragMoved += OnCardDragMoved;
+        cardView.DragStarted += OnCardDragStarted;
+        cardView.DragEnded += OnCardDragEnded;
+        cardView.HoverChanged += OnCardHoverChanged;
+        return cardView;
+    }
+
+    private void RecycleCardView(CardView cardView)
+    {
+        if (!IsInstanceValid(cardView))
+        {
+            return;
+        }
+
+        if (_hoveredCard == cardView)
+        {
+            _hoveredCard = null;
+            HideKeywordTooltip();
+        }
+
+        cardView.PrepareForReuse();
+        cardView.Visible = false;
+        if (cardView.GetParent() == _handContainer)
+        {
+            _handContainer.RemoveChild(cardView);
+        }
+        _cardViewPool.Push(cardView);
     }
 
     private void LayoutHandCards(bool animate)
@@ -1397,8 +1455,7 @@ public partial class BattleScene : Control
             return;
         }
 
-        var state = GetNode<GameState>("/root/GameState");
-        state.PlayerHp = _playerHp;
+        _state.PlayerHp = _playerHp;
         GetTree().ChangeSceneToFile("res://Scenes/MapScene.tscn");
     }
 
@@ -1439,20 +1496,18 @@ public partial class BattleScene : Control
 
     private string BuildRelicBarText()
     {
-        var state = GetNode<GameState>("/root/GameState");
-        if (state.RelicIds.Count == 0)
+        if (_state.RelicIds.Count == 0)
         {
             return "Relics: None";
         }
 
-        var names = state.RelicIds.Select(id => RelicData.CreateById(id).Name);
+        var names = _state.RelicIds.Select(id => RelicData.CreateById(id).Name);
         return $"Relics: {string.Join(" | ", names)}";
     }
 
     private void RefreshRelicIcons()
     {
-        var state = GetNode<GameState>("/root/GameState");
-        var signature = string.Join("|", state.RelicIds);
+        var signature = string.Join("|", _state.RelicIds);
         if (signature == _relicUiSignature)
         {
             return;
@@ -1466,7 +1521,7 @@ public partial class BattleScene : Control
         }
         _relicChipById.Clear();
         _relicTriggerDotById.Clear();
-        foreach (var relicId in state.RelicIds)
+        foreach (var relicId in _state.RelicIds)
         {
             var relic = RelicData.CreateById(relicId);
             var chip = new PanelContainer
@@ -1795,12 +1850,4 @@ public partial class BattleScene : Control
         LayoutHandCards(false);
     }
 
-    private void Shuffle<T>(IList<T> list)
-    {
-        for (var i = list.Count - 1; i > 0; i--)
-        {
-            var j = _rng.Next(i + 1);
-            (list[i], list[j]) = (list[j], list[i]);
-        }
-    }
 }

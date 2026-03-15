@@ -112,6 +112,25 @@ public partial class CardView : PanelContainer
         UpdateModulate();
     }
 
+    public void PrepareForReuse()
+    {
+        _dragging = false;
+        _dragResolvedThisPress = false;
+        _manualAnimating = false;
+        _dragTilt = 0f;
+        _hoverFocused = false;
+        _hoverDimmed = false;
+        _lockPositionWhileDragging = false;
+        _playable = true;
+        ZIndex = 0;
+        RotationDegrees = 0f;
+        Scale = Vector2.One;
+        _targetGlobalPosition = GlobalPosition;
+        _targetRotationDegrees = 0f;
+        _targetScale = Vector2.One;
+        UpdateModulate();
+    }
+
     public override void _GuiInput(InputEvent @event)
     {
         if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)

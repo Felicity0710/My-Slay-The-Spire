@@ -127,9 +127,8 @@ layout_mode = 2
 text = "Relics: None"
 
 [node name="RelicScroll" type="ScrollContainer" parent="MainMargin/MainVBox/TopHud/TopHudRow"]
-layout_mode = 2
 custom_minimum_size = Vector2(300, 0)
-horizontal_scroll_mode = 1
+layout_mode = 2
 vertical_scroll_mode = 0
 
 [node name="RelicIcons" type="HBoxContainer" parent="MainMargin/MainVBox/TopHud/TopHudRow/RelicScroll"]
@@ -290,6 +289,10 @@ anchor_left = 0.6
 anchor_top = 0.22
 anchor_right = 0.98
 anchor_bottom = 0.88
+offset_left = 69.599976
+offset_top = 18.320007
+offset_right = -46.32007
+offset_bottom = -100.71997
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
