@@ -25,6 +25,10 @@ internal static class Program
             ("Elite attack rate is higher than normal", TestEliteAttackRateHigher),
             ("Normal encounter roster scales by floor", TestNormalEncounterRoster),
             ("Elite encounter roster uses sentinel archetype", TestEliteEncounterRoster)
+            ("Elite attack rate is higher than normal", TestEliteAttackRateHigher),
+            ("Card effects aggregate into legacy fields", TestCardEffectsAggregateLegacyFields),
+            ("Card supports complex configurable effects", TestComplexCardEffectConfiguration),
+            ("CreateById returns independent card instances", TestCreateByIdReturnsIndependentInstances)
         };
 
         var failed = 0;
@@ -275,6 +279,43 @@ internal static class Program
                     ExpectEqual(3, intent.Value, "elite buff value");
                     break;
             }
+        }
+    }
+
+    private static void TestCardEffectsAggregateLegacyFields()
+    {
+        var card = CardData.CreateById("quick_slash");
+
+        ExpectEqual(2, card.Effects.Count, "card.Effects.Count");
+        ExpectEqual(7, card.Damage, nameof(card.Damage));
+        ExpectEqual(0, card.Block, nameof(card.Block));
+        ExpectEqual(0, card.ApplyVulnerable, nameof(card.ApplyVulnerable));
+        ExpectEqual(1, card.DrawCount, nameof(card.DrawCount));
+        ExpectEqual(true, card.HasEffect(CardEffectType.Damage), "card.HasEffect(Damage)");
+        ExpectEqual(true, card.HasEffect(CardEffectType.DrawCards), "card.HasEffect(DrawCards)");
+    }
+
+    private static void TestComplexCardEffectConfiguration()
+    {
+        var card = CardData.CreateById("whirlwind");
+
+        ExpectEqual(CardKind.Attack, card.Kind, nameof(card.Kind));
+        ExpectEqual(1, card.Effects.Count, "card.Effects.Count");
+        var effect = card.Effects[0];
+        ExpectEqual(CardEffectType.Damage, effect.Type, nameof(effect.Type));
+        ExpectEqual(CardEffectTarget.AllEnemies, effect.Target, nameof(effect.Target));
+        ExpectEqual(4, effect.Amount, nameof(effect.Amount));
+        ExpectEqual(2, effect.Repeat, nameof(effect.Repeat));
+    }
+
+    private static void TestCreateByIdReturnsIndependentInstances()
+    {
+        var a = CardData.CreateById("strike");
+        var b = CardData.CreateById("strike");
+
+        if (ReferenceEquals(a, b))
+        {
+            throw new InvalidOperationException("CreateById should return independent instances for duplicate cards in deck/hand.");
         }
     }
 

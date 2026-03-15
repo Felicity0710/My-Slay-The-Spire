@@ -769,6 +769,12 @@ public partial class BattleScene : Control
             return false;
         }
 
+        if (CardRequiresEnemyTarget(card) && !CurrentEnemy.IsAlive)
+        {
+            Log("Target is already defeated", "#f59e0b");
+            return false;
+        }
+
         if (card.Cost > _energy)
         {
             Log($"Not enough energy for {card.Name}", "#f59e0b");
@@ -778,71 +784,46 @@ public partial class BattleScene : Control
         _energy -= card.Cost;
 
         var relicAttackBonus = _state.HasRelic("whetstone") ? 1 : 0;
+        var drawCount = 0;
 
-        if (card.Damage > 0)
+        foreach (var effect in card.Effects)
         {
-            var targetEnemy = CurrentEnemy;
-            if (!targetEnemy.IsAlive)
+            for (var i = 0; i < effect.Repeat; i++)
             {
-                Log("Target is already defeated", "#f59e0b");
-                return false;
+                switch (effect.Type)
+                {
+                    case CardEffectType.Damage:
+                        ResolveDamageCardEffect(card, effect, relicAttackBonus);
+                        break;
+                    case CardEffectType.GainBlock:
+                        if (effect.Target == CardEffectTarget.Player && effect.Amount > 0)
+                        {
+                            _playerBlock += effect.Amount;
+                            Log($"Play {card.Name}: gain {effect.Amount} Block", "#60a5fa");
+                            SpawnFloatingText(_playerPanel, $"+{effect.Amount}", new Color("93c5fd"));
+                            SpawnShieldEffect(_playerPanel, new Color("93c5fd"));
+                        }
+                        break;
+                    case CardEffectType.ApplyVulnerable:
+                        ResolveApplyVulnerableEffect(card, effect);
+                        break;
+                    case CardEffectType.DrawCards:
+                        if (effect.Amount > 0)
+                        {
+                            drawCount += effect.Amount;
+                        }
+                        break;
+                }
             }
-            var targetIndex = _selectedEnemyIndex;
-            var effectTarget = EnemyEffectTarget(targetIndex);
-
-            var resolution = CombatResolver.ResolveHit(
-                card.Damage,
-                _playerStrength,
-                targetEnemy.Vulnerable,
-                targetEnemy.Block,
-                targetEnemy.Hp,
-                relicAttackBonus);
-            targetEnemy.Block = resolution.RemainingBlock;
-            targetEnemy.Hp = resolution.RemainingHp;
-            Log($"Play {card.Name}: damage {resolution.FinalDamage} ({resolution.Taken} HP)", "#f87171");
-            if (resolution.Taken > 0)
-            {
-                TriggerHitStop(0.045f);
-                SpawnFloatingText(effectTarget, $"-{resolution.Taken}", new Color("fda4af"));
-                SpawnSlashEffect(effectTarget, new Color("fda4af"));
-                TriggerEnemyHit();
-                FlashPanel(effectTarget, new Color(1f, 0.55f, 0.55f, 1f));
-                PunchPanel(effectTarget, 8f);
-                PulseImpact(effectTarget, 1.05f);
-            }
-        }
-
-        if (card.Block > 0)
-        {
-            _playerBlock += card.Block;
-            Log($"Play {card.Name}: gain {card.Block} Block", "#60a5fa");
-            SpawnFloatingText(_playerPanel, $"+{card.Block}", new Color("93c5fd"));
-            SpawnShieldEffect(_playerPanel, new Color("93c5fd"));
-        }
-
-        if (card.ApplyVulnerable > 0)
-        {
-            var targetEnemy = CurrentEnemy;
-            if (!targetEnemy.IsAlive)
-            {
-                Log("Target is already defeated", "#f59e0b");
-                return false;
-            }
-            var effectTarget = EnemyEffectTarget(_selectedEnemyIndex);
-
-            targetEnemy.Vulnerable += card.ApplyVulnerable;
-            Log($"Play {card.Name}: apply {card.ApplyVulnerable} Vulnerable", "#c084fc");
-            SpawnFloatingText(effectTarget, $"VUL+{card.ApplyVulnerable}", new Color("d8b4fe"));
-            SpawnRuneEffect(effectTarget, new Color("d8b4fe"));
         }
 
         _hand.Remove(card);
         _discardPile.Add(card);
 
-        if (card.DrawCount > 0)
+        if (drawCount > 0)
         {
-            Log($"Play {card.Name}: draw {card.DrawCount}", "#93c5fd");
-            await DrawCards(card.DrawCount);
+            Log($"Play {card.Name}: draw {drawCount}", "#93c5fd");
+            await DrawCards(drawCount);
         }
         else
         {
@@ -1095,7 +1076,106 @@ public partial class BattleScene : Control
 
     private bool CardRequiresEnemyTarget(CardData card)
     {
-        return card.Damage > 0 || card.ApplyVulnerable > 0;
+        return card.Effects.Any(effect =>
+            (effect.Type == CardEffectType.Damage || effect.Type == CardEffectType.ApplyVulnerable)
+            && effect.Target == CardEffectTarget.SelectedEnemy);
+    }
+
+    private void ResolveDamageCardEffect(CardData card, CardEffectData effect, int relicAttackBonus)
+    {
+        if (effect.Amount <= 0)
+        {
+            return;
+        }
+
+        if (effect.Target == CardEffectTarget.AllEnemies)
+        {
+            for (var enemyIndex = 0; enemyIndex < _enemies.Count; enemyIndex++)
+            {
+                if (_enemies[enemyIndex].IsAlive)
+                {
+                    ApplyDamageToEnemy(enemyIndex, card, effect, relicAttackBonus);
+                }
+            }
+            return;
+        }
+
+        ApplyDamageToEnemy(_selectedEnemyIndex, card, effect, relicAttackBonus);
+    }
+
+    private void ResolveApplyVulnerableEffect(CardData card, CardEffectData effect)
+    {
+        if (effect.Amount <= 0)
+        {
+            return;
+        }
+
+        if (effect.Target == CardEffectTarget.AllEnemies)
+        {
+            for (var enemyIndex = 0; enemyIndex < _enemies.Count; enemyIndex++)
+            {
+                if (_enemies[enemyIndex].IsAlive)
+                {
+                    ApplyVulnerableToEnemy(enemyIndex, card.Name, effect.Amount);
+                }
+            }
+            return;
+        }
+
+        ApplyVulnerableToEnemy(_selectedEnemyIndex, card.Name, effect.Amount);
+    }
+
+    private void ApplyDamageToEnemy(int enemyIndex, CardData card, CardEffectData effect, int relicAttackBonus)
+    {
+        var targetEnemy = _enemies[enemyIndex];
+        if (!targetEnemy.IsAlive)
+        {
+            return;
+        }
+
+        var strength = effect.UseAttackerStrength ? _playerStrength : 0;
+        var vulnerable = effect.UseTargetVulnerable ? targetEnemy.Vulnerable : 0;
+        var flatBonus = effect.FlatBonus + relicAttackBonus;
+
+        var resolution = CombatResolver.ResolveHit(
+            effect.Amount,
+            strength,
+            vulnerable,
+            targetEnemy.Block,
+            targetEnemy.Hp,
+            flatBonus);
+
+        targetEnemy.Block = resolution.RemainingBlock;
+        targetEnemy.Hp = resolution.RemainingHp;
+
+        var effectTarget = EnemyEffectTarget(enemyIndex);
+        Log($"Play {card.Name}: damage {resolution.FinalDamage} ({resolution.Taken} HP)", "#f87171");
+        if (resolution.Taken > 0)
+        {
+            TriggerHitStop(0.045f);
+            SpawnFloatingText(effectTarget, $"-{resolution.Taken}", new Color("fda4af"));
+            SpawnSlashEffect(effectTarget, new Color("fda4af"));
+            TriggerEnemyHit();
+            FlashPanel(effectTarget, new Color(1f, 0.55f, 0.55f, 1f));
+            PunchPanel(effectTarget, 8f);
+            PulseImpact(effectTarget, 1.05f);
+        }
+    }
+
+    private void ApplyVulnerableToEnemy(int enemyIndex, string cardName, int amount)
+    {
+        var enemy = _enemies[enemyIndex];
+        if (!enemy.IsAlive)
+        {
+            return;
+        }
+
+        enemy.Vulnerable += amount;
+        var effectTarget = EnemyEffectTarget(enemyIndex);
+
+        Log($"Play {cardName}: apply {amount} Vulnerable", "#c084fc");
+        SpawnFloatingText(effectTarget, $"VUL+{amount}", new Color("d8b4fe"));
+        SpawnRuneEffect(effectTarget, new Color("d8b4fe"));
     }
 
     private void SetDropZoneHighlight(bool highlight)
@@ -1997,7 +2077,7 @@ public partial class BattleScene : Control
             Antialiased = true,
             TopLevel = true,
             Visible = false,
-            ZIndex = 5000
+            ZIndex = 1000
         };
         _dragArrowHead = new Line2D
         {
@@ -2006,7 +2086,7 @@ public partial class BattleScene : Control
             Antialiased = true,
             TopLevel = true,
             Visible = false,
-            ZIndex = 5001
+            ZIndex = 1001
         };
         _overlayCanvas.AddChild(_dragGuide);
         _overlayCanvas.AddChild(_dragArrowHead);
