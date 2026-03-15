@@ -1,0 +1,149 @@
+{
+  "cards": [
+    {
+      "id": "strike",
+      "name": "Strike",
+      "description": "Deal 6 damage.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "defend",
+      "name": "Defend",
+      "description": "Gain 5 Block.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 5,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "heavy_slash",
+      "name": "Heavy Slash",
+      "description": "Deal 12 damage.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 12
+        }
+      ]
+    },
+    {
+      "id": "bash",
+      "name": "Bash",
+      "description": "Deal 8 damage. Apply 2 Vulnerable.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 8
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "SelectedEnemy",
+          "amount": 2,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "shrug",
+      "name": "Shrug It Off",
+      "description": "Gain 8 Block. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 8,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "quick_slash",
+      "name": "Quick Slash",
+      "description": "Deal 7 damage. Draw 1 card.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 7
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "whirlwind",
+      "name": "Whirlwind",
+      "description": "Deal 4 damage to all enemies twice.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "AllEnemies",
+          "amount": 4,
+          "repeat": 2
+        }
+      ]
+    }
+  ],
+  "starterDeck": [
+    "strike",
+    "defend",
+    "strike",
+    "defend",
+    "strike",
+    "defend",
+    "strike",
+    "defend",
+    "strike",
+    "defend",
+    "bash"
+  ],
+  "rewardPool": [
+    "heavy_slash",
+    "shrug",
+    "quick_slash",
+    "whirlwind",
+    "bash",
+    "strike",
+    "defend"
+  ]
+}
