@@ -963,11 +963,22 @@ public partial class BattleScene : Control
 
         if (!TryGetEnemyIndexAt(mouseGlobal, out var targetEnemyIndex))
         {
-            EmitUiSfx("card_cancel");
-            UpdateEnemySelectionUi();
-            await view.AnimateBackToHand();
-            LayoutHandCards(true);
-            return;
+            var selectedAlive = _selectedEnemyIndex >= 0
+                && _selectedEnemyIndex < _enemies.Count
+                && _enemies[_selectedEnemyIndex].IsAlive;
+            var droppedInEnemyZone = _enemyDropArea.GetGlobalRect().Grow(8f).HasPoint(mouseGlobal);
+            if (selectedAlive && droppedInEnemyZone)
+            {
+                targetEnemyIndex = _selectedEnemyIndex;
+            }
+            else
+            {
+                EmitUiSfx("card_cancel");
+                UpdateEnemySelectionUi();
+                await view.AnimateBackToHand();
+                LayoutHandCards(true);
+                return;
+            }
         }
 
         _selectedEnemyIndex = targetEnemyIndex;
