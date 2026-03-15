@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 public enum EnemyIntentType
@@ -31,13 +32,21 @@ public partial class BattleScene : Control
     private Label _turnLabel = null!;
     private Label _energyLabel = null!;
     private Label _handCountLabel = null!;
+    private Label _relicBarLabel = null!;
     private RichTextLabel _logText = null!;
+    private HBoxContainer _relicIcons = null!;
 
     private Control _mainMargin = null!;
     private Control _handContainer = null!;
     private Control _enemyDropArea = null!;
     private Label _dropHintLabel = null!;
     private Label _enemyBodyLabel = null!;
+    private ColorRect _enemySprite = null!;
+    private TextureRect _enemyPortrait = null!;
+    private ProgressBar _enemyHpBar = null!;
+    private Control _enemyIntentBadge = null!;
+    private TextureRect _enemyIntentIcon = null!;
+    private Label _enemyIntentValueLabel = null!;
     private Control _playerPanel = null!;
     private Control _enemyPanel = null!;
     private Control _turnBanner = null!;
@@ -57,11 +66,13 @@ public partial class BattleScene : Control
     private int _playerVulnerable;
 
     private int _enemyHp;
+    private int _enemyMaxHp;
     private int _enemyBlock;
     private int _enemyStrength;
     private int _enemyVulnerable;
 
     private string _enemyName = "Enemy";
+    private string _enemyVisualId = "cultist";
     private bool _isElite;
 
     private EnemyIntentType _enemyIntentType;
@@ -70,6 +81,9 @@ public partial class BattleScene : Control
     private int _energy;
     private bool _battleEnded;
     private int _inputLockDepth;
+    private string _relicUiSignature = string.Empty;
+    private readonly Dictionary<string, PanelContainer> _relicChipById = new();
+    private readonly Dictionary<string, Texture2D> _iconCache = new();
 
     private CardView _hoveredCard = null!;
 
@@ -86,6 +100,8 @@ public partial class BattleScene : Control
         _turnLabel = GetNode<Label>("%TurnLabel");
         _energyLabel = GetNode<Label>("%EnergyLabel");
         _handCountLabel = GetNode<Label>("%HandCountLabel");
+        _relicBarLabel = GetNode<Label>("%RelicBarLabel");
+        _relicIcons = GetNode<HBoxContainer>("%RelicIcons");
         _logText = GetNode<RichTextLabel>("%LogText");
 
         _mainMargin = GetNode<Control>("%MainMargin");
@@ -93,6 +109,12 @@ public partial class BattleScene : Control
         _enemyDropArea = GetNode<Control>("%EnemyDropArea");
         _dropHintLabel = GetNode<Label>("%DropHintLabel");
         _enemyBodyLabel = GetNode<Label>("%EnemyBodyLabel");
+        _enemySprite = GetNode<ColorRect>("%EnemySprite");
+        _enemyPortrait = GetNode<TextureRect>("%EnemyPortrait");
+        _enemyHpBar = GetNode<ProgressBar>("%EnemyHpBar");
+        _enemyIntentBadge = GetNode<Control>("%EnemyIntentBadge");
+        _enemyIntentIcon = GetNode<TextureRect>("%EnemyIntentIcon");
+        _enemyIntentValueLabel = GetNode<Label>("%EnemyIntentValue");
         _playerPanel = GetNode<Control>("%PlayerPanel");
         _enemyPanel = GetNode<Control>("%EnemyPanel");
         _turnBanner = GetNode<Control>("%TurnBanner");
@@ -111,6 +133,12 @@ public partial class BattleScene : Control
         SetupFromGameState();
 
         Log("Battle start", "#cbd5e1");
+        StartBattleFlow();
+    }
+
+    private async void StartBattleFlow()
+    {
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         StartPlayerTurn();
     }
 
@@ -150,16 +178,23 @@ public partial class BattleScene : Control
         _isElite = state.PendingEncounterType == MapNodeType.EliteBattle;
         if (_isElite)
         {
-            _enemyName = "Elite Sentinel";
+            _enemyVisualId = "elite_sentinel";
             _enemyHp = 85 + state.Floor * 12;
+            _enemyMaxHp = _enemyHp;
             _enemyStrength = Math.Max(state.Floor / 2, 1);
         }
         else
         {
-            _enemyName = "Cultist";
+            _enemyVisualId = "cultist";
             _enemyHp = 50 + state.Floor * 9;
+            _enemyMaxHp = _enemyHp;
             _enemyStrength = Math.Max(state.Floor - 1, 0);
         }
+
+        var visual = CombatVisualCatalog.GetEnemyVisual(_enemyVisualId);
+        _enemyName = visual.DisplayName;
+        _enemySprite.Color = visual.StageTint;
+        _enemyPortrait.Texture = LoadTextureCached(visual.PortraitPath);
 
         _drawPile.Clear();
         _discardPile.Clear();
@@ -186,6 +221,7 @@ public partial class BattleScene : Control
         {
             _energy += 1;
             Log("Lantern grants +1 energy", "#facc15");
+            FlashRelic("lantern");
         }
 
         _playerBlock = 0;
@@ -193,6 +229,7 @@ public partial class BattleScene : Control
         {
             _playerBlock += 8;
             Log("Anchor grants 8 block", "#60a5fa");
+            FlashRelic("anchor");
         }
 
         await DrawCards(5);
@@ -233,6 +270,22 @@ public partial class BattleScene : Control
             EnemyIntentType.Buff => $"Gain {_enemyIntentValue} Strength",
             _ => "-"
         };
+    }
+
+    private string IntentBadgeText()
+    {
+        return _enemyIntentType switch
+        {
+            EnemyIntentType.Attack => $"{_enemyIntentValue + _enemyStrength}",
+            EnemyIntentType.Defend => $"{_enemyIntentValue}",
+            EnemyIntentType.Buff => $"+{_enemyIntentValue}",
+            _ => "-"
+        };
+    }
+
+    private string IntentIconText()
+    {
+        return CombatVisualCatalog.GetIntentIconPath(_enemyIntentType);
     }
 
     private async void EndTurn()
@@ -383,9 +436,9 @@ public partial class BattleScene : Control
             Log($"Play {card.Name}: damage {finalDamage} ({damageToHp} HP)", "#f87171");
             if (damageToHp > 0)
             {
-                SpawnFloatingText(_enemyPanel, $"-{damageToHp}", new Color("fda4af"));
-                FlashPanel(_enemyPanel, new Color(1f, 0.55f, 0.55f, 1f));
-                PunchPanel(_enemyPanel, 8f);
+                SpawnFloatingText(_enemyDropArea, $"-{damageToHp}", new Color("fda4af"));
+                FlashPanel(_enemyDropArea, new Color(1f, 0.55f, 0.55f, 1f));
+                PunchPanel(_enemyDropArea, 8f);
                 ShakeMain(4f, 5);
             }
         }
@@ -401,7 +454,7 @@ public partial class BattleScene : Control
         {
             _enemyVulnerable += card.ApplyVulnerable;
             Log($"Play {card.Name}: apply {card.ApplyVulnerable} Vulnerable", "#c084fc");
-            SpawnFloatingText(_enemyPanel, $"VUL+{card.ApplyVulnerable}", new Color("d8b4fe"));
+            SpawnFloatingText(_enemyDropArea, $"VUL+{card.ApplyVulnerable}", new Color("d8b4fe"));
         }
 
         _hand.Remove(card);
@@ -577,6 +630,9 @@ public partial class BattleScene : Control
         }
 
         _mainMargin.Position = original;
+        // Cards are positioned in global space; after screen shake, force a re-layout
+        // so they snap back to the correct fan positions.
+        LayoutHandCards(false);
     }
 
     private async Task ShowTurnBanner(string text, Color tint)
@@ -642,7 +698,13 @@ public partial class BattleScene : Control
 
         var state = GetNode<GameState>("/root/GameState");
         state.PlayerHp = _playerHp;
+        var hpBeforeResolve = state.PlayerHp;
         state.ResolveBattleVictory();
+        if (state.PlayerHp > hpBeforeResolve && state.HasRelic("charm"))
+        {
+            Log($"Lucky Charm heals {state.PlayerHp - hpBeforeResolve} HP", "#86efac");
+            FlashRelic("charm");
+        }
         state.RollRewardOptions(3);
 
         if (_isElite)
@@ -776,18 +838,125 @@ public partial class BattleScene : Control
         _enemyHpLabel.Text = $"Enemy HP: {_enemyHp}";
         _enemyBlockLabel.Text = $"Enemy Block: {_enemyBlock}";
         _enemyStatusLabel.Text = $"Enemy Status: STR {_enemyStrength}, VUL {_enemyVulnerable}";
+        _enemyHpBar.MaxValue = Math.Max(_enemyMaxHp, 1);
+        _enemyHpBar.Value = Math.Max(_enemyHp, 0);
+        _enemyIntentIcon.Texture = _battleEnded ? null : LoadTextureCached(IntentIconText());
+        _enemyIntentValueLabel.Text = _battleEnded ? "-" : IntentBadgeText();
+        _enemyIntentBadge.Modulate = _enemyIntentType switch
+        {
+            EnemyIntentType.Attack => new Color("fecaca"),
+            EnemyIntentType.Defend => new Color("bfdbfe"),
+            EnemyIntentType.Buff => new Color("e9d5ff"),
+            _ => Colors.White
+        };
 
         _enemyIntentLabel.Text = _battleEnded ? "Intent: -" : $"Intent: {IntentText()}";
         _turnLabel.Text = $"Turn: {_turn}";
         _energyLabel.Text = $"Energy: {_energy}/{MaxEnergy}";
         _handCountLabel.Text = $"Hand: {_hand.Count} | Draw: {_drawPile.Count} | Discard: {_discardPile.Count}";
+        _relicBarLabel.Text = BuildRelicBarText();
+        RefreshRelicIcons();
 
         UpdateInputControls();
     }
 
+    private string BuildRelicBarText()
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        if (state.RelicIds.Count == 0)
+        {
+            return "Relics: None";
+        }
+
+        var names = state.RelicIds.Select(id => RelicData.CreateById(id).Name);
+        return $"Relics: {string.Join(" | ", names)}";
+    }
+
+    private void RefreshRelicIcons()
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        var signature = string.Join("|", state.RelicIds);
+        if (signature == _relicUiSignature)
+        {
+            return;
+        }
+
+        _relicUiSignature = signature;
+
+        foreach (Node child in _relicIcons.GetChildren())
+        {
+            child.QueueFree();
+        }
+        _relicChipById.Clear();
+        foreach (var relicId in state.RelicIds)
+        {
+            var relic = RelicData.CreateById(relicId);
+            var chip = new PanelContainer
+            {
+                CustomMinimumSize = new Vector2(48, 28),
+                TooltipText = relic.ToRelicText()
+            };
+            var chipStyle = new StyleBoxFlat
+            {
+                BgColor = new Color("1b2936"),
+                BorderColor = new Color("6ea0c8"),
+                BorderWidthLeft = 1,
+                BorderWidthTop = 1,
+                BorderWidthRight = 1,
+                BorderWidthBottom = 1,
+                CornerRadiusTopLeft = 6,
+                CornerRadiusTopRight = 6,
+                CornerRadiusBottomLeft = 6,
+                CornerRadiusBottomRight = 6
+            };
+            chip.AddThemeStyleboxOverride("panel", chipStyle);
+
+            var icon = new TextureRect
+            {
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+                Texture = LoadTextureCached(CombatVisualCatalog.GetRelicIconPath(relicId))
+            };
+            chip.AddChild(icon);
+            _relicIcons.AddChild(chip);
+            _relicChipById[relicId] = chip;
+        }
+    }
+
+    private void FlashRelic(string relicId)
+    {
+        if (!_relicChipById.TryGetValue(relicId, out var chip) || !IsInstanceValid(chip))
+        {
+            return;
+        }
+
+        var tween = CreateTween();
+        tween.SetEase(Tween.EaseType.Out);
+        tween.SetTrans(Tween.TransitionType.Cubic);
+        tween.TweenProperty(chip, "modulate", new Color("fef08a"), 0.08f);
+        tween.TweenProperty(chip, "modulate", Colors.White, 0.18f);
+    }
+
+    private Texture2D LoadTextureCached(string path)
+    {
+        if (_iconCache.TryGetValue(path, out var texture) && IsInstanceValid(texture))
+        {
+            return texture;
+        }
+
+        var loaded = GD.Load<Texture2D>(path);
+        if (loaded != null)
+        {
+            _iconCache[path] = loaded;
+            return loaded;
+        }
+
+        return GD.Load<Texture2D>("res://icon.svg");
+    }
+
     private void Log(string line, string colorHex = "#cbd5e1")
     {
-        _logText.AppendText($"[color={colorHex}]{line}[/color]\\n");
+        _logText.AppendText($"[color={colorHex}]{line}[/color]\n");
         _logText.ScrollToLine(Math.Max(_logText.GetLineCount() - 1, 0));
     }
 

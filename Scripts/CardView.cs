@@ -29,6 +29,7 @@ public partial class CardView : PanelContainer
         BuildUi();
         MouseFilter = MouseFilterEnum.Stop;
         TopLevel = true;
+        Size = CustomMinimumSize;
 
         MouseEntered += () =>
         {
@@ -59,6 +60,7 @@ public partial class CardView : PanelContainer
     public void SetPose(Vector2 globalPosition, float rotationDegrees, Vector2 poseScale, bool animate)
     {
         _homeGlobalPosition = globalPosition;
+        Size = CustomMinimumSize;
         if (_dragging)
         {
             return;
@@ -187,8 +189,8 @@ public partial class CardView : PanelContainer
 
         var style = new StyleBoxFlat
         {
-            BgColor = new Color("1f2937"),
-            BorderColor = new Color("475569"),
+            BgColor = new Color("18212b"),
+            BorderColor = new Color("7aa8cf"),
             BorderWidthLeft = 2,
             BorderWidthTop = 2,
             BorderWidthRight = 2,
@@ -196,7 +198,9 @@ public partial class CardView : PanelContainer
             CornerRadiusTopLeft = 8,
             CornerRadiusTopRight = 8,
             CornerRadiusBottomLeft = 8,
-            CornerRadiusBottomRight = 8
+            CornerRadiusBottomRight = 8,
+            ShadowColor = new Color(0f, 0f, 0f, 0.45f),
+            ShadowSize = 5
         };
         AddThemeStyleboxOverride("panel", style);
 
@@ -211,12 +215,38 @@ public partial class CardView : PanelContainer
         vbox.AddThemeConstantOverride("separation", 6);
         margin.AddChild(vbox);
 
-        _nameLabel = new Label { HorizontalAlignment = HorizontalAlignment.Center };
+        _nameLabel = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart
+        };
+        _nameLabel.AddThemeColorOverride("font_color", new Color("e2e8f0"));
+
+        var costBadge = new PanelContainer();
+        var costStyle = new StyleBoxFlat
+        {
+            BgColor = new Color("0d2538"),
+            BorderColor = new Color("7dd3fc"),
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = 6,
+            CornerRadiusTopRight = 6,
+            CornerRadiusBottomLeft = 6,
+            CornerRadiusBottomRight = 6
+        };
+        costBadge.AddThemeStyleboxOverride("panel", costStyle);
+
         _costLabel = new Label { HorizontalAlignment = HorizontalAlignment.Center };
+        _costLabel.AddThemeColorOverride("font_color", new Color("93c5fd"));
+        costBadge.AddChild(_costLabel);
+
         _descLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        _descLabel.AddThemeColorOverride("font_color", new Color("cbd5e1"));
 
         vbox.AddChild(_nameLabel);
-        vbox.AddChild(_costLabel);
+        vbox.AddChild(costBadge);
         vbox.AddChild(_descLabel);
 
         RefreshText();
