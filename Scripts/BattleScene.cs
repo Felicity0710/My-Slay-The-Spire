@@ -419,16 +419,20 @@ public partial class BattleScene : Control
                 legacyStats.Visible = false;
             }
 
-            _enemyRosterGrid = new GridContainer
+            _enemyRosterGrid = _enemyDropArea.GetNodeOrNull<GridContainer>("DropVBox/EnemyRosterGrid");
+            if (_enemyRosterGrid == null)
             {
-                Name = "EnemyRosterGrid",
-                Columns = 2,
-                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
-            };
+                _enemyRosterGrid = new GridContainer
+                {
+                    Name = "EnemyRosterGrid",
+                    Columns = 2,
+                    SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+                };
+                dropVBox.AddChild(_enemyRosterGrid);
+                dropVBox.MoveChild(_enemyRosterGrid, 1);
+            }
             _enemyRosterGrid.AddThemeConstantOverride("h_separation", 6);
             _enemyRosterGrid.AddThemeConstantOverride("v_separation", 6);
-            dropVBox.AddChild(_enemyRosterGrid);
-            dropVBox.MoveChild(_enemyRosterGrid, 1);
         }
 
         _enemyPanel.Visible = false;
