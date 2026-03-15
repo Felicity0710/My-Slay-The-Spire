@@ -14,4 +14,10 @@
     <Compile Include="..\..\Scripts\IntentResolver.cs" Link="IntentResolver.cs" />
     <Compile Include="..\..\Scripts\TurnFlowResolver.cs" Link="TurnFlowResolver.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\Data\cards.json" Link="Data\cards.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
