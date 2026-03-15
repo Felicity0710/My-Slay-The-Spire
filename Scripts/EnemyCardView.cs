@@ -17,6 +17,16 @@ public partial class EnemyCardView : Button
         Text = string.Empty;
         ClipText = true;
 
+        CacheNodes();
+    }
+
+    private void CacheNodes()
+    {
+        if (_intentLabel != null)
+        {
+            return;
+        }
+
         _intentLabel = GetNode<Label>("Margin/VBox/IntentRow/IntentLabel");
         _portraitBg = GetNode<ColorRect>("Margin/VBox/PortraitBg");
         _portrait = GetNode<TextureRect>("Margin/VBox/PortraitBg/Portrait");
@@ -38,6 +48,8 @@ public partial class EnemyCardView : Button
         bool isTargetable,
         bool inputLocked)
     {
+        CacheNodes();
+
         Disabled = !enemy.IsAlive || inputLocked;
 
         var cardStyle = new StyleBoxFlat
