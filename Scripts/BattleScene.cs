@@ -111,6 +111,10 @@ public partial class BattleScene : Control
     private EnemyAnimState _enemyAnimState = EnemyAnimState.Idle;
     private float _enemyAnimTimer;
     private bool _enemyEntrancePlayed;
+    private float _playerPunchX;
+    private float _enemyPunchX;
+    private bool _deferredHandLayoutPending;
+    private bool _dropZoneHighlighted;
 
     private CardView _hoveredCard = null!;
 
@@ -196,7 +200,9 @@ public partial class BattleScene : Control
 
         var breathePlayer = Mathf.Sin(_animTime * 1.2f) * 2.2f;
         var breatheEnemy = Mathf.Sin(_animTime * 1.1f + 1.3f) * 2.8f;
-        _playerPanel.Position = _playerPanelBasePos + new Vector2(0, breathePlayer);
+        _playerPunchX = Mathf.Lerp(_playerPunchX, 0f, (float)delta * 16f);
+        _enemyPunchX = Mathf.Lerp(_enemyPunchX, 0f, (float)delta * 16f);
+        _playerPanel.Position = _playerPanelBasePos + new Vector2(_playerPunchX, breathePlayer);
 
         var enemyAnimOffset = Vector2.Zero;
         var enemyAnimScaleMul = 1f;
@@ -217,7 +223,7 @@ public partial class BattleScene : Control
                 break;
         }
 
-        _enemyDropArea.Position = _enemyDropAreaBasePos + new Vector2(0, breatheEnemy) + enemyAnimOffset;
+        _enemyDropArea.Position = _enemyDropAreaBasePos + new Vector2(_enemyPunchX, breatheEnemy) + enemyAnimOffset;
         _enemyDropArea.Scale = _enemyDropAreaBaseScale * ((1f + Mathf.Sin(_animTime * 1.1f + 1.3f) * 0.01f) * enemyAnimScaleMul);
 
         var shadowScale = 1f + Mathf.Sin(_animTime * 1.1f + 1.3f) * 0.03f;
@@ -677,6 +683,16 @@ public partial class BattleScene : Control
             return;
         }
 
+        if (CardRequiresEnemyTarget(view.Card))
+        {
+            Log($"Drag {view.Card.Name} to enemy to play", "#94a3b8");
+            if (IsInstanceValid(view))
+            {
+                await view.AnimateBackToHand(0.08f);
+            }
+            return;
+        }
+
         PushInputLock();
         var toRect = _enemyDropArea.GetGlobalRect();
         var fromPos = view.GlobalPosition + view.Size * 0.5f;
@@ -706,12 +722,15 @@ public partial class BattleScene : Control
         HideKeywordTooltip();
         SetDropZoneHighlight(false);
         card.Scale = Vector2.One;
-        LayoutHandCards(true);
     }
 
-    private void OnCardDragEnded(CardView _)
+    private void OnCardDragEnded(CardView card)
     {
         SetDropZoneHighlight(false);
+        if (IsInstanceValid(card) && _hand.Contains(card.Card))
+        {
+            RequestHandLayout(true);
+        }
     }
 
     private void OnCardHoverChanged(CardView card, bool hovered)
@@ -725,17 +744,11 @@ public partial class BattleScene : Control
         if (hovered)
         {
             ShowKeywordTooltip(card);
-            if (!IsInputLocked() && card.Card.Cost <= _energy && CardRequiresEnemyTarget(card.Card))
-            {
-                SetDropZoneHighlight(true);
-            }
         }
         else if (_hoveredCard == null)
         {
             HideKeywordTooltip();
-            SetDropZoneHighlight(false);
         }
-        LayoutHandCards(false);
     }
 
     private bool CardRequiresEnemyTarget(CardData card)
@@ -745,6 +758,12 @@ public partial class BattleScene : Control
 
     private void SetDropZoneHighlight(bool highlight)
     {
+        if (_dropZoneHighlighted == highlight)
+        {
+            return;
+        }
+
+        _dropZoneHighlighted = highlight;
         _enemyDropArea.AddThemeStyleboxOverride("panel", highlight ? _dropHotStyle : _dropNormalStyle);
         _dropHintLabel.Modulate = highlight ? new Color("bbf7d0") : new Color("d1d5db");
     }
@@ -878,17 +897,16 @@ public partial class BattleScene : Control
 
     private void PunchPanel(Control panel, float offsetX)
     {
-        if (!IsInstanceValid(panel))
+        if (panel == _playerPanel)
         {
+            _playerPunchX += offsetX;
             return;
         }
 
-        var origin = panel.Position;
-        var tween = CreateTween();
-        tween.SetEase(Tween.EaseType.Out);
-        tween.SetTrans(Tween.TransitionType.Quad);
-        tween.TweenProperty(panel, "position:x", origin.X + offsetX, 0.06f);
-        tween.TweenProperty(panel, "position:x", origin.X, 0.11f);
+        if (panel == _enemyDropArea || panel == _enemyPanel)
+        {
+            _enemyPunchX += offsetX;
+        }
     }
 
     private async void ShakeMain(float intensity, int steps)
@@ -1119,6 +1137,26 @@ public partial class BattleScene : Control
             return;
         }
 
+        CardView hovered = null;
+        if (IsInstanceValid(_hoveredCard))
+        {
+            hovered = _hoveredCard;
+        }
+
+        var hoveredIndex = -1;
+        var anyDragging = false;
+        for (var i = 0; i < count; i++)
+        {
+            if (cards[i].IsDragging)
+            {
+                anyDragging = true;
+            }
+            if (hovered != null && cards[i] == hovered && !cards[i].IsDragging)
+            {
+                hoveredIndex = i;
+            }
+        }
+
         var width = _handContainer.Size.X;
         var baseY = _handContainer.GlobalPosition.Y + _handContainer.Size.Y - 230f;
         var spread = Mathf.Min(1000f, 170f * Math.Max(count - 1, 1));
@@ -1132,12 +1170,38 @@ public partial class BattleScene : Control
             var curveY = Mathf.Abs(normalized) * 26f;
             var rot = normalized * 14f;
 
-            var isHover = cards[i] == _hoveredCard && !cards[i].IsDragging;
-            var pos = new Vector2(x, baseY + curveY + (isHover ? -34f : 0f));
-            var scale = isHover ? new Vector2(1.08f, 1.08f) : Vector2.One;
-            var finalRot = isHover ? 0f : rot;
+            if (!anyDragging && hoveredIndex >= 0)
+            {
+                var distance = Math.Abs(i - hoveredIndex);
+                var direction = i < hoveredIndex ? -1f : 1f;
+                if (i == hoveredIndex)
+                {
+                    curveY -= 14f;
+                    rot *= 0.22f;
+                }
+                else if (distance == 1)
+                {
+                    x += direction * 20f;
+                    rot *= 0.65f;
+                }
+                else if (distance == 2)
+                {
+                    x += direction * 8f;
+                }
+            }
 
-            cards[i].ZIndex = isHover ? 80 : i;
+            var pos = new Vector2(x, baseY + curveY);
+            var scale = Vector2.One;
+            var finalRot = rot;
+
+            if (!anyDragging && hoveredIndex == i)
+            {
+                pos.Y -= 18f;
+                scale = new Vector2(1.08f, 1.08f);
+                finalRot = 0f;
+            }
+
+            cards[i].ZIndex = hoveredIndex == i ? count + 10 : i;
             cards[i].SetPose(pos, finalRot, scale, animate);
         }
     }
@@ -1178,9 +1242,9 @@ public partial class BattleScene : Control
         };
 
         _enemyIntentLabel.Text = _battleEnded ? "Intent: -" : $"Intent: {IntentText()}";
-        _topHpLabel.Text = $"❤ {_playerHp}/{_playerMaxHp}";
-        _turnLabel.Text = $"⏳ {_turn}";
-        _energyLabel.Text = $"◆ {_energy}/{MaxEnergy}";
+        _topHpLabel.Text = $"HP {_playerHp}/{_playerMaxHp}";
+        _turnLabel.Text = $"Turn {_turn}";
+        _energyLabel.Text = $"Energy {_energy}/{MaxEnergy}";
         _handCountLabel.Text = $"Hand: {_hand.Count} | Draw: {_drawPile.Count} | Discard: {_discardPile.Count}";
         _relicBarLabel.Text = BuildRelicBarText();
         RefreshRelicIcons();
@@ -1295,6 +1359,14 @@ public partial class BattleScene : Control
 
         _keywordTooltipText.Text = string.Join("\n", lines);
         var pos = card.GlobalPosition + new Vector2(card.Size.X + 12f, -10f);
+        var viewport = GetViewportRect().Size;
+        var tipSize = _keywordTooltip.Size;
+        if (tipSize.X < 10f || tipSize.Y < 10f)
+        {
+            tipSize = new Vector2(270f, 150f);
+        }
+        pos.X = Mathf.Clamp(pos.X, 8f, viewport.X - tipSize.X - 8f);
+        pos.Y = Mathf.Clamp(pos.Y, 8f, viewport.Y - tipSize.Y - 8f);
         _keywordTooltip.Position = pos;
         _keywordTooltip.Visible = true;
     }
@@ -1396,6 +1468,29 @@ public partial class BattleScene : Control
                 cardView.SetPlayable(!IsInputLocked() && cardView.Card.Cost <= _energy);
             }
         }
+    }
+
+    private void RequestHandLayout(bool animate)
+    {
+        if (animate)
+        {
+            LayoutHandCards(true);
+            return;
+        }
+
+        if (_deferredHandLayoutPending)
+        {
+            return;
+        }
+
+        _deferredHandLayoutPending = true;
+        CallDeferred(nameof(DeferredHandLayout));
+    }
+
+    private void DeferredHandLayout()
+    {
+        _deferredHandLayoutPending = false;
+        LayoutHandCards(false);
     }
 
     private void Shuffle<T>(IList<T> list)

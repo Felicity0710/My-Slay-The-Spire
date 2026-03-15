@@ -10,10 +10,14 @@ public partial class CardView : PanelContainer
 
     private bool _dragging;
     private bool _playable = true;
-    private Tween _poseTween = null!;
     private Vector2 _dragOffset;
     private Vector2 _pressStartMouse;
     private Vector2 _homeGlobalPosition;
+    private bool _dragResolvedThisPress;
+    private Vector2 _targetGlobalPosition;
+    private float _targetRotationDegrees;
+    private Vector2 _targetScale = Vector2.One;
+    private bool _manualAnimating;
 
     public bool IsDragging => _dragging;
 
@@ -32,6 +36,11 @@ public partial class CardView : PanelContainer
         MouseFilter = MouseFilterEnum.Stop;
         TopLevel = true;
         Size = CustomMinimumSize;
+        SetProcessInput(true);
+        SetProcess(true);
+        _targetGlobalPosition = GlobalPosition;
+        _targetRotationDegrees = RotationDegrees;
+        _targetScale = Scale;
 
         MouseEntered += () =>
         {
@@ -62,6 +71,9 @@ public partial class CardView : PanelContainer
     public void SetPose(Vector2 globalPosition, float rotationDegrees, Vector2 poseScale, bool animate)
     {
         _homeGlobalPosition = globalPosition;
+        _targetGlobalPosition = globalPosition;
+        _targetRotationDegrees = rotationDegrees;
+        _targetScale = poseScale;
         Size = CustomMinimumSize;
         if (_dragging)
         {
@@ -70,27 +82,10 @@ public partial class CardView : PanelContainer
 
         if (!animate)
         {
-            if (_poseTween != null && _poseTween.IsValid())
-            {
-                _poseTween.Kill();
-            }
             GlobalPosition = globalPosition;
             RotationDegrees = rotationDegrees;
             Scale = poseScale;
-            return;
         }
-
-        if (_poseTween != null && _poseTween.IsValid())
-        {
-            _poseTween.Kill();
-        }
-
-        _poseTween = CreateTween();
-        _poseTween.SetEase(Tween.EaseType.Out);
-        _poseTween.SetTrans(Tween.TransitionType.Cubic);
-        _poseTween.TweenProperty(this, "global_position", globalPosition, 0.08f);
-        _poseTween.Parallel().TweenProperty(this, "rotation_degrees", rotationDegrees, 0.08f);
-        _poseTween.Parallel().TweenProperty(this, "scale", poseScale, 0.08f);
     }
 
     public void SetPlayable(bool playable)
@@ -116,49 +111,52 @@ public partial class CardView : PanelContainer
         {
             if (mb.Pressed)
             {
-                if (!_playable)
-                {
-                    AcceptEvent();
-                    return;
-                }
-
                 _pressStartMouse = GetGlobalMousePosition();
                 _dragging = true;
+                _dragResolvedThisPress = false;
                 _dragOffset = GetGlobalMousePosition() - GlobalPosition;
-                if (_poseTween != null && _poseTween.IsValid())
-                {
-                    _poseTween.Kill();
-                }
                 RotationDegrees = 0;
                 Scale = Vector2.One;
                 ZIndex = 100;
                 DragStarted(this);
                 AcceptEvent();
             }
-            else if (_dragging)
-            {
-                _dragging = false;
-                var moved = _pressStartMouse.DistanceTo(GetGlobalMousePosition()) > 14f;
-                DragEnded(this);
-
-                if (moved)
-                {
-                    DropAttempted(this, GetGlobalMousePosition());
-                }
-                else
-                {
-                    Clicked(this);
-                }
-
-                AcceptEvent();
-            }
         }
-        else if (@event is InputEventMouseMotion && _dragging)
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (!_dragging)
+        {
+            return;
+        }
+
+        if (@event is InputEventMouseMotion)
         {
             GlobalPosition = GetGlobalMousePosition() - _dragOffset;
             DragMoved(this, GetGlobalMousePosition());
-            AcceptEvent();
+            GetViewport().SetInputAsHandled();
+            return;
         }
+
+        if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && !mb.Pressed)
+        {
+            ResolveDragRelease();
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_dragging || _manualAnimating)
+        {
+            return;
+        }
+
+        var t = 1f - Mathf.Exp(-(float)delta * 18f);
+        GlobalPosition = GlobalPosition.Lerp(_targetGlobalPosition, t);
+        RotationDegrees = Mathf.Lerp(RotationDegrees, _targetRotationDegrees, t);
+        Scale = Scale.Lerp(_targetScale, t);
     }
 
     public async Task AnimateBackToHand(float duration = 0.14f)
@@ -168,6 +166,7 @@ public partial class CardView : PanelContainer
             return;
         }
 
+        _manualAnimating = true;
         var tween = CreateTween();
         tween.SetEase(Tween.EaseType.Out);
         tween.SetTrans(Tween.TransitionType.Cubic);
@@ -179,7 +178,32 @@ public partial class CardView : PanelContainer
         if (IsInsideTree())
         {
             ZIndex = 0;
+            _targetGlobalPosition = _homeGlobalPosition;
+            _targetRotationDegrees = 0f;
+            _targetScale = Vector2.One;
         }
+        _manualAnimating = false;
+    }
+
+    private void ResolveDragRelease()
+    {
+        if (!_dragging || _dragResolvedThisPress)
+        {
+            return;
+        }
+
+        _dragResolvedThisPress = true;
+        _dragging = false;
+        var moved = _pressStartMouse.DistanceTo(GetGlobalMousePosition()) > 6f;
+        DragEnded(this);
+
+        if (moved)
+        {
+            DropAttempted(this, GetGlobalMousePosition());
+            return;
+        }
+
+        Clicked(this);
     }
 
     public async Task AnimateToTarget(Vector2 targetGlobalPosition, float duration = 0.12f)
@@ -189,12 +213,17 @@ public partial class CardView : PanelContainer
             return;
         }
 
+        _manualAnimating = true;
         var tween = CreateTween();
         tween.SetEase(Tween.EaseType.In);
         tween.SetTrans(Tween.TransitionType.Cubic);
         tween.TweenProperty(this, "global_position", targetGlobalPosition, duration);
         tween.Parallel().TweenProperty(this, "scale", new Vector2(0.86f, 0.86f), duration);
         await ToSignal(tween, Tween.SignalName.Finished);
+        _targetGlobalPosition = GlobalPosition;
+        _targetRotationDegrees = RotationDegrees;
+        _targetScale = Scale;
+        _manualAnimating = false;
     }
 
     public async Task AnimateFromDraw(Vector2 fromGlobalPosition, float duration = 0.2f)
@@ -204,14 +233,15 @@ public partial class CardView : PanelContainer
             return;
         }
 
-        var targetPos = _homeGlobalPosition;
-        var targetRot = RotationDegrees;
-        var targetScale = Scale;
+        var targetPos = _targetGlobalPosition;
+        var targetRot = _targetRotationDegrees;
+        var targetScale = _targetScale;
 
         GlobalPosition = fromGlobalPosition;
         RotationDegrees = 0f;
         Scale = new Vector2(0.72f, 0.72f);
 
+        _manualAnimating = true;
         var tween = CreateTween();
         tween.SetEase(Tween.EaseType.Out);
         tween.SetTrans(Tween.TransitionType.Cubic);
@@ -219,6 +249,7 @@ public partial class CardView : PanelContainer
         tween.Parallel().TweenProperty(this, "rotation_degrees", targetRot, duration);
         tween.Parallel().TweenProperty(this, "scale", targetScale, duration);
         await ToSignal(tween, Tween.SignalName.Finished);
+        _manualAnimating = false;
     }
 
     private void BuildUi()
