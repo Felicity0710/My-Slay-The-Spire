@@ -653,7 +653,13 @@ public partial class BattleScene : Control
                 continue;
             }
 
-            if (button.GetGlobalRect().Grow(3f).HasPoint(mouseGlobal))
+            var hitRect = button.GetGlobalRect().Grow(-6f);
+            if (_enemyCardTargetByIndex.TryGetValue(idx, out var target) && IsInstanceValid(target))
+            {
+                hitRect = target.GetGlobalRect().Grow(10f);
+            }
+
+            if (hitRect.HasPoint(mouseGlobal))
             {
                 enemyIndex = idx;
                 return true;

@@ -5,6 +5,7 @@ public partial class EnemyCardView : Button
     private Label _intentLabel = null!;
     private ColorRect _portraitBg = null!;
     private TextureRect _portrait = null!;
+    private ColorRect _targetGlow = null!;
     private Label _hpLabel = null!;
     private ProgressBar _hpBar = null!;
     private Label _nameLabel = null!;
@@ -30,6 +31,7 @@ public partial class EnemyCardView : Button
         _intentLabel = GetNode<Label>("Margin/VBox/IntentRow/IntentLabel");
         _portraitBg = GetNode<ColorRect>("Margin/VBox/PortraitBg");
         _portrait = GetNode<TextureRect>("Margin/VBox/PortraitBg/Portrait");
+        _targetGlow = GetNode<ColorRect>("Margin/VBox/PortraitBg/TargetGlow");
         _hpLabel = GetNode<Label>("Margin/VBox/HpLabel");
         _hpBar = GetNode<ProgressBar>("Margin/VBox/HpBar");
         _nameLabel = GetNode<Label>("Margin/VBox/NameLabel");
@@ -80,12 +82,26 @@ public partial class EnemyCardView : Button
         AddThemeStyleboxOverride("pressed", cardStyle);
         AddThemeStyleboxOverride("hover", cardStyle);
 
+        var elevation = isSelected ? -7f : (isHovered ? -3f : 0f);
+        Position = new Vector2(Position.X, elevation);
+
         _intentLabel.Text = enemy.IsAlive ? intentCompactText : "KO";
         _intentLabel.Modulate = enemy.IsAlive ? intentTint : new Color("6b7280");
         _intentLabel.TooltipText = enemy.IsAlive ? intentTooltip : "Defeated";
 
         _portraitBg.Color = new Color(stageTint.R, stageTint.G, stageTint.B, enemy.IsAlive ? 1f : 0.45f);
         _portrait.Texture = portraitTexture;
+
+        var glowAlpha = !enemy.IsAlive
+            ? 0f
+            : isHovered
+                ? 0.16f
+                : isSelected
+                    ? 0.22f
+                    : isTargetable
+                        ? 0.08f
+                        : 0f;
+        _targetGlow.Color = new Color(0.49f, 0.83f, 0.99f, glowAlpha);
 
         _hpLabel.Text = $"{enemy.Hp}/{enemy.MaxHp}";
         _hpBar.MaxValue = Mathf.Max(enemy.MaxHp, 1);
