@@ -18,6 +18,9 @@ public partial class CardView : PanelContainer
     private float _targetRotationDegrees;
     private Vector2 _targetScale = Vector2.One;
     private bool _manualAnimating;
+    private float _dragTilt;
+    private bool _hoverFocused;
+    private bool _hoverDimmed;
 
     public bool IsDragging => _dragging;
 
@@ -91,18 +94,14 @@ public partial class CardView : PanelContainer
     public void SetPlayable(bool playable)
     {
         _playable = playable;
-        if (_dragging)
-        {
-            return;
-        }
+        UpdateModulate();
+    }
 
-        if (_playable)
-        {
-            Modulate = Colors.White;
-            return;
-        }
-
-        Modulate = new Color(0.62f, 0.62f, 0.68f, 0.92f);
+    public void SetFocusState(bool focused, bool dimmed)
+    {
+        _hoverFocused = focused;
+        _hoverDimmed = dimmed;
+        UpdateModulate();
     }
 
     public override void _GuiInput(InputEvent @event)
@@ -133,6 +132,11 @@ public partial class CardView : PanelContainer
 
         if (@event is InputEventMouseMotion)
         {
+            if (@event is InputEventMouseMotion motion)
+            {
+                _dragTilt = Mathf.Clamp(motion.Relative.X * 0.45f, -14f, 14f);
+                RotationDegrees = Mathf.Lerp(RotationDegrees, _dragTilt, 0.42f);
+            }
             GlobalPosition = GetGlobalMousePosition() - _dragOffset;
             DragMoved(this, GetGlobalMousePosition());
             GetViewport().SetInputAsHandled();
@@ -206,6 +210,30 @@ public partial class CardView : PanelContainer
         Clicked(this);
     }
 
+    private void UpdateModulate()
+    {
+        if (_dragging)
+        {
+            Modulate = Colors.White;
+            return;
+        }
+
+        var color = _playable ? Colors.White : new Color(0.62f, 0.62f, 0.68f, 0.92f);
+        if (_hoverFocused)
+        {
+            color = new Color(
+                Mathf.Clamp(color.R * 1.05f, 0f, 1f),
+                Mathf.Clamp(color.G * 1.05f, 0f, 1f),
+                Mathf.Clamp(color.B * 1.05f, 0f, 1f),
+                color.A);
+        }
+        if (_hoverDimmed)
+        {
+            color = new Color(color.R * 0.78f, color.G * 0.78f, color.B * 0.78f, Mathf.Min(color.A, 0.86f));
+        }
+        Modulate = color;
+    }
+
     public async Task AnimateToTarget(Vector2 targetGlobalPosition, float duration = 0.12f)
     {
         if (!IsInsideTree())
@@ -214,10 +242,25 @@ public partial class CardView : PanelContainer
         }
 
         _manualAnimating = true;
+        var start = GlobalPosition;
+        var end = targetGlobalPosition;
+        var mid = (start + end) * 0.5f;
+        var control = mid + new Vector2(0f, -Mathf.Clamp(Mathf.Abs(end.X - start.X) * 0.16f + 80f, 80f, 150f));
+        var startRot = RotationDegrees;
+
         var tween = CreateTween();
         tween.SetEase(Tween.EaseType.In);
         tween.SetTrans(Tween.TransitionType.Cubic);
-        tween.TweenProperty(this, "global_position", targetGlobalPosition, duration);
+        tween.TweenMethod(Callable.From<float>(p =>
+            {
+                var a = start.Lerp(control, p);
+                var b = control.Lerp(end, p);
+                GlobalPosition = a.Lerp(b, p);
+                RotationDegrees = Mathf.Lerp(startRot, 0f, p);
+            }),
+            0f,
+            1f,
+            duration);
         tween.Parallel().TweenProperty(this, "scale", new Vector2(0.86f, 0.86f), duration);
         await ToSignal(tween, Tween.SignalName.Finished);
         _targetGlobalPosition = GlobalPosition;

@@ -115,8 +115,12 @@ public partial class BattleScene : Control
     private float _enemyPunchX;
     private bool _deferredHandLayoutPending;
     private bool _dropZoneHighlighted;
+    private float _hitStopTimer;
+    private Line2D _dragGuide = null!;
+    private CardView _draggingCard = null!;
 
     private CardView _hoveredCard = null!;
+    public Action<string> UiSfxRequested = _ => { };
 
     public override void _Ready()
     {
@@ -162,6 +166,7 @@ public partial class BattleScene : Control
         _playerShadow = GetNode<ColorRect>("MainMargin/MainVBox/Arena/PlayerShadow");
 
         _endTurnButton = GetNode<Button>("%EndTurnButton");
+        SetupDragGuide();
 
         SetupDropZoneStyles();
 
@@ -182,6 +187,12 @@ public partial class BattleScene : Control
 
     public override void _Process(double delta)
     {
+        if (_hitStopTimer > 0f)
+        {
+            _hitStopTimer -= (float)delta;
+            return;
+        }
+
         _animTime += (float)delta;
 
         var viewport = GetViewportRect().Size;
@@ -417,6 +428,7 @@ public partial class BattleScene : Control
             return;
         }
 
+        EmitUiSfx("turn_end");
         PushInputLock();
 
         foreach (var card in _hand)
@@ -458,11 +470,12 @@ public partial class BattleScene : Control
                 Log($"Enemy attacks {finalDamage}, blocked {blocked}, took {taken}", "#f87171");
                 if (taken > 0)
                 {
+                    TriggerHitStop(0.045f);
                     SpawnFloatingText(_playerPanel, $"-{taken}", new Color("fca5a5"));
                     SpawnSlashEffect(_playerPanel, new Color("fecaca"));
                     FlashPanel(_playerPanel, new Color(1f, 0.5f, 0.5f, 1f));
                     PunchPanel(_playerPanel, -8f);
-                    ShakeMain(6f, 7);
+                    PulseImpact(_playerPanel, 1.045f);
                 }
 
                 break;
@@ -561,12 +574,13 @@ public partial class BattleScene : Control
             Log($"Play {card.Name}: damage {finalDamage} ({damageToHp} HP)", "#f87171");
             if (damageToHp > 0)
             {
+                TriggerHitStop(0.045f);
                 SpawnFloatingText(_enemyDropArea, $"-{damageToHp}", new Color("fda4af"));
                 SpawnSlashEffect(_enemyDropArea, new Color("fda4af"));
                 TriggerEnemyHit();
                 FlashPanel(_enemyDropArea, new Color(1f, 0.55f, 0.55f, 1f));
                 PunchPanel(_enemyDropArea, 8f);
-                ShakeMain(4f, 5);
+                PulseImpact(_enemyDropArea, 1.05f);
             }
         }
 
@@ -612,6 +626,9 @@ public partial class BattleScene : Control
 
     private async void OnCardDropAttempt(CardView view, Vector2 mouseGlobal)
     {
+        _draggingCard = null;
+        SetDragGuideVisible(false);
+
         if (_battleEnded || IsInputLocked())
         {
             SetDropZoneHighlight(false);
@@ -633,8 +650,13 @@ public partial class BattleScene : Control
             var playedSelf = await TrySpendAndApplyCard(view.Card);
             if (!playedSelf && IsInstanceValid(view))
             {
+                EmitUiSfx("card_cancel");
                 await view.AnimateBackToHand();
                 LayoutHandCards(true);
+            }
+            else if (playedSelf)
+            {
+                EmitUiSfx("card_play");
             }
             PopInputLock();
             return;
@@ -643,6 +665,7 @@ public partial class BattleScene : Control
         var canPlayZone = _enemyDropArea.GetGlobalRect().HasPoint(mouseGlobal);
         if (!canPlayZone)
         {
+            EmitUiSfx("card_cancel");
             await view.AnimateBackToHand();
             LayoutHandCards(true);
             return;
@@ -651,6 +674,7 @@ public partial class BattleScene : Control
         if (view.Card.Cost > _energy)
         {
             Log($"Not enough energy for {view.Card.Name}", "#f59e0b");
+            EmitUiSfx("error");
             await view.AnimateBackToHand();
             LayoutHandCards(true);
             return;
@@ -670,8 +694,13 @@ public partial class BattleScene : Control
         var played = await TrySpendAndApplyCard(view.Card);
         if (!played && IsInstanceValid(view))
         {
+            EmitUiSfx("card_cancel");
             await view.AnimateBackToHand();
             LayoutHandCards(true);
+        }
+        else if (played)
+        {
+            EmitUiSfx("card_play");
         }
         PopInputLock();
     }
@@ -686,6 +715,7 @@ public partial class BattleScene : Control
         if (CardRequiresEnemyTarget(view.Card))
         {
             Log($"Drag {view.Card.Name} to enemy to play", "#94a3b8");
+            EmitUiSfx("ui_hint");
             if (IsInstanceValid(view))
             {
                 await view.AnimateBackToHand(0.08f);
@@ -703,29 +733,41 @@ public partial class BattleScene : Control
         }
         if (!await TrySpendAndApplyCard(view.Card) && IsInstanceValid(view))
         {
+            EmitUiSfx("card_cancel");
             await view.AnimateBackToHand();
             LayoutHandCards(true);
+        }
+        else
+        {
+            EmitUiSfx("card_play");
         }
 
         PopInputLock();
     }
 
-    private void OnCardDragMoved(CardView _, Vector2 mouseGlobal)
+    private void OnCardDragMoved(CardView card, Vector2 mouseGlobal)
     {
         var hot = _enemyDropArea.GetGlobalRect().HasPoint(mouseGlobal);
         SetDropZoneHighlight(hot);
+        UpdateDragGuide(card, mouseGlobal, hot);
     }
 
     private void OnCardDragStarted(CardView card)
     {
         _hoveredCard = null;
+        _draggingCard = card;
         HideKeywordTooltip();
         SetDropZoneHighlight(false);
+        SetDragGuideVisible(CardRequiresEnemyTarget(card.Card));
+        UpdateDragGuide(card, card.GlobalPosition + card.Size * 0.5f, false);
+        EmitUiSfx("card_grab");
         card.Scale = Vector2.One;
     }
 
     private void OnCardDragEnded(CardView card)
     {
+        _draggingCard = null;
+        SetDragGuideVisible(false);
         SetDropZoneHighlight(false);
         if (IsInstanceValid(card) && _hand.Contains(card.Card))
         {
@@ -743,6 +785,7 @@ public partial class BattleScene : Control
         _hoveredCard = hovered ? card : (_hoveredCard == card ? null : _hoveredCard);
         if (hovered)
         {
+            EmitUiSfx("card_hover");
             ShowKeywordTooltip(card);
         }
         else if (_hoveredCard == null)
@@ -981,9 +1024,18 @@ public partial class BattleScene : Control
         }
         var isCritStyle = isDamage && value >= 12;
         label.Scale = isCritStyle ? new Vector2(1.25f, 1.25f) : Vector2.One;
+        label.AddThemeFontSizeOverride("font_size", isCritStyle ? 28 : (isDamage ? 23 : 20));
         if (isCritStyle)
         {
             label.AddThemeColorOverride("font_color", new Color("fecaca"));
+        }
+        else if (isDamage)
+        {
+            label.AddThemeColorOverride("font_color", new Color("fca5a5"));
+        }
+        else if (text.Contains("Block", StringComparison.OrdinalIgnoreCase) || text.StartsWith("+"))
+        {
+            label.AddThemeColorOverride("font_color", new Color("93c5fd"));
         }
 
         var tween = CreateTween();
@@ -1030,6 +1082,23 @@ public partial class BattleScene : Control
                 trail.QueueFree();
             }
         };
+    }
+
+    private void PulseImpact(Control target, float peakScale)
+    {
+        if (!IsInstanceValid(target))
+        {
+            return;
+        }
+
+        var originalScale = target.Scale;
+        target.PivotOffset = target.Size * 0.5f;
+
+        var tween = CreateTween();
+        tween.SetEase(Tween.EaseType.Out);
+        tween.SetTrans(Tween.TransitionType.Cubic);
+        tween.TweenProperty(target, "scale", originalScale * peakScale, 0.06f);
+        tween.TweenProperty(target, "scale", originalScale, 0.11f);
     }
 
     private async void OnVictory()
@@ -1112,7 +1181,7 @@ public partial class BattleScene : Control
         for (var i = 0; i < entrants.Count; i++)
         {
             var offset = new Vector2(i * 8f, -i * 6f);
-            tasks.Add(entrants[i].AnimateFromDraw(basePos + offset));
+            tasks.Add(AnimateDrawEntry(entrants[i], basePos + offset, i));
         }
 
         await Task.WhenAll(tasks);
@@ -1203,6 +1272,7 @@ public partial class BattleScene : Control
 
             cards[i].ZIndex = hoveredIndex == i ? count + 10 : i;
             cards[i].SetPose(pos, finalRot, scale, animate);
+            cards[i].SetFocusState(hoveredIndex == i, hoveredIndex >= 0 && hoveredIndex != i && !anyDragging);
         }
     }
 
@@ -1457,6 +1527,81 @@ public partial class BattleScene : Control
     {
         _endTurnButton.Disabled = IsInputLocked();
         RefreshCardPlayableStates();
+    }
+
+    private void TriggerHitStop(float duration)
+    {
+        _hitStopTimer = Math.Max(_hitStopTimer, duration);
+    }
+
+    private void SetupDragGuide()
+    {
+        _dragGuide = new Line2D
+        {
+            Width = 3f,
+            DefaultColor = new Color("7dd3fc"),
+            Antialiased = true,
+            TopLevel = true,
+            Visible = false,
+            ZIndex = 160
+        };
+        _effectsLayer.AddChild(_dragGuide);
+    }
+
+    private void SetDragGuideVisible(bool visible)
+    {
+        if (!IsInstanceValid(_dragGuide))
+        {
+            return;
+        }
+
+        _dragGuide.Visible = visible;
+        if (!visible)
+        {
+            _dragGuide.ClearPoints();
+        }
+    }
+
+    private void UpdateDragGuide(CardView card, Vector2 mouseGlobal, bool hot)
+    {
+        if (!IsInstanceValid(card) || !IsInstanceValid(_dragGuide) || !CardRequiresEnemyTarget(card.Card))
+        {
+            SetDragGuideVisible(false);
+            return;
+        }
+
+        var cardCenter = card.GlobalPosition + card.Size * 0.5f;
+        var dropRect = _enemyDropArea.GetGlobalRect();
+        var enemyCenter = dropRect.Position + dropRect.Size * 0.5f;
+        var control = (cardCenter + enemyCenter) * 0.5f + new Vector2(0f, -64f);
+
+        _dragGuide.ClearPoints();
+        _dragGuide.AddPoint(cardCenter);
+        _dragGuide.AddPoint(control);
+        _dragGuide.AddPoint(enemyCenter);
+
+        var nearTarget = enemyCenter.DistanceTo(mouseGlobal) < 240f;
+        var active = hot || nearTarget;
+        _dragGuide.DefaultColor = active ? new Color("86efac") : new Color("7dd3fc");
+        _dragGuide.Width = active ? 4.5f : 3f;
+        _dragGuide.Visible = true;
+    }
+
+    private async Task AnimateDrawEntry(CardView card, Vector2 from, int index)
+    {
+        var delay = 0.026f * index;
+        if (delay > 0f)
+        {
+            await ToSignal(GetTree().CreateTimer(delay), SceneTreeTimer.SignalName.Timeout);
+        }
+
+        EmitUiSfx("card_draw");
+        await card.AnimateFromDraw(from);
+    }
+
+    private void EmitUiSfx(string cue)
+    {
+        UiSfxRequested(cue);
     }
 
     private void RefreshCardPlayableStates()
