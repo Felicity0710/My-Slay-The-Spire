@@ -82,6 +82,9 @@ public partial class EnemyCardView : Button
         AddThemeStyleboxOverride("pressed", cardStyle);
         AddThemeStyleboxOverride("hover", cardStyle);
 
+        PivotOffset = Size * 0.5f;
+        var scaleMul = isSelected ? 1.035f : (isHovered ? 1.015f : 1f);
+        Scale = new Vector2(scaleMul, scaleMul);
         var elevation = isSelected ? -7f : (isHovered ? -3f : 0f);
         Position = new Vector2(Position.X, elevation);
 
