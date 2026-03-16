@@ -166,6 +166,7 @@ public partial class BattleScene : Control
 
         _endTurnButton.Pressed += EndTurn;
         GetNode<Button>("%BackButton").Pressed += BackToMap;
+        GetNode<Button>("%TestVictoryButton").Pressed += OnTestVictoryPressed;
         _handContainer.Resized += () => LayoutHandCards(false);
 
         SetupFromGameState();
@@ -1867,6 +1868,17 @@ public partial class BattleScene : Control
         }
 
         RequestHandLayout(true);
+    }
+
+    private async void OnTestVictoryPressed()
+    {
+        if (_battleEnded)
+        {
+            return;
+        }
+
+        Log("[TEST] Trigger instant victory", "#facc15");
+        await OnVictoryAsync();
     }
 
     private void BackToMap()
