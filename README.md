@@ -9,7 +9,9 @@ https://github.com/user-attachments/assets/62f93228-8809-45c3-a432-a451aba46220
 
 
 ## godot 4.5.1
-因为godot场景等都是可以文本diff，ai友好，我愿称之为ai native game engine
+因为godot场景等都是可以文本diff，ai友好，我愿称之为ai native game engine  
+这实现的效果就是，我这个demo里面不止没有写代码！我连素材，资源，场景文件，也没有自己写！ai连场景文件，ui布局，都能直接给你写！
+
 ![BE06A99AC1DF9E807615C041B74057A7](https://github.com/user-attachments/assets/7e4d118b-c753-49b2-9fa4-6983eaa607c3)
 
 ## codex
