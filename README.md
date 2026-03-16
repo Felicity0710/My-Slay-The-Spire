@@ -1,10 +1,7 @@
 ## 0 coding 纯vibe
 本项目完全由codex开发，全程聊天修改逻辑，一天run起来。
 
-
-https://github.com/user-attachments/assets/0700602e-af02-464f-a803-b81f4bb82d79
-
-
+https://github.com/user-attachments/assets/62f93228-8809-45c3-a432-a451aba46220
 
 全程0coding，一天完成，这在之前几乎是不可能完成的，哥们不吹牛逼，也是985十年大厂资深程序了，
 之前自学游戏引擎unity ue什么的，真的，想要实现类似的逻辑，真的要花好久好久好久，
