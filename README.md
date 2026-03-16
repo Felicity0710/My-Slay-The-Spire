@@ -15,6 +15,6 @@
 你就验证下他们的开发结果，然后再把满意的合并到master。就跟大公司多个开发基于git协调的ci工作流一样，效率倍倍倍倍增
 
 
-#### ai时代，唯有震撼，world changed...
+## ai时代，唯有震撼，world changed...
 
 【codex 多任务工作流太牛了，唯有震撼，全程高能-哔哩哔哩】 https://b23.tv/0Ps1VZx
