@@ -5,8 +5,9 @@ using System.Collections.Generic;
 public partial class RewardScene : Control
 {
     private readonly List<Control> _cardSlots = new();
-    private readonly List<CardView> _cardPreviewViews = new();
+    private readonly List<RewardCardOptionView> _cardPreviewViews = new();
     private readonly Random _rng = new();
+    private readonly PackedScene _rewardCardOptionScene = GD.Load<PackedScene>("res://Scenes/RewardCardOptionView.tscn");
 
     private Label _titleLabel = null!;
     private Label _statusLabel = null!;
@@ -141,17 +142,18 @@ public partial class RewardScene : Control
 
             var cardId = cardIds[i];
             var card = CardData.CreateById(cardId);
-            var cardView = new CardView();
-            cardView.SetUseTopLevel(false);
-            cardView.SetDragEnabled(false);
-            cardView.Setup(card);
-            cardView.MouseDefaultCursorShape = CursorShape.PointingHand;
-            cardView.Scale = new Vector2(1.32f, 1.32f);
-            cardView.SetProcess(false);
-            cardView.SetProcessInput(false);
-            cardView.Clicked += _ => OnPickCardFromPack(cardId);
-            slot.AddChild(cardView);
-            _cardPreviewViews.Add(cardView);
+            var optionView = _rewardCardOptionScene.Instantiate<RewardCardOptionView>();
+            optionView.Setup(card);
+            optionView.GuiInput += @event =>
+            {
+                if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left && mb.Pressed)
+                {
+                    OnPickCardFromPack(cardId);
+                    optionView.AcceptEvent();
+                }
+            };
+            slot.AddChild(optionView);
+            _cardPreviewViews.Add(optionView);
         }
     }
 
