@@ -1,5 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
+[ext_resource type="Script" path="res://Scripts/MainMenu.cs" id="1_3plf2"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu"]
 bg_color = Color(0.05, 0.06, 0.09, 0.66)
 border_width_left = 2
@@ -13,8 +15,6 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_color = Color(0, 0, 0, 0.35)
 shadow_size = 14
-
-[ext_resource type="Script" path="res://Scripts/MainMenu.cs" id="1_3plf2"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
