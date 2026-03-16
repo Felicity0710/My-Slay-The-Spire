@@ -62,6 +62,9 @@ public static class CombatVisualCatalog
             "anchor" => "res://Assets/Icons/relic_anchor.svg",
             "whetstone" => "res://Assets/Icons/relic_whetstone.svg",
             "charm" => "res://Assets/Icons/relic_charm.svg",
+            "ember_ring" => "res://Assets/Icons/relic_lantern.svg",
+            "iron_shell" => "res://Assets/Icons/relic_anchor.svg",
+            "blood_vial" => "res://Assets/Icons/relic_charm.svg",
             _ => "res://Assets/Icons/relic_lantern.svg"
         };
     }

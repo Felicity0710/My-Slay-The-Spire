@@ -22,6 +22,8 @@ public partial class CardView : PanelContainer
     private bool _hoverFocused;
     private bool _hoverDimmed;
     private bool _lockPositionWhileDragging;
+    private bool _useTopLevel = true;
+    private bool _dragEnabled = true;
 
     public bool IsDragging => _dragging;
     public bool LockPositionWhileDragging
@@ -43,7 +45,7 @@ public partial class CardView : PanelContainer
     {
         BuildUi();
         MouseFilter = MouseFilterEnum.Stop;
-        TopLevel = true;
+        TopLevel = _useTopLevel;
         Size = CustomMinimumSize;
         SetProcessInput(true);
         SetProcess(true);
@@ -66,6 +68,20 @@ public partial class CardView : PanelContainer
                 HoverChanged(this, false);
             }
         };
+    }
+
+    public void SetUseTopLevel(bool useTopLevel)
+    {
+        _useTopLevel = useTopLevel;
+        if (IsInsideTree())
+        {
+            TopLevel = _useTopLevel;
+        }
+    }
+
+    public void SetDragEnabled(bool enabled)
+    {
+        _dragEnabled = enabled;
     }
 
     public void Setup(CardData card)
@@ -135,6 +151,17 @@ public partial class CardView : PanelContainer
     {
         if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
         {
+            if (!_dragEnabled)
+            {
+                if (mb.Pressed)
+                {
+                    Clicked(this);
+                    AcceptEvent();
+                }
+
+                return;
+            }
+
             if (mb.Pressed)
             {
                 _pressStartMouse = GetGlobalMousePosition();

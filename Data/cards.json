@@ -204,6 +204,356 @@
           "useAttackerStrength": false
         }
       ]
+    },
+    {
+      "id": "twin_strike",
+      "name": "Twin Strike",
+      "description": "Deal 4 damage twice.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 4,
+          "repeat": 2
+        }
+      ]
+    },
+    {
+      "id": "shield_bash",
+      "name": "Shield Bash",
+      "description": "Gain 6 Block. Deal 6 damage.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 6,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 6
+        }
+      ]
+    },
+    {
+      "id": "iron_wall",
+      "name": "Iron Wall",
+      "description": "Gain 12 Block.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 12,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "rend_armor",
+      "name": "Rend Armor",
+      "description": "Deal 6 damage. Apply 2 Vulnerable.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 6
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "SelectedEnemy",
+          "amount": 2,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "blood_pact",
+      "name": "Blood Pact",
+      "description": "Gain 2 Strength. Apply 1 Vulnerable to yourself.",
+      "kind": "Skill",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GainStrength",
+          "target": "Player",
+          "amount": 2,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "tactical_step",
+      "name": "Tactical Step",
+      "description": "Gain 4 Block. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 4,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "reaper_touch",
+      "name": "Reaper Touch",
+      "description": "Deal 9 damage. Heal 4 HP.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 9
+        },
+        {
+          "type": "Heal",
+          "target": "Player",
+          "amount": 4,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "fortify",
+      "name": "Fortify",
+      "description": "Gain 16 Block. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 16,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "meteor_shower",
+      "name": "Meteor Shower",
+      "description": "Deal 3 damage to all enemies three times.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "AllEnemies",
+          "amount": 3,
+          "repeat": 3
+        }
+      ]
+    },
+    {
+      "id": "glass_cannon",
+      "name": "Glass Cannon",
+      "description": "Deal 11 damage. Apply 1 Vulnerable to yourself.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 11
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "war_cry",
+      "name": "War Cry",
+      "description": "Draw 2 cards. Gain 1 Energy.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 2,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "GainEnergy",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "berserker_form",
+      "name": "Berserker Form",
+      "description": "Gain 3 Strength. Apply 1 Vulnerable to yourself.",
+      "kind": "Skill",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "GainStrength",
+          "target": "Player",
+          "amount": 3,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "overclock",
+      "name": "Overclock",
+      "description": "Gain 2 Energy. Apply 1 Vulnerable to yourself.",
+      "kind": "Skill",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GainEnergy",
+          "target": "Player",
+          "amount": 2,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "crushing_blow",
+      "name": "Crushing Blow",
+      "description": "Deal 14 damage. Apply 1 Vulnerable.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 14
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "SelectedEnemy",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "chain_lightning",
+      "name": "Chain Lightning",
+      "description": "Deal 4 damage to all enemies. Draw 1 card.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "AllEnemies",
+          "amount": 4
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "meditate",
+      "name": "Meditate",
+      "description": "Heal 3 HP. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Heal",
+          "target": "Player",
+          "amount": 3,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "fortress_stance",
+      "name": "Fortress Stance",
+      "description": "Gain 10 Block. Gain 1 Strength.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 10,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "GainStrength",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
     }
   ],
   "starterDeck": [
@@ -211,10 +561,10 @@
     "defend",
     "strike",
     "defend",
-    "strike",
-    "defend",
-    "quick_slash",
-    "shrug",
+    "twin_strike",
+    "shield_bash",
+    "iron_wall",
+    "tactical_step",
     "battle_focus",
     "adrenaline_rush",
     "bash"
@@ -228,6 +578,23 @@
     "battle_focus",
     "adrenaline_rush",
     "second_wind",
-    "rending_wave"
+    "rending_wave",
+    "twin_strike",
+    "shield_bash",
+    "iron_wall",
+    "rend_armor",
+    "blood_pact",
+    "tactical_step",
+    "reaper_touch",
+    "fortify",
+    "meteor_shower",
+    "glass_cannon",
+    "war_cry",
+    "berserker_form",
+    "overclock",
+    "crushing_blow",
+    "chain_lightning",
+    "meditate",
+    "fortress_stance"
   ]
 }

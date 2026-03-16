@@ -166,6 +166,7 @@ public partial class BattleScene : Control
 
         _endTurnButton.Pressed += EndTurn;
         GetNode<Button>("%BackButton").Pressed += BackToMap;
+        GetNode<Button>("%TestVictoryButton").Pressed += OnTestVictoryPressed;
         _handContainer.Resized += () => LayoutHandCards(false);
 
         SetupFromGameState();
@@ -447,6 +448,13 @@ public partial class BattleScene : Control
         var turnStart = TurnFlowResolver.ResolvePlayerTurnStart(_turn, MaxEnergy, hasLantern, hasAnchor);
 
         _energy = turnStart.Energy;
+
+        if (_state.HasRelic("ember_ring"))
+        {
+            _energy += 1;
+            Log("Ember Ring grants +1 energy", "#fb923c");
+            FlashRelic("ember_ring");
+        }
         if (_turn == 1 && hasLantern)
         {
             Log("Lantern grants +1 energy", "#facc15");
@@ -454,6 +462,13 @@ public partial class BattleScene : Control
         }
 
         _playerBlock = turnStart.PlayerBlock;
+
+        if (_state.HasRelic("iron_shell"))
+        {
+            _playerBlock += 3;
+            Log("Iron Shell grants 3 block", "#93c5fd");
+            FlashRelic("iron_shell");
+        }
         if (_turn == 1 && hasAnchor)
         {
             Log("Anchor grants 8 block", "#60a5fa");
@@ -1562,19 +1577,23 @@ public partial class BattleScene : Control
 
         _state.PlayerHp = _playerHp;
         var hpBeforeResolve = _state.PlayerHp;
+        var hpAfterCharm = _state.HasRelic("charm") ? Math.Min(hpBeforeResolve + 5, _state.MaxHp) : hpBeforeResolve;
+        var charmHeal = hpAfterCharm - hpBeforeResolve;
+        var hpAfterBloodVial = _state.HasRelic("blood_vial") ? Math.Min(hpAfterCharm + 2, _state.MaxHp) : hpAfterCharm;
+        var bloodVialHeal = hpAfterBloodVial - hpAfterCharm;
+
         _state.ResolveBattleVictory();
-        if (_state.PlayerHp > hpBeforeResolve && _state.HasRelic("charm"))
+
+        if (charmHeal > 0)
         {
-            Log($"Lucky Charm heals {_state.PlayerHp - hpBeforeResolve} HP", "#86efac");
+            Log($"Lucky Charm heals {charmHeal} HP", "#86efac");
             FlashRelic("charm");
         }
-        _state.RollRewardOptions(3);
 
-        if (_isElite)
+        if (bloodVialHeal > 0)
         {
-            _state.RollRelicOptions(3);
-            GetTree().ChangeSceneToFile("res://Scenes/RelicRewardScene.tscn");
-            return;
+            Log($"Blood Vial heals {bloodVialHeal} HP", "#fca5a5");
+            FlashRelic("blood_vial");
         }
 
         GetTree().ChangeSceneToFile("res://Scenes/RewardScene.tscn");
@@ -1876,6 +1895,17 @@ public partial class BattleScene : Control
         }
 
         RequestHandLayout(true);
+    }
+
+    private async void OnTestVictoryPressed()
+    {
+        if (_battleEnded)
+        {
+            return;
+        }
+
+        Log("[TEST] Trigger instant victory", "#facc15");
+        await OnVictoryAsync();
     }
 
     private void BackToMap()

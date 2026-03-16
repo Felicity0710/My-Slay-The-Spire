@@ -14,9 +14,11 @@ public partial class GameState : Node
     public int PlayerHp { get; set; } = 80;
     public int Floor { get; private set; } = 1;
     public int BattlesWon { get; private set; }
+    public int PotionCharges { get; private set; }
 
     public List<string> DeckCardIds { get; } = new();
     public List<string> RelicIds { get; } = new();
+    public List<string> PotionIds { get; } = new();
 
     public List<List<MapNodeType>> MapLayout { get; } = new();
     public List<List<List<int>>> MapConnections { get; } = new();
@@ -38,11 +40,13 @@ public partial class GameState : Node
         PlayerHp = 80;
         Floor = 1;
         BattlesWon = 0;
+        PotionCharges = 0;
 
         DeckCardIds.Clear();
         DeckCardIds.AddRange(CardData.StarterDeckIds());
 
         RelicIds.Clear();
+        PotionIds.Clear();
 
         PendingEncounterType = MapNodeType.NormalBattle;
         PendingEventId = string.Empty;
@@ -85,6 +89,49 @@ public partial class GameState : Node
         DeckCardIds.Add(id);
     }
 
+
+    public void AddPotion(string potionId)
+    {
+        if (PotionIds.Count >= 9)
+        {
+            return;
+        }
+
+        PotionIds.Add(potionId);
+        PotionCharges = PotionIds.Count;
+    }
+
+    public PotionData AddRandomPotion()
+    {
+        var pool = PotionData.AllPotionIds();
+        if (pool.Count == 0)
+        {
+            var fallback = PotionData.CreateById("healing_potion");
+            AddPotion(fallback.Id);
+            return fallback;
+        }
+
+        var potionId = pool[_rng.Next(pool.Count)];
+        AddPotion(potionId);
+        return PotionData.CreateById(potionId);
+    }
+
+    public void AddPotionCharge(int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        var cap = Math.Min(PotionCharges + amount, 9);
+        while (PotionIds.Count < cap)
+        {
+            PotionIds.Add("healing_potion");
+        }
+
+        PotionCharges = PotionIds.Count;
+    }
+
     public bool CanChooseMapNode(int row, int column)
     {
         if (row != CurrentMapRow || row < 0 || row >= MapLayout.Count)
@@ -99,6 +146,12 @@ public partial class GameState : Node
 
         if (CurrentMapRow == 0)
         {
+            return true;
+        }
+
+        if (CurrentMapColumn < 0 || CurrentMapColumn >= MapWidth)
+        {
+            // Fallback for debug/forced encounters that did not originate from map node selection.
             return true;
         }
 
@@ -136,6 +189,11 @@ public partial class GameState : Node
         if (HasRelic("charm"))
         {
             PlayerHp = Math.Min(PlayerHp + 5, MaxHp);
+        }
+
+        if (HasRelic("blood_vial"))
+        {
+            PlayerHp = Math.Min(PlayerHp + 2, MaxHp);
         }
 
         AdvanceFloor();
@@ -239,7 +297,7 @@ public partial class GameState : Node
     {
         PendingRelicOptions.Clear();
 
-        var pool = new List<string> { "lantern", "anchor", "whetstone", "charm" };
+        var pool = new List<string>(RelicData.AllRelicIds());
         pool.RemoveAll(HasRelic);
 
         if (pool.Count == 0)

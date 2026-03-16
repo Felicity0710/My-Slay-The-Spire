@@ -11,14 +11,42 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_j2x8e")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="BgFar" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.07, 0.11, 0.09, 1)
+color = Color(0.015, 0.03, 0.045, 1)
+
+[node name="BgMid" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.06, 0.08, 0.82)
+
+[node name="VignetteTop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 210.0
+grow_horizontal = 2
+color = Color(0, 0, 0, 0.55)
+
+[node name="VignetteBottom" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -230.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0, 0, 0, 0.62)
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -27,42 +55,112 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
+theme_override_constants/margin_left = 32
 theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 26
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="RootVBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 12
+size_flags_vertical = 3
+theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="Margin/VBox"]
+[node name="BannerWrap" type="CenterContainer" parent="Margin/RootVBox"]
 layout_mode = 2
-text = "Choose A Card Reward"
 
-[node name="Options" type="HBoxContainer" parent="Margin/VBox"]
+[node name="BannerPanel" type="PanelContainer" parent="Margin/RootVBox/BannerWrap"]
 layout_mode = 2
-theme_override_constants/separation = 10
+custom_minimum_size = Vector2(540, 86)
 
-[node name="OptionButton1" type="Button" parent="Margin/VBox/Options"]
+[node name="BannerMargin" type="MarginContainer" parent="Margin/RootVBox/BannerWrap/BannerPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 14
+
+[node name="Title" type="Label" parent="Margin/RootVBox/BannerWrap/BannerPanel/BannerMargin"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
-custom_minimum_size = Vector2(220, 220)
+horizontal_alignment = 1
+text = "选择一张牌"
+
+[node name="StatusWrap" type="CenterContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Margin/RootVBox/StatusWrap"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(760, 0)
+layout_mode = 2
+text = "选择一种奖励：遗物 / 卡牌包 / 药水 / 随机奖励"
+horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="OptionButton2" type="Button" parent="Margin/VBox/Options"]
+[node name="RewardTypeWrap" type="CenterContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RewardTypes" type="HBoxContainer" parent="Margin/RootVBox/RewardTypeWrap"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="RelicRewardButton" type="Button" parent="Margin/RootVBox/RewardTypeWrap/RewardTypes"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(220, 220)
+custom_minimum_size = Vector2(220, 96)
+text = "遗物奖励\n随机获得 1 个遗物"
 autowrap_mode = 3
 
-[node name="OptionButton3" type="Button" parent="Margin/VBox/Options"]
+[node name="CardPackRewardButton" type="Button" parent="Margin/RootVBox/RewardTypeWrap/RewardTypes"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(220, 220)
+custom_minimum_size = Vector2(220, 96)
+text = "卡牌包\n三选一"
 autowrap_mode = 3
 
-[node name="SkipButton" type="Button" parent="Margin/VBox"]
+[node name="PotionRewardButton" type="Button" parent="Margin/RootVBox/RewardTypeWrap/RewardTypes"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Skip"
+custom_minimum_size = Vector2(220, 96)
+text = "药水奖励\n随机获得 1 瓶"
+autowrap_mode = 3
+
+[node name="RandomRewardButton" type="Button" parent="Margin/RootVBox/RewardTypeWrap/RewardTypes"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(220, 96)
+text = "随机奖励\n遗物/卡牌/药水"
+autowrap_mode = 3
+
+[node name="CardPackWrap" type="CenterContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Options" type="HBoxContainer" parent="Margin/RootVBox/CardPackWrap"]
+layout_mode = 2
+theme_override_constants/separation = 42
+
+[node name="CardSlot1" type="CenterContainer" parent="Margin/RootVBox/CardPackWrap/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(260, 380)
+
+[node name="CardSlot2" type="CenterContainer" parent="Margin/RootVBox/CardPackWrap/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(260, 380)
+
+[node name="CardSlot3" type="CenterContainer" parent="Margin/RootVBox/CardPackWrap/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(260, 380)
+
+[node name="BottomRow" type="CenterContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+
+[node name="SkipButton" type="Button" parent="Margin/RootVBox/BottomRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(196, 54)
+text = "跳过"
