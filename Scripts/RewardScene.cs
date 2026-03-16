@@ -147,6 +147,8 @@ public partial class RewardScene : Control
             cardView.Setup(card);
             cardView.MouseDefaultCursorShape = CursorShape.PointingHand;
             cardView.Scale = new Vector2(1.32f, 1.32f);
+            cardView.SetProcess(false);
+            cardView.SetProcessInput(false);
             cardView.Clicked += _ => OnPickCardFromPack(cardId);
             slot.AddChild(cardView);
             _cardPreviewViews.Add(cardView);
