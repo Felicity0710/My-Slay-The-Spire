@@ -1,5 +1,5 @@
 ## 0 coding 纯vibe
-本项目完全由codex开发，全程聊天修改逻辑，一天run起来。
+本项目完全由codex开发，全程聊天修改逻辑，一天run起来。最下面有直播录像
 
 https://github.com/user-attachments/assets/62f93228-8809-45c3-a432-a451aba46220
 
