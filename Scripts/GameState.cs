@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public partial class GameState : Node
 {
@@ -209,9 +210,25 @@ public partial class GameState : Node
         PendingRewardOptions.Clear();
 
         var pool = CardData.RewardPoolIds();
+        pool.RemoveAll(id => id == "strike" || id == "defend");
+
+        if (pool.Count == 0)
+        {
+            return;
+        }
+
+        // Guarantee at least one build-enabler so rewards feel less like starter deck filler.
+        var buildCards = pool.Where(IsBuildEnablerCard).ToList();
+        if (buildCards.Count > 0 && count > 0)
+        {
+            var guaranteed = buildCards[_rng.Next(buildCards.Count)];
+            PendingRewardOptions.Add(guaranteed);
+            pool.Remove(guaranteed);
+        }
+
         Shuffle(pool);
 
-        var cap = Math.Min(count, pool.Count);
+        var cap = Math.Min(count - PendingRewardOptions.Count, pool.Count);
         for (var i = 0; i < cap; i++)
         {
             PendingRewardOptions.Add(pool[i]);
@@ -356,5 +373,31 @@ public partial class GameState : Node
             var j = _rng.Next(i + 1);
             (list[i], list[j]) = (list[j], list[i]);
         }
+    }
+
+    private static bool IsBuildEnablerCard(string cardId)
+    {
+        var card = CardData.CreateById(cardId);
+        foreach (var effect in card.Effects)
+        {
+            if (effect.Type == CardEffectType.GainStrength ||
+                effect.Type == CardEffectType.GainEnergy ||
+                effect.Type == CardEffectType.Heal)
+            {
+                return true;
+            }
+
+            if (effect.Type == CardEffectType.Damage && effect.Target == CardEffectTarget.AllEnemies)
+            {
+                return true;
+            }
+
+            if (effect.Type == CardEffectType.ApplyVulnerable && effect.Target == CardEffectTarget.AllEnemies)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

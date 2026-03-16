@@ -3,50 +3,44 @@ using System.Collections.Generic;
 
 public static class EnemyEncounterBuilder
 {
-    private sealed record EnemyArchetype(string Id, string DisplayName, string VisualId, int BaseHp, int HpPerFloor);
-
-    private static readonly Dictionary<string, EnemyArchetype> Archetypes = new()
-    {
-        ["cultist"] = new EnemyArchetype("cultist", "Cultist", "cultist", 36, 7),
-        ["cultist_scout"] = new EnemyArchetype("cultist_scout", "Cultist", "cultist", 32, 6),
-        ["elite_sentinel"] = new EnemyArchetype("elite_sentinel", "Elite Sentinel", "elite_sentinel", 78, 10)
-    };
+    private static readonly EnemyEncounterCatalog Catalog = EnemyEncounterCatalog.Load();
 
     public static List<EnemyUnit> BuildEncounter(MapNodeType encounterType, int floor)
     {
-        var enemies = new List<EnemyUnit>();
-        if (encounterType == MapNodeType.EliteBattle)
+        if (!Catalog.EncounterMembersByType.TryGetValue(encounterType, out var members))
         {
-            enemies.Add(Create("elite_sentinel", floor, "A", strength: Math.Max(floor / 2, 1)));
-            enemies.Add(Create("elite_sentinel", floor, "B", strength: Math.Max(floor / 2, 1)));
-            return enemies;
+            throw new InvalidOperationException($"No encounter rule configured for encounterType={encounterType}");
         }
 
-        enemies.Add(Create("cultist", floor, "A", strength: Math.Max(floor - 1, 0)));
-        enemies.Add(Create("cultist", floor, "B", strength: Math.Max(floor - 1, 0)));
-        if (floor >= 3)
+        var enemies = new List<EnemyUnit>();
+        foreach (var member in members)
         {
-            enemies.Add(Create("cultist_scout", floor, "C", strength: Math.Max(floor - 1, 0)));
+            if (floor < member.MinFloor)
+            {
+                continue;
+            }
+
+            enemies.Add(Create(member, floor));
         }
 
         return enemies;
     }
 
-    private static EnemyUnit Create(string archetypeId, int floor, string suffix, int strength)
+    private static EnemyUnit Create(EnemyEncounterCatalog.EncounterMember member, int floor)
     {
-        if (!Archetypes.TryGetValue(archetypeId, out var archetype))
+        if (!Catalog.ArchetypesById.TryGetValue(member.ArchetypeId, out var archetype))
         {
-            throw new InvalidOperationException($"Unknown enemy archetype: {archetypeId}");
+            throw new InvalidOperationException($"Unknown enemy archetype: {member.ArchetypeId}");
         }
 
         var hp = archetype.BaseHp + floor * archetype.HpPerFloor;
         return new EnemyUnit
         {
-            Name = $"{archetype.DisplayName} {suffix}",
+            Name = Catalog.BuildName(archetype, member.Suffix),
             VisualId = archetype.VisualId,
             Hp = hp,
             MaxHp = hp,
-            Strength = strength
+            Strength = Catalog.ResolveStrength(member.Strength, floor)
         };
     }
 }

@@ -8,8 +8,10 @@
 
   <ItemGroup>
     <Compile Include="..\..\Scripts\CardData.cs" Link="CardData.cs" />
+    <Compile Include="..\..\Scripts\CardEffectPipeline.cs" Link="CardEffectPipeline.cs" />
     <Compile Include="..\..\Scripts\CombatResolver.cs" Link="CombatResolver.cs" />
     <Compile Include="..\..\Scripts\DeckFlowResolver.cs" Link="DeckFlowResolver.cs" />
+    <Compile Include="..\..\Scripts\EnemyEncounterCatalog.cs" Link="EnemyEncounterCatalog.cs" />
     <Compile Include="..\..\Scripts\EnemyEncounterBuilder.cs" Link="EnemyEncounterBuilder.cs" />
     <Compile Include="..\..\Scripts\EnemyIntentType.cs" Link="EnemyIntentType.cs" />
     <Compile Include="..\..\Scripts\EnemyUnit.cs" Link="EnemyUnit.cs" />
@@ -20,6 +22,9 @@
 
   <ItemGroup>
     <Content Include="..\..\Data\cards.json" Link="Data\cards.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Data\enemies.json" Link="Data\enemies.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -24,9 +24,13 @@ internal static class Program
             ("Elite intent values stay in expected ranges", TestEliteIntentRanges),
             ("Elite attack rate is higher than normal", TestEliteAttackRateHigher),
             ("Normal encounter roster scales by floor", TestNormalEncounterRoster),
-            ("Elite attack rate is higher than normal", TestEliteAttackRateHigher),
+            ("Elite encounter roster scales by floor", TestEliteEncounterRoster),
             ("Card effects aggregate into legacy fields", TestCardEffectsAggregateLegacyFields),
-            ("CreateById returns independent card instances", TestCreateByIdReturnsIndependentInstances)
+            ("CreateById returns independent card instances", TestCreateByIdReturnsIndependentInstances),
+            ("Card pools only contain known card ids", TestCardPoolsContainKnownCardIds),
+            ("Enemy catalog contains configured encounter rules", TestEnemyCatalogRuleCoverage),
+            ("Card effect pipeline preserves execution order", TestCardEffectPipelineOrder),
+            ("Card effect pipeline handles new buff effects", TestCardEffectPipelineExtendedEffects)
         };
 
         var failed = 0;
@@ -51,36 +55,21 @@ internal static class Program
 
     private static void TestVulnerableRounding()
     {
-        var result = CombatResolver.ResolveHit(
-            baseDamage: 5,
-            attackerStrength: 0,
-            targetVulnerable: 1,
-            targetBlock: 0,
-            targetHp: 50);
+        var result = CombatResolver.ResolveHit(5, 0, 1, 0, 50);
         ExpectEqual(8, result.FinalDamage, nameof(result.FinalDamage));
         ExpectEqual(42, result.RemainingHp, nameof(result.RemainingHp));
     }
 
     private static void TestNoVulnerable()
     {
-        var result = CombatResolver.ResolveHit(
-            baseDamage: 7,
-            attackerStrength: 0,
-            targetVulnerable: 0,
-            targetBlock: 0,
-            targetHp: 30);
+        var result = CombatResolver.ResolveHit(7, 0, 0, 0, 30);
         ExpectEqual(7, result.FinalDamage, nameof(result.FinalDamage));
         ExpectEqual(23, result.RemainingHp, nameof(result.RemainingHp));
     }
 
     private static void TestFullBlock()
     {
-        var result = CombatResolver.ResolveHit(
-            baseDamage: 6,
-            attackerStrength: 0,
-            targetVulnerable: 0,
-            targetBlock: 10,
-            targetHp: 25);
+        var result = CombatResolver.ResolveHit(6, 0, 0, 10, 25);
         ExpectEqual(6, result.FinalDamage, nameof(result.FinalDamage));
         ExpectEqual(6, result.Blocked, nameof(result.Blocked));
         ExpectEqual(0, result.Taken, nameof(result.Taken));
@@ -90,12 +79,7 @@ internal static class Program
 
     private static void TestPartialBlock()
     {
-        var result = CombatResolver.ResolveHit(
-            baseDamage: 12,
-            attackerStrength: 0,
-            targetVulnerable: 0,
-            targetBlock: 5,
-            targetHp: 40);
+        var result = CombatResolver.ResolveHit(12, 0, 0, 5, 40);
         ExpectEqual(12, result.FinalDamage, nameof(result.FinalDamage));
         ExpectEqual(5, result.Blocked, nameof(result.Blocked));
         ExpectEqual(7, result.Taken, nameof(result.Taken));
@@ -105,56 +89,35 @@ internal static class Program
 
     private static void TestStrengthAndFlatBonus()
     {
-        var result = CombatResolver.ResolveHit(
-            baseDamage: 6,
-            attackerStrength: 2,
-            targetVulnerable: 1,
-            targetBlock: 0,
-            targetHp: 40,
-            flatBonus: 1);
+        var result = CombatResolver.ResolveHit(6, 2, 1, 0, 40, flatBonus: 1);
         ExpectEqual(14, result.FinalDamage, nameof(result.FinalDamage));
         ExpectEqual(26, result.RemainingHp, nameof(result.RemainingHp));
     }
 
     private static void TestClampToZero()
     {
-        var result = CombatResolver.ResolveHit(
-            baseDamage: -2,
-            attackerStrength: -5,
-            targetVulnerable: 0,
-            targetBlock: 0,
-            targetHp: 10);
+        var result = CombatResolver.ResolveHit(-2, -5, 0, 0, 10);
         ExpectEqual(0, result.FinalDamage, nameof(result.FinalDamage));
         ExpectEqual(10, result.RemainingHp, nameof(result.RemainingHp));
     }
 
     private static void TestTurnOneRelicBonuses()
     {
-        var result = TurnFlowResolver.ResolvePlayerTurnStart(
-            turn: 1,
-            maxEnergy: 3,
-            hasLantern: true,
-            hasAnchor: true);
+        var result = TurnFlowResolver.ResolvePlayerTurnStart(1, 3, hasLantern: true, hasAnchor: true);
         ExpectEqual(4, result.Energy, nameof(result.Energy));
         ExpectEqual(8, result.PlayerBlock, nameof(result.PlayerBlock));
     }
 
     private static void TestLaterTurnNoOpeningBonus()
     {
-        var result = TurnFlowResolver.ResolvePlayerTurnStart(
-            turn: 2,
-            maxEnergy: 3,
-            hasLantern: true,
-            hasAnchor: true);
+        var result = TurnFlowResolver.ResolvePlayerTurnStart(2, 3, hasLantern: true, hasAnchor: true);
         ExpectEqual(3, result.Energy, nameof(result.Energy));
         ExpectEqual(0, result.PlayerBlock, nameof(result.PlayerBlock));
     }
 
     private static void TestEndOfRoundStatusDecay()
     {
-        var result = TurnFlowResolver.ResolveEndOfRoundStatuses(
-            playerVulnerable: 2,
-            enemyVulnerable: 1);
+        var result = TurnFlowResolver.ResolveEndOfRoundStatuses(2, 1);
         ExpectEqual(1, result.PlayerVulnerable, nameof(result.PlayerVulnerable));
         ExpectEqual(0, result.EnemyVulnerable, nameof(result.EnemyVulnerable));
     }
@@ -180,13 +143,7 @@ internal static class Program
         var discardPile = new List<string>();
         var hand = new List<string> { "h1", "h2" };
 
-        var result = DeckFlowResolver.DrawIntoHand(
-            drawPile,
-            discardPile,
-            hand,
-            drawCount: 3,
-            handLimit: 3,
-            rng);
+        var result = DeckFlowResolver.DrawIntoHand(drawPile, discardPile, hand, drawCount: 3, handLimit: 3, rng);
 
         ExpectEqual(true, result.HandLimitReached, nameof(result.HandLimitReached));
         ExpectEqual(1, result.DrawnCards.Count, "result.DrawnCards.Count");
@@ -201,13 +158,7 @@ internal static class Program
         var discardPile = new List<string> { "x", "y", "z" };
         var hand = new List<string>();
 
-        var result = DeckFlowResolver.DrawIntoHand(
-            drawPile,
-            discardPile,
-            hand,
-            drawCount: 3,
-            handLimit: 10,
-            rng);
+        var result = DeckFlowResolver.DrawIntoHand(drawPile, discardPile, hand, drawCount: 3, handLimit: 10, rng);
 
         ExpectEqual(false, result.HandLimitReached, nameof(result.HandLimitReached));
         ExpectEqual(1, result.ReshuffleCount, nameof(result.ReshuffleCount));
@@ -221,17 +172,7 @@ internal static class Program
     private static void TestDrawHaltsWhenNoCards()
     {
         var rng = new Random(7);
-        var drawPile = new List<string>();
-        var discardPile = new List<string>();
-        var hand = new List<string>();
-
-        var result = DeckFlowResolver.DrawIntoHand(
-            drawPile,
-            discardPile,
-            hand,
-            drawCount: 5,
-            handLimit: 10,
-            rng);
+        var result = DeckFlowResolver.DrawIntoHand(new List<string>(), new List<string>(), new List<string>(), drawCount: 5, handLimit: 10, rng);
 
         ExpectEqual(0, result.DrawnCards.Count, "result.DrawnCards.Count");
         ExpectEqual(0, result.ReshuffleCount, nameof(result.ReshuffleCount));
@@ -280,30 +221,6 @@ internal static class Program
         }
     }
 
-    private static void TestCardEffectsAggregateLegacyFields()
-    {
-        var card = CardData.CreateById("quick_slash");
-
-        ExpectEqual(2, card.Effects.Count, "card.Effects.Count");
-        ExpectEqual(7, card.Damage, nameof(card.Damage));
-        ExpectEqual(0, card.Block, nameof(card.Block));
-        ExpectEqual(0, card.ApplyVulnerable, nameof(card.ApplyVulnerable));
-        ExpectEqual(1, card.DrawCount, nameof(card.DrawCount));
-        ExpectEqual(true, card.HasEffect(CardEffectType.Damage), "card.HasEffect(Damage)");
-        ExpectEqual(true, card.HasEffect(CardEffectType.DrawCards), "card.HasEffect(DrawCards)");
-    }
-
-    private static void TestCreateByIdReturnsIndependentInstances()
-    {
-        var a = CardData.CreateById("strike");
-        var b = CardData.CreateById("strike");
-
-        if (ReferenceEquals(a, b))
-        {
-            throw new InvalidOperationException("CreateById should return independent instances for duplicate cards in deck/hand.");
-        }
-    }
-
     private static void TestEliteAttackRateHigher()
     {
         const int sampleSize = 20000;
@@ -314,12 +231,12 @@ internal static class Program
 
         for (var i = 0; i < sampleSize; i++)
         {
-            if (IntentResolver.RollEnemyIntent(isElite: false, normalRng).Type == EnemyIntentType.Attack)
+            if (IntentResolver.RollEnemyIntent(false, normalRng).Type == EnemyIntentType.Attack)
             {
                 normalAttack++;
             }
 
-            if (IntentResolver.RollEnemyIntent(isElite: true, eliteRng).Type == EnemyIntentType.Attack)
+            if (IntentResolver.RollEnemyIntent(true, eliteRng).Type == EnemyIntentType.Attack)
             {
                 eliteAttack++;
             }
@@ -331,8 +248,7 @@ internal static class Program
         ExpectInRange(eliteRate, 0.65, 0.75, "elite attack rate");
         if (eliteRate <= normalRate)
         {
-            throw new InvalidOperationException(
-                $"elite attack rate should be higher than normal: elite={eliteRate:F3}, normal={normalRate:F3}");
+            throw new InvalidOperationException($"elite attack rate should be higher than normal: elite={eliteRate:F3}, normal={normalRate:F3}");
         }
     }
 
@@ -357,6 +273,167 @@ internal static class Program
         ExpectEqual("elite_sentinel", roster[0].VisualId, "roster[0].VisualId");
         ExpectEqual(118, roster[0].Hp, "roster[0].Hp");
         ExpectEqual(2, roster[0].Strength, "roster[0].Strength");
+    }
+
+    private static void TestCardEffectsAggregateLegacyFields()
+    {
+        var card = CardData.CreateById("quick_slash");
+
+        ExpectEqual(2, card.Effects.Count, "card.Effects.Count");
+        ExpectEqual(7, card.Damage, nameof(card.Damage));
+        ExpectEqual(0, card.Block, nameof(card.Block));
+        ExpectEqual(0, card.ApplyVulnerable, nameof(card.ApplyVulnerable));
+        ExpectEqual(1, card.DrawCount, nameof(card.DrawCount));
+        ExpectEqual(true, card.HasEffect(CardEffectType.Damage), "card.HasEffect(Damage)");
+        ExpectEqual(true, card.HasEffect(CardEffectType.DrawCards), "card.HasEffect(DrawCards)");
+    }
+
+    private static void TestCreateByIdReturnsIndependentInstances()
+    {
+        var a = CardData.CreateById("strike");
+        var b = CardData.CreateById("strike");
+
+        if (ReferenceEquals(a, b))
+        {
+            throw new InvalidOperationException("CreateById should return independent instances for duplicate cards in deck/hand.");
+        }
+    }
+
+    private static void TestCardPoolsContainKnownCardIds()
+    {
+        foreach (var id in CardData.StarterDeckIds())
+        {
+            var card = CardData.CreateById(id);
+            ExpectEqual(id, card.Id, "starter id resolution");
+        }
+
+        foreach (var id in CardData.RewardPoolIds())
+        {
+            var card = CardData.CreateById(id);
+            ExpectEqual(id, card.Id, "reward id resolution");
+        }
+    }
+
+    private static void TestEnemyCatalogRuleCoverage()
+    {
+        var catalog = EnemyEncounterCatalog.Load();
+        ExpectEqual(true, catalog.EncounterMembersByType.ContainsKey(MapNodeType.NormalBattle), "normal encounter config exists");
+        ExpectEqual(true, catalog.EncounterMembersByType.ContainsKey(MapNodeType.EliteBattle), "elite encounter config exists");
+        ExpectEqual(true, catalog.ArchetypesById.ContainsKey("cultist"), "cultist archetype exists");
+    }
+
+    private static void TestCardEffectPipelineOrder()
+    {
+        var card = new CardData(
+            id: "combo",
+            name: "Combo",
+            description: "Deal 4. Apply 2 Vulnerable. Draw 1.",
+            kind: CardKind.Attack,
+            cost: 1,
+            effects: new List<CardEffectData>
+            {
+                new(CardEffectType.Damage, CardEffectTarget.SelectedEnemy, amount: 4),
+                new(CardEffectType.ApplyVulnerable, CardEffectTarget.SelectedEnemy, amount: 2),
+                new(CardEffectType.DrawCards, CardEffectTarget.Player, amount: 1)
+            });
+
+        var log = new List<string>();
+        var result = CardEffectPipeline.Execute(card, new RecordingEffectExecutor(log));
+
+        ExpectEqual(2, log.Count, "pipeline action count");
+        ExpectEqual("Damage:4", log[0], "pipeline first action");
+        ExpectEqual("Vulnerable:2", log[1], "pipeline second action");
+        ExpectEqual(1, result.DrawCount, "pipeline draw count");
+    }
+
+    private static void TestCardEffectPipelineExtendedEffects()
+    {
+        var card = new CardData(
+            id: "support",
+            name: "Support",
+            description: "Gain 2 Strength. Gain 1 Energy. Heal 3.",
+            kind: CardKind.Skill,
+            cost: 1,
+            effects: new List<CardEffectData>
+            {
+                new(CardEffectType.GainStrength, CardEffectTarget.Player, amount: 2),
+                new(CardEffectType.GainEnergy, CardEffectTarget.Player, amount: 1),
+                new(CardEffectType.Heal, CardEffectTarget.Player, amount: 3)
+            });
+
+        var runtime = new CountingRuntime();
+        var result = CardEffectPipeline.Execute(card, runtime);
+
+        ExpectEqual(1, runtime.GainStrengthCount, "GainStrengthCount");
+        ExpectEqual(1, runtime.GainEnergyCount, "GainEnergyCount");
+        ExpectEqual(1, runtime.HealCount, "HealCount");
+        ExpectEqual(0, result.DrawCount, "extended pipeline draw count");
+    }
+
+    private sealed class RecordingEffectExecutor : ICardEffectRuntime
+    {
+        private readonly List<string> _log;
+
+        public RecordingEffectExecutor(List<string> log)
+        {
+            _log = log;
+        }
+
+        public void ExecuteDamage(CardData card, CardEffectData effect)
+        {
+            _log.Add($"Damage:{effect.Amount}");
+        }
+
+        public void ExecuteGainBlock(CardData card, CardEffectData effect)
+        {
+            _log.Add($"Block:{effect.Amount}");
+        }
+
+        public void ExecuteApplyVulnerable(CardData card, CardEffectData effect)
+        {
+            _log.Add($"Vulnerable:{effect.Amount}");
+        }
+
+        public void ExecuteGainStrength(CardData card, CardEffectData effect)
+        {
+            _log.Add($"Strength:{effect.Amount}");
+        }
+
+        public void ExecuteGainEnergy(CardData card, CardEffectData effect)
+        {
+            _log.Add($"Energy:{effect.Amount}");
+        }
+
+        public void ExecuteHeal(CardData card, CardEffectData effect)
+        {
+            _log.Add($"Heal:{effect.Amount}");
+        }
+    }
+
+    private sealed class CountingRuntime : ICardEffectRuntime
+    {
+        public int GainStrengthCount;
+        public int GainEnergyCount;
+        public int HealCount;
+
+        public void ExecuteDamage(CardData card, CardEffectData effect) { }
+        public void ExecuteGainBlock(CardData card, CardEffectData effect) { }
+        public void ExecuteApplyVulnerable(CardData card, CardEffectData effect) { }
+
+        public void ExecuteGainStrength(CardData card, CardEffectData effect)
+        {
+            GainStrengthCount++;
+        }
+
+        public void ExecuteGainEnergy(CardData card, CardEffectData effect)
+        {
+            GainEnergyCount++;
+        }
+
+        public void ExecuteHeal(CardData card, CardEffectData effect)
+        {
+            HealCount++;
+        }
     }
 
     private static void ExpectEqual(int expected, int actual, string label)

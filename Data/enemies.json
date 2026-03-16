@@ -1,0 +1,94 @@
+{
+  "archetypes": [
+    {
+      "id": "cultist",
+      "displayName": "Cultist",
+      "visualId": "cultist",
+      "nameTemplate": "{displayName} {suffix}",
+      "baseHp": 36,
+      "hpPerFloor": 7
+    },
+    {
+      "id": "cultist_scout",
+      "displayName": "Cultist",
+      "visualId": "cultist",
+      "nameTemplate": "{displayName} {suffix}",
+      "baseHp": 32,
+      "hpPerFloor": 6
+    },
+    {
+      "id": "elite_sentinel",
+      "displayName": "Elite Sentinel",
+      "visualId": "elite_sentinel",
+      "nameTemplate": "{displayName} {suffix}",
+      "baseHp": 78,
+      "hpPerFloor": 10
+    }
+  ],
+  "encounters": {
+    "NormalBattle": [
+      {
+        "archetypeId": "cultist",
+        "suffix": "A",
+        "minFloor": 1,
+        "strength": {
+          "baseValue": 0,
+          "floorMultiplier": 1,
+          "floorDivisor": 1,
+          "floorOffset": -1,
+          "minValue": 0
+        }
+      },
+      {
+        "archetypeId": "cultist",
+        "suffix": "B",
+        "minFloor": 1,
+        "strength": {
+          "baseValue": 0,
+          "floorMultiplier": 1,
+          "floorDivisor": 1,
+          "floorOffset": -1,
+          "minValue": 0
+        }
+      },
+      {
+        "archetypeId": "cultist_scout",
+        "suffix": "C",
+        "minFloor": 3,
+        "strength": {
+          "baseValue": 0,
+          "floorMultiplier": 1,
+          "floorDivisor": 1,
+          "floorOffset": -1,
+          "minValue": 0
+        }
+      }
+    ],
+    "EliteBattle": [
+      {
+        "archetypeId": "elite_sentinel",
+        "suffix": "A",
+        "minFloor": 1,
+        "strength": {
+          "baseValue": 0,
+          "floorMultiplier": 1,
+          "floorDivisor": 2,
+          "floorOffset": 0,
+          "minValue": 1
+        }
+      },
+      {
+        "archetypeId": "elite_sentinel",
+        "suffix": "B",
+        "minFloor": 1,
+        "strength": {
+          "baseValue": 0,
+          "floorMultiplier": 1,
+          "floorDivisor": 2,
+          "floorOffset": 0,
+          "minValue": 1
+        }
+      }
+    ]
+  }
+}

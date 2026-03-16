@@ -122,6 +122,88 @@
           "repeat": 2
         }
       ]
+    },
+    {
+      "id": "battle_focus",
+      "name": "Battle Focus",
+      "description": "Gain 2 Strength.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainStrength",
+          "target": "Player",
+          "amount": 2,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "adrenaline_rush",
+      "name": "Adrenaline Rush",
+      "description": "Gain 1 Energy. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GainEnergy",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "second_wind",
+      "name": "Second Wind",
+      "description": "Gain 6 Block. Heal 4 HP.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 6,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "Heal",
+          "target": "Player",
+          "amount": 4,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "rending_wave",
+      "name": "Rending Wave",
+      "description": "Deal 5 damage to all enemies. Apply 1 Vulnerable to all enemies.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "AllEnemies",
+          "amount": 5
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "AllEnemies",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
     }
   ],
   "starterDeck": [
@@ -131,10 +213,10 @@
     "defend",
     "strike",
     "defend",
-    "strike",
-    "defend",
-    "strike",
-    "defend",
+    "quick_slash",
+    "shrug",
+    "battle_focus",
+    "adrenaline_rush",
     "bash"
   ],
   "rewardPool": [
@@ -143,7 +225,9 @@
     "quick_slash",
     "whirlwind",
     "bash",
-    "strike",
-    "defend"
+    "battle_focus",
+    "adrenaline_rush",
+    "second_wind",
+    "rending_wave"
   ]
 }

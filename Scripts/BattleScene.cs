@@ -783,47 +783,16 @@ public partial class BattleScene : Control
         _energy -= card.Cost;
 
         var relicAttackBonus = _state.HasRelic("whetstone") ? 1 : 0;
-        var drawCount = 0;
-
-        foreach (var effect in card.Effects)
-        {
-            for (var i = 0; i < effect.Repeat; i++)
-            {
-                switch (effect.Type)
-                {
-                    case CardEffectType.Damage:
-                        ResolveDamageCardEffect(card, effect, relicAttackBonus);
-                        break;
-                    case CardEffectType.GainBlock:
-                        if (effect.Target == CardEffectTarget.Player && effect.Amount > 0)
-                        {
-                            _playerBlock += effect.Amount;
-                            Log($"Play {card.Name}: gain {effect.Amount} Block", "#60a5fa");
-                            var playerEffectTarget = _playerCardView.EffectTarget();
-                            SpawnFloatingText(playerEffectTarget, $"+{effect.Amount}", new Color("93c5fd"));
-                            SpawnShieldEffect(playerEffectTarget, new Color("93c5fd"));
-                        }
-                        break;
-                    case CardEffectType.ApplyVulnerable:
-                        ResolveApplyVulnerableEffect(card, effect);
-                        break;
-                    case CardEffectType.DrawCards:
-                        if (effect.Amount > 0)
-                        {
-                            drawCount += effect.Amount;
-                        }
-                        break;
-                }
-            }
-        }
+        var effectExecutor = new BattleCardEffectExecutor(this, relicAttackBonus);
+        var effectResult = CardEffectPipeline.Execute(card, effectExecutor);
 
         _hand.Remove(card);
         _discardPile.Add(card);
 
-        if (drawCount > 0)
+        if (effectResult.DrawCount > 0)
         {
-            Log($"Play {card.Name}: draw {drawCount}", "#93c5fd");
-            await DrawCards(drawCount);
+            Log($"Play {card.Name}: draw {effectResult.DrawCount}", "#93c5fd");
+            await DrawCards(effectResult.DrawCount);
         }
         else
         {
@@ -1079,6 +1048,110 @@ public partial class BattleScene : Control
         return card.Effects.Any(effect =>
             (effect.Type == CardEffectType.Damage || effect.Type == CardEffectType.ApplyVulnerable)
             && effect.Target == CardEffectTarget.SelectedEnemy);
+    }
+
+    private sealed class BattleCardEffectExecutor : ICardEffectRuntime
+    {
+        private readonly BattleScene _scene;
+        private readonly int _relicAttackBonus;
+
+        public BattleCardEffectExecutor(BattleScene scene, int relicAttackBonus)
+        {
+            _scene = scene;
+            _relicAttackBonus = relicAttackBonus;
+        }
+
+        public void ExecuteDamage(CardData card, CardEffectData effect)
+        {
+            _scene.ResolveDamageCardEffect(card, effect, _relicAttackBonus);
+        }
+
+        public void ExecuteGainBlock(CardData card, CardEffectData effect)
+        {
+            _scene.ApplyGainBlockEffect(card, effect);
+        }
+
+        public void ExecuteApplyVulnerable(CardData card, CardEffectData effect)
+        {
+            _scene.ResolveApplyVulnerableEffect(card, effect);
+        }
+
+        public void ExecuteGainStrength(CardData card, CardEffectData effect)
+        {
+            _scene.ApplyGainStrengthEffect(card, effect);
+        }
+
+        public void ExecuteGainEnergy(CardData card, CardEffectData effect)
+        {
+            _scene.ApplyGainEnergyEffect(card, effect);
+        }
+
+        public void ExecuteHeal(CardData card, CardEffectData effect)
+        {
+            _scene.ApplyHealEffect(card, effect);
+        }
+    }
+
+    private void ApplyGainBlockEffect(CardData card, CardEffectData effect)
+    {
+        if (effect.Target != CardEffectTarget.Player || effect.Amount <= 0)
+        {
+            return;
+        }
+
+        _playerBlock += effect.Amount;
+        Log($"Play {card.Name}: gain {effect.Amount} Block", "#60a5fa");
+        var playerEffectTarget = _playerCardView.EffectTarget();
+        SpawnFloatingText(playerEffectTarget, $"+{effect.Amount}", new Color("93c5fd"));
+        SpawnShieldEffect(playerEffectTarget, new Color("93c5fd"));
+    }
+
+
+    private void ApplyGainStrengthEffect(CardData card, CardEffectData effect)
+    {
+        if (effect.Target != CardEffectTarget.Player || effect.Amount <= 0)
+        {
+            return;
+        }
+
+        _playerStrength += effect.Amount;
+        var playerEffectTarget = _playerCardView.EffectTarget();
+        Log($"Play {card.Name}: gain {effect.Amount} Strength", "#c084fc");
+        SpawnFloatingText(playerEffectTarget, $"STR+{effect.Amount}", new Color("d8b4fe"));
+        SpawnRuneEffect(playerEffectTarget, new Color("d8b4fe"));
+    }
+
+    private void ApplyGainEnergyEffect(CardData card, CardEffectData effect)
+    {
+        if (effect.Target != CardEffectTarget.Player || effect.Amount <= 0)
+        {
+            return;
+        }
+
+        _energy += effect.Amount;
+        var playerEffectTarget = _playerCardView.EffectTarget();
+        Log($"Play {card.Name}: gain {effect.Amount} Energy", "#fde68a");
+        SpawnFloatingText(playerEffectTarget, $"EN+{effect.Amount}", new Color("fde68a"));
+    }
+
+    private void ApplyHealEffect(CardData card, CardEffectData effect)
+    {
+        if (effect.Target != CardEffectTarget.Player || effect.Amount <= 0)
+        {
+            return;
+        }
+
+        var before = _playerHp;
+        _playerHp = Math.Min(_playerHp + effect.Amount, _playerMaxHp);
+        var gained = _playerHp - before;
+        if (gained <= 0)
+        {
+            return;
+        }
+
+        var playerEffectTarget = _playerCardView.EffectTarget();
+        Log($"Play {card.Name}: heal {gained}", "#86efac");
+        SpawnFloatingText(playerEffectTarget, $"+{gained} HP", new Color("86efac"));
     }
 
     private void ResolveDamageCardEffect(CardData card, CardEffectData effect, int relicAttackBonus)
@@ -1957,6 +2030,21 @@ public partial class BattleScene : Control
         if (card.Card.DrawCount > 0)
         {
             lines.Add("[color=#a5f3fc]Draw[/color]: draw extra cards now.");
+        }
+
+        if (card.Card.HasEffect(CardEffectType.GainStrength))
+        {
+            lines.Add("[color=#d8b4fe]Strength[/color]: increases your attack damage.");
+        }
+
+        if (card.Card.HasEffect(CardEffectType.GainEnergy))
+        {
+            lines.Add("[color=#fde68a]Energy[/color]: adds extra energy this turn.");
+        }
+
+        if (card.Card.HasEffect(CardEffectType.Heal))
+        {
+            lines.Add("[color=#86efac]Heal[/color]: restore HP, up to max HP.");
         }
 
         if (lines.Count == 0)

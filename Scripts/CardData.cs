@@ -15,7 +15,10 @@ public enum CardEffectType
     Damage,
     GainBlock,
     ApplyVulnerable,
-    DrawCards
+    DrawCards,
+    GainStrength,
+    GainEnergy,
+    Heal
 }
 
 public enum CardEffectTarget
