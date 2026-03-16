@@ -10,6 +10,7 @@ https://github.com/user-attachments/assets/62f93228-8809-45c3-a432-a451aba46220
 
 ## godot 4.5.1
 因为godot场景等都是可以文本diff，ai友好，我愿称之为ai native game engine
+![BE06A99AC1DF9E807615C041B74057A7](https://github.com/user-attachments/assets/7e4d118b-c753-49b2-9fa4-6983eaa607c3)
 
 ## codex
 基于git分支，每个agent自己开发一块功能，合理做好解耦，分配给他们不同模块的任务，实现类似，好几个人并发给你开发的效果。
