@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://Scripts/MainMenu.cs" id="1_3plf2"]
 
@@ -15,6 +15,30 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_color = Color(0, 0, 0, 0.35)
 shadow_size = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary"]
+bg_color = Color(0.66, 0.25, 0.18, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.74, 0.58, 0.5)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_ghost"]
+bg_color = Color(0.13, 0.16, 0.22, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 0.2)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -86,7 +110,7 @@ theme_override_font_sizes/font_size = 64
 
 [node name="Tagline" type="Label" parent="LeftMenu/Panel/Content"]
 layout_mode = 2
-text = "A deckbuilding adventure"
+text = "像素卡牌肉鸽冒险"
 theme_override_font_sizes/font_size = 24
 modulate = Color(1, 1, 1, 0.82)
 
@@ -98,19 +122,37 @@ layout_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
-text = "Start Run"
+text = "开始游戏"
 theme_override_font_sizes/font_size = 38
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
+
+[node name="ContinueButton" type="Button" parent="LeftMenu/Panel/Content"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+text = "继续游戏（即将开放）"
+disabled = true
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+
+[node name="OptionsButton" type="Button" parent="LeftMenu/Panel/Content"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+text = "设置（即将开放）"
+disabled = true
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 
 [node name="QuitButton" type="Button" parent="LeftMenu/Panel/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
-text = "Quit"
+text = "退出游戏"
 theme_override_font_sizes/font_size = 34
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
 
 [node name="Hint" type="Label" parent="LeftMenu/Panel/Content"]
 layout_mode = 2
 size_flags_vertical = 10
-text = "Tip: Replace the BackgroundImage texture with your full-screen art."
+text = "提示：你后续可把 BackgroundImage 换成自己的全屏背景图。"
 vertical_alignment = 2
 modulate = Color(1, 1, 1, 0.55)
