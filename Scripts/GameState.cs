@@ -149,6 +149,12 @@ public partial class GameState : Node
             return true;
         }
 
+        if (CurrentMapColumn < 0 || CurrentMapColumn >= MapWidth)
+        {
+            // Fallback for debug/forced encounters that did not originate from map node selection.
+            return true;
+        }
+
         return MapConnections[CurrentMapRow - 1][CurrentMapColumn].Contains(column);
     }
 

@@ -17,6 +17,8 @@
     <Compile Include="..\..\Scripts\EnemyUnit.cs" Link="EnemyUnit.cs" />
     <Compile Include="..\..\Scripts\IntentResolver.cs" Link="IntentResolver.cs" />
     <Compile Include="..\..\Scripts\MapNodeType.cs" Link="MapNodeType.cs" />
+    <Compile Include="..\..\Scripts\PotionData.cs" Link="PotionData.cs" />
+    <Compile Include="..\..\Scripts\RelicData.cs" Link="RelicData.cs" />
     <Compile Include="..\..\Scripts\TurnFlowResolver.cs" Link="TurnFlowResolver.cs" />
   </ItemGroup>
 
