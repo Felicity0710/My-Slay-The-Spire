@@ -2,17 +2,15 @@ using Godot;
 
 public partial class RewardCardOptionView : PanelContainer
 {
-    private Label _nameLabel = null!;
-    private Label _costLabel = null!;
-    private RichTextLabel _descLabel = null!;
+    private Label? _nameLabel;
+    private Label? _costLabel;
+    private RichTextLabel? _descLabel;
 
     public string CardId { get; private set; } = string.Empty;
 
     public override void _Ready()
     {
-        _nameLabel = GetNode<Label>("Margin/VBox/NameLabel");
-        _costLabel = GetNode<Label>("Margin/VBox/CostLabel");
-        _descLabel = GetNode<RichTextLabel>("Margin/VBox/DescLabel");
+        EnsureNodes();
 
         var normalStyle = new StyleBoxFlat
         {
@@ -47,8 +45,8 @@ public partial class RewardCardOptionView : PanelContainer
         };
 
         AddThemeStyleboxOverride("panel", normalStyle);
-        _costLabel.AddThemeColorOverride("font_color", new Color("93c5fd"));
-        _descLabel.AddThemeColorOverride("default_color", new Color("cbd5e1"));
+        _costLabel!.AddThemeColorOverride("font_color", new Color("93c5fd"));
+        _descLabel!.AddThemeColorOverride("default_color", new Color("cbd5e1"));
 
         MouseEntered += () =>
         {
@@ -63,11 +61,25 @@ public partial class RewardCardOptionView : PanelContainer
         };
     }
 
+    private void EnsureNodes()
+    {
+        if (_nameLabel != null && _costLabel != null && _descLabel != null)
+        {
+            return;
+        }
+
+        _nameLabel = GetNode<Label>("Margin/VBox/NameLabel");
+        _costLabel = GetNode<Label>("Margin/VBox/CostLabel");
+        _descLabel = GetNode<RichTextLabel>("Margin/VBox/DescLabel");
+    }
+
     public void Setup(CardData card)
     {
+        EnsureNodes();
+
         CardId = card.Id;
-        _nameLabel.Text = card.Name;
-        _costLabel.Text = $"Cost: {card.Cost}";
+        _nameLabel!.Text = card.Name;
+        _costLabel!.Text = $"Cost: {card.Cost}";
 
         var text = card.Description
             .Replace("Deal", "[color=#fca5a5]Deal[/color]")
@@ -78,6 +90,6 @@ public partial class RewardCardOptionView : PanelContainer
             .Replace("Heal", "[color=#86efac]Heal[/color]")
             .Replace("damage", "[color=#fda4af]damage[/color]");
 
-        _descLabel.Text = text;
+        _descLabel!.Text = text;
     }
 }
