@@ -14,6 +14,8 @@ public partial class RewardScene : Control
     private Button _potionRewardButton = null!;
     private Button _randomRewardButton = null!;
     private Button _skipButton = null!;
+    private Control _rewardTypeWrap = null!;
+    private Control _cardPackWrap = null!;
 
     private bool _isChoosingFromCardPack;
 
@@ -26,6 +28,8 @@ public partial class RewardScene : Control
         _potionRewardButton = GetNode<Button>("%PotionRewardButton");
         _randomRewardButton = GetNode<Button>("%RandomRewardButton");
         _skipButton = GetNode<Button>("%SkipButton");
+        _rewardTypeWrap = GetNode<Control>("Margin/RootVBox/RewardTypeWrap");
+        _cardPackWrap = GetNode<Control>("Margin/RootVBox/CardPackWrap");
 
         _cardOptionButtons.Add(GetNode<Button>("%OptionButton1"));
         _cardOptionButtons.Add(GetNode<Button>("%OptionButton2"));
@@ -52,6 +56,8 @@ public partial class RewardScene : Control
         _titleLabel.Text = "战后奖励";
         _statusLabel.Text = "选择一种奖励：遗物 / 卡牌包 / 药水 / 随机奖励";
 
+        _rewardTypeWrap.Visible = true;
+        _cardPackWrap.Visible = true;
         _relicRewardButton.Visible = true;
         _cardPackRewardButton.Visible = true;
         _potionRewardButton.Visible = true;
@@ -64,7 +70,7 @@ public partial class RewardScene : Control
             button.Text = string.Empty;
         }
 
-        _skipButton.Text = "Skip";
+        _skipButton.Text = "跳过";
     }
 
     private void OnPickRelicReward()
@@ -102,11 +108,13 @@ public partial class RewardScene : Control
         _titleLabel.Text = "卡牌包（3 选 1）";
         _statusLabel.Text = "从 3 张卡中选择 1 张加入牌库。";
 
+        _rewardTypeWrap.Visible = false;
+        _cardPackWrap.Visible = true;
         _relicRewardButton.Visible = false;
         _cardPackRewardButton.Visible = false;
         _potionRewardButton.Visible = false;
         _randomRewardButton.Visible = false;
-        _skipButton.Text = "Skip Card Pack";
+        _skipButton.Text = "跳过";
 
         for (var i = 0; i < _cardOptionButtons.Count; i++)
         {
