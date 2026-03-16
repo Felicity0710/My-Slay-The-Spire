@@ -105,7 +105,7 @@ public sealed class CardData
 
     public string ToCardText()
     {
-        return $"{Name}\\nCost: {Cost}\\n{Description}";
+        return $"{Name}\nCost: {Cost}\n{Description}";
     }
 
     public bool HasEffect(CardEffectType type)

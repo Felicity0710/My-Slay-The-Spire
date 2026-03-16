@@ -4,7 +4,8 @@ using System.Collections.Generic;
 
 public partial class RewardScene : Control
 {
-    private readonly List<Button> _cardOptionButtons = new();
+    private readonly List<Control> _cardSlots = new();
+    private readonly List<CardView> _cardPreviewViews = new();
     private readonly Random _rng = new();
 
     private Label _titleLabel = null!;
@@ -31,15 +32,9 @@ public partial class RewardScene : Control
         _rewardTypeWrap = GetNode<Control>("Margin/RootVBox/RewardTypeWrap");
         _cardPackWrap = GetNode<Control>("Margin/RootVBox/CardPackWrap");
 
-        _cardOptionButtons.Add(GetNode<Button>("%OptionButton1"));
-        _cardOptionButtons.Add(GetNode<Button>("%OptionButton2"));
-        _cardOptionButtons.Add(GetNode<Button>("%OptionButton3"));
-
-        for (var i = 0; i < _cardOptionButtons.Count; i++)
-        {
-            var index = i;
-            _cardOptionButtons[i].Pressed += () => OnPickCardButtonByIndex(index);
-        }
+        _cardSlots.Add(GetNode<Control>("%CardSlot1"));
+        _cardSlots.Add(GetNode<Control>("%CardSlot2"));
+        _cardSlots.Add(GetNode<Control>("%CardSlot3"));
 
         _relicRewardButton.Pressed += OnPickRelicReward;
         _cardPackRewardButton.Pressed += OnPickCardPackReward;
@@ -57,20 +52,28 @@ public partial class RewardScene : Control
         _statusLabel.Text = "选择一种奖励：遗物 / 卡牌包 / 药水 / 随机奖励";
 
         _rewardTypeWrap.Visible = true;
-        _cardPackWrap.Visible = true;
+        _cardPackWrap.Visible = false;
         _relicRewardButton.Visible = true;
         _cardPackRewardButton.Visible = true;
         _potionRewardButton.Visible = true;
         _randomRewardButton.Visible = true;
 
-        foreach (var button in _cardOptionButtons)
-        {
-            button.Visible = false;
-            button.Disabled = true;
-            button.Text = string.Empty;
-        }
+        ClearCardPreviews();
 
         _skipButton.Text = "跳过";
+    }
+
+    private void ClearCardPreviews()
+    {
+        foreach (var view in _cardPreviewViews)
+        {
+            if (IsInstanceValid(view))
+            {
+                view.QueueFree();
+            }
+        }
+
+        _cardPreviewViews.Clear();
     }
 
     private void OnPickRelicReward()
@@ -105,8 +108,8 @@ public partial class RewardScene : Control
         }
 
         _isChoosingFromCardPack = true;
-        _titleLabel.Text = "卡牌包（3 选 1）";
-        _statusLabel.Text = "从 3 张卡中选择 1 张加入牌库。";
+        _titleLabel.Text = "选择一张牌";
+        _statusLabel.Text = "从 3 张卡牌中选择 1 张加入牌库。";
 
         _rewardTypeWrap.Visible = false;
         _cardPackWrap.Visible = true;
@@ -116,41 +119,38 @@ public partial class RewardScene : Control
         _randomRewardButton.Visible = false;
         _skipButton.Text = "跳过";
 
-        for (var i = 0; i < _cardOptionButtons.Count; i++)
-        {
-            var button = _cardOptionButtons[i];
-            button.Visible = false;
-            button.Disabled = true;
-            button.Text = string.Empty;
+        BuildCardPreviews(state.PendingRewardOptions);
+    }
 
-            if (i >= state.PendingRewardOptions.Count)
+    private void BuildCardPreviews(IReadOnlyList<string> cardIds)
+    {
+        ClearCardPreviews();
+
+        for (var i = 0; i < _cardSlots.Count; i++)
+        {
+            var slot = _cardSlots[i];
+            foreach (Node child in slot.GetChildren())
+            {
+                child.QueueFree();
+            }
+
+            if (i >= cardIds.Count)
             {
                 continue;
             }
 
-            var cardId = state.PendingRewardOptions[i];
+            var cardId = cardIds[i];
             var card = CardData.CreateById(cardId);
-            button.Text = card.ToCardText();
-            button.Visible = true;
-            button.Disabled = false;
-            button.SetMeta("card_id", cardId);
+            var cardView = new CardView();
+            cardView.SetUseTopLevel(false);
+            cardView.SetDragEnabled(false);
+            cardView.Setup(card);
+            cardView.MouseDefaultCursorShape = CursorShape.PointingHand;
+            cardView.Scale = new Vector2(1.32f, 1.32f);
+            cardView.Clicked += _ => OnPickCardFromPack(cardId);
+            slot.AddChild(cardView);
+            _cardPreviewViews.Add(cardView);
         }
-    }
-
-    private void OnPickCardButtonByIndex(int index)
-    {
-        if (index < 0 || index >= _cardOptionButtons.Count)
-        {
-            return;
-        }
-
-        var cardId = _cardOptionButtons[index].GetMeta("card_id", string.Empty).AsString();
-        if (string.IsNullOrWhiteSpace(cardId))
-        {
-            return;
-        }
-
-        OnPickCardFromPack(cardId);
     }
 
     private void OnPickCardFromPack(string cardId)

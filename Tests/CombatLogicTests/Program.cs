@@ -31,6 +31,7 @@ internal static class Program
             ("Enemy catalog contains configured encounter rules", TestEnemyCatalogRuleCoverage),
             ("Card effect pipeline preserves execution order", TestCardEffectPipelineOrder),
             ("Card effect pipeline handles new buff effects", TestCardEffectPipelineExtendedEffects),
+            ("Card text uses real line breaks", TestCardTextUsesLineBreaks),
             ("Relic catalog exposes extended relic ids", TestRelicCatalogCoverage),
             ("Potion catalog exposes potion ids", TestPotionCatalogCoverage),
             ("New build cards resolve from catalog", TestNewBuildCardsResolve)
@@ -371,6 +372,14 @@ internal static class Program
         ExpectEqual(1, runtime.GainEnergyCount, "GainEnergyCount");
         ExpectEqual(1, runtime.HealCount, "HealCount");
         ExpectEqual(0, result.DrawCount, "extended pipeline draw count");
+    }
+
+    private static void TestCardTextUsesLineBreaks()
+    {
+        var card = CardData.CreateById("strike");
+        var text = card.ToCardText();
+        ExpectEqual(true, text.Contains("\n"), "card text includes newline");
+        ExpectEqual(false, text.Contains("\\n"), "card text should not include escaped literal \\\\n");
     }
 
     private static void TestRelicCatalogCoverage()

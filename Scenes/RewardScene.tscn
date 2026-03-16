@@ -70,7 +70,7 @@ layout_mode = 2
 
 [node name="BannerPanel" type="PanelContainer" parent="Margin/RootVBox/BannerWrap"]
 layout_mode = 2
-custom_minimum_size = Vector2(520, 78)
+custom_minimum_size = Vector2(540, 86)
 
 [node name="BannerMargin" type="MarginContainer" parent="Margin/RootVBox/BannerWrap/BannerPanel"]
 layout_mode = 2
@@ -81,6 +81,7 @@ theme_override_constants/margin_bottom = 14
 
 [node name="Title" type="Label" parent="Margin/RootVBox/BannerWrap/BannerPanel/BannerMargin"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 horizontal_alignment = 1
 text = "选择一张牌"
@@ -90,6 +91,7 @@ layout_mode = 2
 
 [node name="StatusLabel" type="Label" parent="Margin/RootVBox/StatusWrap"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(760, 0)
 layout_mode = 2
 text = "选择一种奖励：遗物 / 卡牌包 / 药水 / 随机奖励"
 horizontal_alignment = 1
@@ -137,31 +139,22 @@ size_flags_vertical = 3
 
 [node name="Options" type="HBoxContainer" parent="Margin/RootVBox/CardPackWrap"]
 layout_mode = 2
-theme_override_constants/separation = 28
+theme_override_constants/separation = 42
 
-[node name="OptionButton1" type="Button" parent="Margin/RootVBox/CardPackWrap/Options"]
+[node name="CardSlot1" type="CenterContainer" parent="Margin/RootVBox/CardPackWrap/Options"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(210, 318)
-size_flags_vertical = 4
-autowrap_mode = 3
-visible = false
+custom_minimum_size = Vector2(260, 380)
 
-[node name="OptionButton2" type="Button" parent="Margin/RootVBox/CardPackWrap/Options"]
+[node name="CardSlot2" type="CenterContainer" parent="Margin/RootVBox/CardPackWrap/Options"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(210, 318)
-size_flags_vertical = 4
-autowrap_mode = 3
-visible = false
+custom_minimum_size = Vector2(260, 380)
 
-[node name="OptionButton3" type="Button" parent="Margin/RootVBox/CardPackWrap/Options"]
+[node name="CardSlot3" type="CenterContainer" parent="Margin/RootVBox/CardPackWrap/Options"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(210, 318)
-size_flags_vertical = 4
-autowrap_mode = 3
-visible = false
+custom_minimum_size = Vector2(260, 380)
 
 [node name="BottomRow" type="CenterContainer" parent="Margin/RootVBox"]
 layout_mode = 2
