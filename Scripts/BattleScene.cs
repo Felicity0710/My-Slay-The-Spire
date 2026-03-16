@@ -1568,15 +1568,6 @@ public partial class BattleScene : Control
             Log($"Lucky Charm heals {_state.PlayerHp - hpBeforeResolve} HP", "#86efac");
             FlashRelic("charm");
         }
-        _state.RollRewardOptions(3);
-
-        if (_isElite)
-        {
-            _state.RollRelicOptions(3);
-            GetTree().ChangeSceneToFile("res://Scenes/RelicRewardScene.tscn");
-            return;
-        }
-
         GetTree().ChangeSceneToFile("res://Scenes/RewardScene.tscn");
     }
 

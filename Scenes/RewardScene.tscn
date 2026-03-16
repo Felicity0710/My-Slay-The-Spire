@@ -37,8 +37,51 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
 layout_mode = 2
-text = "Choose A Card Reward"
+text = "战后奖励"
+
+[node name="StatusLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "选择一种奖励：遗物 / 卡牌包 / 药水 / 随机奖励"
+autowrap_mode = 3
+
+[node name="RewardTypes" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="RelicRewardButton" type="Button" parent="Margin/VBox/RewardTypes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(200, 90)
+text = "遗物奖励\n(随机获得 1 个遗物)"
+autowrap_mode = 3
+
+[node name="CardPackRewardButton" type="Button" parent="Margin/VBox/RewardTypes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(200, 90)
+text = "卡牌包\n(3 选 1)"
+autowrap_mode = 3
+
+[node name="PotionRewardButton" type="Button" parent="Margin/VBox/RewardTypes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(200, 90)
+text = "药水奖励\n(+1 药水)"
+autowrap_mode = 3
+
+[node name="RandomRewardButton" type="Button" parent="Margin/VBox/RewardTypes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(200, 90)
+text = "随机奖励\n(遗物/卡包/药水)"
+autowrap_mode = 3
 
 [node name="Options" type="HBoxContainer" parent="Margin/VBox"]
 layout_mode = 2
@@ -47,20 +90,26 @@ theme_override_constants/separation = 10
 [node name="OptionButton1" type="Button" parent="Margin/VBox/Options"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(220, 220)
 autowrap_mode = 3
+visible = false
 
 [node name="OptionButton2" type="Button" parent="Margin/VBox/Options"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(220, 220)
 autowrap_mode = 3
+visible = false
 
 [node name="OptionButton3" type="Button" parent="Margin/VBox/Options"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 custom_minimum_size = Vector2(220, 220)
 autowrap_mode = 3
+visible = false
 
 [node name="SkipButton" type="Button" parent="Margin/VBox"]
 unique_name_in_owner = true

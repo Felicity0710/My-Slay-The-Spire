@@ -27,7 +27,7 @@ public partial class MapScene : Control
         var state = GetNode<GameState>("/root/GameState");
 
         _runInfoLabel.Text =
-            $"Floor: {state.Floor}    HP: {state.PlayerHp}/{state.MaxHp}    Deck: {state.DeckCardIds.Count}    Wins: {state.BattlesWon}";
+            $"Floor: {state.Floor}    HP: {state.PlayerHp}/{state.MaxHp}    Deck: {state.DeckCardIds.Count}    Potions: {state.PotionCharges}    Wins: {state.BattlesWon}";
 
         _statusLabel.Text = status;
 

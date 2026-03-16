@@ -14,6 +14,7 @@ public partial class GameState : Node
     public int PlayerHp { get; set; } = 80;
     public int Floor { get; private set; } = 1;
     public int BattlesWon { get; private set; }
+    public int PotionCharges { get; private set; }
 
     public List<string> DeckCardIds { get; } = new();
     public List<string> RelicIds { get; } = new();
@@ -38,6 +39,7 @@ public partial class GameState : Node
         PlayerHp = 80;
         Floor = 1;
         BattlesWon = 0;
+        PotionCharges = 0;
 
         DeckCardIds.Clear();
         DeckCardIds.AddRange(CardData.StarterDeckIds());
@@ -83,6 +85,17 @@ public partial class GameState : Node
     public void AddCardToDeck(string id)
     {
         DeckCardIds.Add(id);
+    }
+
+
+    public void AddPotionCharge(int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        PotionCharges = Math.Min(PotionCharges + amount, 9);
     }
 
     public bool CanChooseMapNode(int row, int column)
