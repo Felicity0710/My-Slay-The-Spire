@@ -229,6 +229,7 @@ anchor_bottom = 0.87
 color = Color(0.18, 0.23, 0.28, 0.6)
 
 [node name="PlayerShadow" type="ColorRect" parent="MainMargin/MainVBox/Arena"]
+visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.09
@@ -256,16 +257,15 @@ anchor_left = 0.03
 anchor_top = 0.4
 anchor_right = 0.34
 anchor_bottom = 0.84
-offset_left = 16.0
-offset_top = -62.0
-offset_right = -24.0
-offset_bottom = -8.0
+offset_left = 69.479996
+offset_top = -137.6
+offset_right = -274.56
+offset_bottom = -120.95996
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="PlayerCardView" parent="MainMargin/MainVBox/Arena/PlayerPanel" instance=ExtResource("2_84p6t")]
 unique_name_in_owner = true
-layout_mode = 2
 
 [node name="EnemyDropArea" type="PanelContainer" parent="MainMargin/MainVBox/Arena"]
 unique_name_in_owner = true
@@ -358,6 +358,7 @@ stretch_mode = 5
 unique_name_in_owner = true
 layout_mode = 2
 text = "0"
+
 [node name="DropHintLabel" type="Label" parent="MainMargin/MainVBox/Arena/EnemyDropArea/DropVBox"]
 unique_name_in_owner = true
 visible = false

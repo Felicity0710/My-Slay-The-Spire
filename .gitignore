@@ -94,14 +94,14 @@ Desktop.ini
 .godot/
 
 # === 二进制资源（大文件） ===
-images/
-models/
-animations/
-materials/
-fonts/
-shaders/
-themes/
-banks/
+#images/
+#models/
+#animations/
+#materials/
+#fonts/
+#shaders/
+#themes/
+#banks/
 debug_audio/
 icudt_godot.dat
 
@@ -126,5 +126,5 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-localization
+#localization
 addons

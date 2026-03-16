@@ -14,6 +14,7 @@
     <Content Include="Scenes\EventScene.tscn" />
     <Content Include="Scenes\MainMenu.tscn" />
     <Content Include="Scenes\MapScene.tscn" />
+    <Content Include="Scenes\PlayerCardView.tscn" />
     <Content Include="Scenes\RelicRewardScene.tscn" />
     <Content Include="Scenes\RewardScene.tscn" />
   </ItemGroup>
