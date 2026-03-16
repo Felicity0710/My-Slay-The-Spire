@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://dhl63infi0nua"]
+[gd_scene load_steps=9 format=3 uid="uid://dhl63infi0nua"]
 
 [ext_resource type="Script" uid="uid://p8rbtdgwkm3l" path="res://Scripts/BattleScene.cs" id="1_fh80r"]
+[ext_resource type="PackedScene" path="res://Scenes/PlayerCardView.tscn" id="2_84p6t"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.09, 0.12, 0.16, 0.88)
@@ -248,39 +249,23 @@ color = Color(0, 0, 0, 0.35)
 
 [node name="PlayerPanel" type="PanelContainer" parent="MainMargin/MainVBox/Arena"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 0)
 layout_mode = 1
 anchors_preset = -1
-anchor_top = 0.45
-anchor_right = 0.36
-anchor_bottom = 0.82
-offset_left = 20.0
-offset_top = -80.0
-offset_right = -20.0
+anchor_left = 0.03
+anchor_top = 0.4
+anchor_right = 0.34
+anchor_bottom = 0.84
+offset_left = 16.0
+offset_top = -62.0
+offset_right = -24.0
+offset_bottom = -8.0
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="PlayerInfo" type="VBoxContainer" parent="MainMargin/MainVBox/Arena/PlayerPanel"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="PlayerTitle" type="Label" parent="MainMargin/MainVBox/Arena/PlayerPanel/PlayerInfo"]
-layout_mode = 2
-text = "Player"
-
-[node name="PlayerHpLabel" type="Label" parent="MainMargin/MainVBox/Arena/PlayerPanel/PlayerInfo"]
+[node name="PlayerCardView" parent="MainMargin/MainVBox/Arena/PlayerPanel" instance=ExtResource("2_84p6t")]
 unique_name_in_owner = true
 layout_mode = 2
-text = "HP: 80"
-
-[node name="PlayerBlockLabel" type="Label" parent="MainMargin/MainVBox/Arena/PlayerPanel/PlayerInfo"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Block: 0"
-
-[node name="PlayerStatusLabel" type="Label" parent="MainMargin/MainVBox/Arena/PlayerPanel/PlayerInfo"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Status: STR 0, VUL 0"
 
 [node name="EnemyDropArea" type="PanelContainer" parent="MainMargin/MainVBox/Arena"]
 unique_name_in_owner = true

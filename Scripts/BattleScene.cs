@@ -23,9 +23,6 @@ public partial class BattleScene : Control
     private readonly Dictionary<CardData, CardView> _handViews = new();
     private readonly Stack<CardView> _cardViewPool = new();
 
-    private Label _playerHpLabel = null!;
-    private Label _playerBlockLabel = null!;
-    private Label _playerStatusLabel = null!;
     private Label _enemyHpLabel = null!;
     private Label _enemyBlockLabel = null!;
     private Label _enemyStatusLabel = null!;
@@ -50,6 +47,7 @@ public partial class BattleScene : Control
     private readonly PackedScene _enemyCardScene = GD.Load<PackedScene>("res://Scenes/EnemyCardView.tscn");
     private int _hoverEnemyIndex = -1;
     private Control _playerPanel = null!;
+    private PlayerCardView _playerCardView = null!;
     private Control _enemyPanel = null!;
     private Control _turnBanner = null!;
     private Label _turnBannerLabel = null!;
@@ -72,6 +70,7 @@ public partial class BattleScene : Control
     private int _playerBlock;
     private int _playerStrength;
     private int _playerVulnerable;
+    private readonly PlayerUnit _player = new();
 
     private readonly List<EnemyUnit> _enemies = new();
     private int _selectedEnemyIndex;
@@ -114,9 +113,6 @@ public partial class BattleScene : Control
 
     public override void _Ready()
     {
-        _playerHpLabel = GetNode<Label>("%PlayerHpLabel");
-        _playerBlockLabel = GetNode<Label>("%PlayerBlockLabel");
-        _playerStatusLabel = GetNode<Label>("%PlayerStatusLabel");
         _enemyNameLabel = GetNode<Label>("%EnemyNameLabel");
         _enemyHpLabel = GetNode<Label>("%EnemyHpLabel");
         _enemyBlockLabel = GetNode<Label>("%EnemyBlockLabel");
@@ -135,6 +131,7 @@ public partial class BattleScene : Control
         _enemyDropArea = GetNode<Control>("%EnemyDropArea");
         _dropHintLabel = GetNode<Label>("%DropHintLabel");
         _playerPanel = GetNode<Control>("%PlayerPanel");
+        _playerCardView = GetNode<PlayerCardView>("%PlayerCardView");
         _enemyPanel = GetNode<Control>("%EnemyPanel");
         _turnBanner = GetNode<Control>("%TurnBanner");
         _turnBannerLabel = GetNode<Label>("%TurnBannerLabel");
@@ -416,6 +413,7 @@ public partial class BattleScene : Control
     {
         _playerHp = _state.PlayerHp;
         _playerMaxHp = _state.MaxHp;
+        _player.Name = "Player";
 
         _enemies.Clear();
         _selectedEnemyIndex = 0;
@@ -686,8 +684,9 @@ public partial class BattleScene : Control
                     if (resolution.Taken > 0)
                     {
                         TriggerHitStop(0.045f);
-                        SpawnFloatingText(_playerPanel, $"-{resolution.Taken}", new Color("fca5a5"));
-                        SpawnSlashEffect(_playerPanel, new Color("fecaca"));
+                        var playerEffectTarget = _playerCardView.EffectTarget();
+                        SpawnFloatingText(playerEffectTarget, $"-{resolution.Taken}", new Color("fca5a5"));
+                        SpawnSlashEffect(playerEffectTarget, new Color("fecaca"));
                         FlashPanel(_playerPanel, new Color(1f, 0.5f, 0.5f, 1f));
                         PunchPanel(_playerPanel, -8f);
                         PulseImpact(_playerPanel, 1.045f);
@@ -800,8 +799,9 @@ public partial class BattleScene : Control
                         {
                             _playerBlock += effect.Amount;
                             Log($"Play {card.Name}: gain {effect.Amount} Block", "#60a5fa");
-                            SpawnFloatingText(_playerPanel, $"+{effect.Amount}", new Color("93c5fd"));
-                            SpawnShieldEffect(_playerPanel, new Color("93c5fd"));
+                            var playerEffectTarget = _playerCardView.EffectTarget();
+                            SpawnFloatingText(playerEffectTarget, $"+{effect.Amount}", new Color("93c5fd"));
+                            SpawnShieldEffect(playerEffectTarget, new Color("93c5fd"));
                         }
                         break;
                     case CardEffectType.ApplyVulnerable:
@@ -1827,9 +1827,12 @@ public partial class BattleScene : Control
         SyncEnemyVisualFromSelection();
         var enemy = CurrentEnemy;
 
-        _playerHpLabel.Text = $"HP: {_playerHp}";
-        _playerBlockLabel.Text = $"Block: {_playerBlock}";
-        _playerStatusLabel.Text = $"Status: STR {_playerStrength}, VUL {_playerVulnerable}";
+        _player.Hp = _playerHp;
+        _player.MaxHp = _playerMaxHp;
+        _player.Block = _playerBlock;
+        _player.Strength = _playerStrength;
+        _player.Vulnerable = _playerVulnerable;
+        _playerCardView.Configure(_player, IsInputLocked());
 
         _enemyNameLabel.Text = $"{enemy.Name} ({_selectedEnemyIndex + 1}/{_enemies.Count})";
         _enemyHpLabel.Text = $"Enemy HP: {enemy.Hp}";
