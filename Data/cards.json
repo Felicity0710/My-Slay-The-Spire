@@ -423,6 +423,137 @@
           "useTargetVulnerable": false
         }
       ]
+    },
+    {
+      "id": "berserker_form",
+      "name": "Berserker Form",
+      "description": "Gain 3 Strength. Apply 1 Vulnerable to yourself.",
+      "kind": "Skill",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "GainStrength",
+          "target": "Player",
+          "amount": 3,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "overclock",
+      "name": "Overclock",
+      "description": "Gain 2 Energy. Apply 1 Vulnerable to yourself.",
+      "kind": "Skill",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GainEnergy",
+          "target": "Player",
+          "amount": 2,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "crushing_blow",
+      "name": "Crushing Blow",
+      "description": "Deal 14 damage. Apply 1 Vulnerable.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 14
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "SelectedEnemy",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ]
+    },
+    {
+      "id": "chain_lightning",
+      "name": "Chain Lightning",
+      "description": "Deal 4 damage to all enemies. Draw 1 card.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "AllEnemies",
+          "amount": 4
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "meditate",
+      "name": "Meditate",
+      "description": "Heal 3 HP. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Heal",
+          "target": "Player",
+          "amount": 3,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
+    },
+    {
+      "id": "fortress_stance",
+      "name": "Fortress Stance",
+      "description": "Gain 10 Block. Gain 1 Strength.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainBlock",
+          "target": "Player",
+          "amount": 10,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "GainStrength",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ]
     }
   ],
   "starterDeck": [
@@ -458,6 +589,12 @@
     "fortify",
     "meteor_shower",
     "glass_cannon",
-    "war_cry"
+    "war_cry",
+    "berserker_form",
+    "overclock",
+    "crushing_blow",
+    "chain_lightning",
+    "meditate",
+    "fortress_stance"
   ]
 }

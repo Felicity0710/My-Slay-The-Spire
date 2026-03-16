@@ -26,8 +26,12 @@ public partial class MapScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
 
+        var potionSummary = state.PotionIds.Count == 0
+            ? "None"
+            : string.Join(", ", state.PotionIds.ConvertAll(id => PotionData.CreateById(id).Name));
+
         _runInfoLabel.Text =
-            $"Floor: {state.Floor}    HP: {state.PlayerHp}/{state.MaxHp}    Deck: {state.DeckCardIds.Count}    Potions: {state.PotionCharges}    Wins: {state.BattlesWon}";
+            $"Floor: {state.Floor}    HP: {state.PlayerHp}/{state.MaxHp}    Deck: {state.DeckCardIds.Count}    Potions: {state.PotionCharges} ({potionSummary})    Wins: {state.BattlesWon}";
 
         _statusLabel.Text = status;
 

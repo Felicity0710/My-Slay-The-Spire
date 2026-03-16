@@ -31,6 +31,12 @@ public partial class RewardScene : Control
         _cardOptionButtons.Add(GetNode<Button>("%OptionButton2"));
         _cardOptionButtons.Add(GetNode<Button>("%OptionButton3"));
 
+        for (var i = 0; i < _cardOptionButtons.Count; i++)
+        {
+            var index = i;
+            _cardOptionButtons[i].Pressed += () => OnPickCardButtonByIndex(index);
+        }
+
         _relicRewardButton.Pressed += OnPickRelicReward;
         _cardPackRewardButton.Pressed += OnPickCardPackReward;
         _potionRewardButton.Pressed += OnPickPotionReward;
@@ -68,9 +74,9 @@ public partial class RewardScene : Control
 
         if (state.PendingRelicOptions.Count == 0)
         {
-            state.AddPotionCharge(1);
+            var fallbackPotion = state.AddRandomPotion();
             state.PendingRelicOptions.Clear();
-            ExitToMap("遗物已拿满，改为获得 1 瓶药水。");
+            ExitToMap($"遗物已拿满，改为获得药水：{fallbackPotion.Name}");
             return;
         }
 
@@ -119,8 +125,24 @@ public partial class RewardScene : Control
             button.Text = card.ToCardText();
             button.Visible = true;
             button.Disabled = false;
-            button.Pressed += () => OnPickCardFromPack(cardId);
+            button.SetMeta("card_id", cardId);
         }
+    }
+
+    private void OnPickCardButtonByIndex(int index)
+    {
+        if (index < 0 || index >= _cardOptionButtons.Count)
+        {
+            return;
+        }
+
+        var cardId = _cardOptionButtons[index].GetMeta("card_id", string.Empty).AsString();
+        if (string.IsNullOrWhiteSpace(cardId))
+        {
+            return;
+        }
+
+        OnPickCardFromPack(cardId);
     }
 
     private void OnPickCardFromPack(string cardId)
@@ -134,8 +156,8 @@ public partial class RewardScene : Control
     private void OnPickPotionReward()
     {
         var state = GetNode<GameState>("/root/GameState");
-        state.AddPotionCharge(1);
-        ExitToMap("获得 1 瓶药水。\n药水会在地图页显示（当前版本暂未支持战斗中使用）。");
+        var potion = state.AddRandomPotion();
+        ExitToMap($"获得药水：{potion.Name}\n{potion.Description}");
     }
 
     private void OnPickRandomReward()
@@ -143,7 +165,7 @@ public partial class RewardScene : Control
         var state = GetNode<GameState>("/root/GameState");
 
         var choices = new List<string> { "relic", "card_pack", "potion" };
-        if (state.RelicIds.Count >= 4)
+        if (state.RelicIds.Count >= RelicData.AllRelicIds().Count)
         {
             choices.Remove("relic");
         }

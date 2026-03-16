@@ -30,7 +30,10 @@ internal static class Program
             ("Card pools only contain known card ids", TestCardPoolsContainKnownCardIds),
             ("Enemy catalog contains configured encounter rules", TestEnemyCatalogRuleCoverage),
             ("Card effect pipeline preserves execution order", TestCardEffectPipelineOrder),
-            ("Card effect pipeline handles new buff effects", TestCardEffectPipelineExtendedEffects)
+            ("Card effect pipeline handles new buff effects", TestCardEffectPipelineExtendedEffects),
+            ("Relic catalog exposes extended relic ids", TestRelicCatalogCoverage),
+            ("Potion catalog exposes potion ids", TestPotionCatalogCoverage),
+            ("New build cards resolve from catalog", TestNewBuildCardsResolve)
         };
 
         var failed = 0;
@@ -368,6 +371,49 @@ internal static class Program
         ExpectEqual(1, runtime.GainEnergyCount, "GainEnergyCount");
         ExpectEqual(1, runtime.HealCount, "HealCount");
         ExpectEqual(0, result.DrawCount, "extended pipeline draw count");
+    }
+
+    private static void TestRelicCatalogCoverage()
+    {
+        foreach (var relicId in RelicData.AllRelicIds())
+        {
+            var relic = RelicData.CreateById(relicId);
+            ExpectEqual(relicId, relic.Id, "relic id resolution");
+            ExpectEqual(false, string.IsNullOrWhiteSpace(relic.Name), "relic name non-empty");
+        }
+    }
+
+    private static void TestPotionCatalogCoverage()
+    {
+        foreach (var potionId in PotionData.AllPotionIds())
+        {
+            var potion = PotionData.CreateById(potionId);
+            ExpectEqual(potionId, potion.Id, "potion id resolution");
+            ExpectEqual(false, string.IsNullOrWhiteSpace(potion.Name), "potion name non-empty");
+        }
+    }
+
+    private static void TestNewBuildCardsResolve()
+    {
+        var newBuildCards = new[]
+        {
+            "berserker_form",
+            "overclock",
+            "crushing_blow",
+            "chain_lightning",
+            "meditate",
+            "fortress_stance"
+        };
+
+        foreach (var cardId in newBuildCards)
+        {
+            var card = CardData.CreateById(cardId);
+            ExpectEqual(cardId, card.Id, "new build card id resolution");
+            if (card.Effects.Count == 0)
+            {
+                throw new InvalidOperationException($"new build card should have effects: {cardId}");
+            }
+        }
     }
 
     private sealed class RecordingEffectExecutor : ICardEffectRuntime
