@@ -8,7 +8,7 @@ public partial class GameState : Node
     private readonly Random _rng = new();
 
     private const int MapWidth = 5;
-    private const int MapRows = 12;
+    private const int MapRows = 8;
 
     public int MaxHp { get; private set; } = 80;
     public int PlayerHp { get; set; } = 80;
