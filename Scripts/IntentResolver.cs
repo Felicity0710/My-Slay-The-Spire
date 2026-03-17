@@ -96,7 +96,7 @@ public static class IntentResolver
 
     private static EnemyIntentRoll RollEliteSentinelIntent(int turn, Random rng)
     {
-        return turn % 3 switch
+        return (turn % 3) switch
         {
             1 => new EnemyIntentRoll(EnemyIntentType.Attack, rng.Next(10, 16)),
             2 => new EnemyIntentRoll(EnemyIntentType.Defend, 12),
