@@ -4,11 +4,13 @@ using System.Linq;
 
 public partial class CardBrowserScene : Control
 {
+    private readonly PackedScene _cardViewScene = GD.Load<PackedScene>("res://Scenes/RewardCardOptionView.tscn");
+
     private LineEdit _searchInput = null!;
     private OptionButton _kindFilter = null!;
     private OptionButton _costFilter = null!;
     private OptionButton _effectFilter = null!;
-    private VBoxContainer _cardList = null!;
+    private GridContainer _cardGrid = null!;
     private Label _countLabel = null!;
 
     private List<CardData> _allCards = new();
@@ -19,7 +21,7 @@ public partial class CardBrowserScene : Control
         _kindFilter = GetNode<OptionButton>("%KindFilter");
         _costFilter = GetNode<OptionButton>("%CostFilter");
         _effectFilter = GetNode<OptionButton>("%EffectFilter");
-        _cardList = GetNode<VBoxContainer>("%CardList");
+        _cardGrid = GetNode<GridContainer>("%CardGrid");
         _countLabel = GetNode<Label>("%CountLabel");
 
         _allCards = CardData.AllCards();
@@ -88,7 +90,7 @@ public partial class CardBrowserScene : Control
 
     private void RefreshCards()
     {
-        foreach (Node child in _cardList.GetChildren())
+        foreach (Node child in _cardGrid.GetChildren())
         {
             child.QueueFree();
         }
@@ -106,7 +108,9 @@ public partial class CardBrowserScene : Control
 
         foreach (var card in filteredCards)
         {
-            _cardList.AddChild(CreateCardItem(card));
+            var cardNode = _cardViewScene.Instantiate<RewardCardOptionView>();
+            cardNode.Setup(card);
+            _cardGrid.AddChild(cardNode);
         }
     }
 
@@ -138,56 +142,5 @@ public partial class CardBrowserScene : Control
         }
 
         return (CardEffectType)_effectFilter.GetItemMetadata(_effectFilter.Selected).AsInt32();
-    }
-
-    private static PanelContainer CreateCardItem(CardData card)
-    {
-        var panel = new PanelContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-
-        panel.AddThemeStyleboxOverride("panel", new StyleBoxFlat
-        {
-            BgColor = card.Kind == CardKind.Attack ? new Color("3f1d1d") : new Color("1c2f3f"),
-            BorderColor = card.Kind == CardKind.Attack ? new Color("f87171") : new Color("67e8f9"),
-            BorderWidthLeft = 1,
-            BorderWidthTop = 1,
-            BorderWidthRight = 1,
-            BorderWidthBottom = 1,
-            CornerRadiusTopLeft = 8,
-            CornerRadiusTopRight = 8,
-            CornerRadiusBottomLeft = 8,
-            CornerRadiusBottomRight = 8
-        });
-
-        var margin = new MarginContainer();
-        margin.AddThemeConstantOverride("margin_left", 10);
-        margin.AddThemeConstantOverride("margin_top", 8);
-        margin.AddThemeConstantOverride("margin_right", 10);
-        margin.AddThemeConstantOverride("margin_bottom", 8);
-        panel.AddChild(margin);
-
-        var body = new VBoxContainer();
-        body.AddThemeConstantOverride("separation", 4);
-        margin.AddChild(body);
-
-        var title = new Label
-        {
-            Text = $"[{card.Cost}] {card.Name} ({(card.Kind == CardKind.Attack ? "攻击" : "技能")})",
-            Modulate = Colors.White
-        };
-        title.AddThemeFontSizeOverride("font_size", 24);
-        body.AddChild(title);
-
-        var desc = new Label
-        {
-            Text = card.DescriptionZh,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            Modulate = new Color("e5e7eb")
-        };
-        body.AddChild(desc);
-
-        return panel;
     }
 }
