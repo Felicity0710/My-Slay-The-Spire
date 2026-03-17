@@ -44,6 +44,11 @@ public partial class RewardCardOptionView : PanelContainer
             ShadowSize = 7
         };
 
+        MouseFilter = MouseFilterEnum.Stop;
+        _nameLabel!.MouseFilter = MouseFilterEnum.Ignore;
+        _costLabel!.MouseFilter = MouseFilterEnum.Ignore;
+        _descLabel!.MouseFilter = MouseFilterEnum.Ignore;
+
         AddThemeStyleboxOverride("panel", normalStyle);
         _costLabel!.AddThemeColorOverride("font_color", new Color("93c5fd"));
         _descLabel!.AddThemeColorOverride("default_color", new Color("cbd5e1"));
