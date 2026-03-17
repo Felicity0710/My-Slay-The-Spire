@@ -1,4 +1,3 @@
-using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -99,15 +98,6 @@ public sealed class EnemyEncounterCatalog
 
     private static (string Json, string Source) ReadEnemiesJson()
     {
-        const string resourcePath = "res://Data/enemies.json";
-        using (var file = Godot.FileAccess.Open(resourcePath, Godot.FileAccess.ModeFlags.Read))
-        {
-            if (file != null)
-            {
-                return (file.GetAsText(), resourcePath);
-            }
-        }
-
         var candidates = new List<string>();
         var envPath = Environment.GetEnvironmentVariable("SLAY_THE_HS_ENEMIES_JSON");
         if (!string.IsNullOrWhiteSpace(envPath))
@@ -117,6 +107,8 @@ public sealed class EnemyEncounterCatalog
 
         candidates.AddRange(EnumerateCandidates(AppContext.BaseDirectory));
         candidates.AddRange(EnumerateCandidates(Directory.GetCurrentDirectory()));
+        candidates.AddRange(EnumerateExportDataCandidates(AppContext.BaseDirectory));
+        candidates.AddRange(EnumerateExportDataCandidates(Directory.GetCurrentDirectory()));
 
         foreach (var path in candidates.Distinct())
         {
@@ -139,6 +131,34 @@ public sealed class EnemyEncounterCatalog
         }
     }
 
+
+    private static IEnumerable<string> EnumerateExportDataCandidates(string startDir)
+    {
+        if (string.IsNullOrWhiteSpace(startDir) || !Directory.Exists(startDir))
+        {
+            yield break;
+        }
+
+        var baseDir = new DirectoryInfo(startDir);
+        var roots = new List<DirectoryInfo> { baseDir };
+        if (baseDir.Parent != null)
+        {
+            roots.Add(baseDir.Parent);
+        }
+
+        foreach (var root in roots)
+        {
+            foreach (var dir in root.EnumerateDirectories())
+            {
+                if (!dir.Name.StartsWith("data_", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                yield return Path.Combine(dir.FullName, "Data", "enemies.json");
+            }
+        }
+    }
     private static T ParseEnum<T>(string? raw, string label) where T : struct
     {
         if (!string.IsNullOrWhiteSpace(raw) && Enum.TryParse<T>(raw, true, out var parsed))
