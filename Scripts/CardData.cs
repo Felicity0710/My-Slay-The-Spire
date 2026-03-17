@@ -146,6 +146,15 @@ public sealed class CardData
         return new List<string>(Catalog.RewardPool);
     }
 
+    public static List<CardData> AllCards()
+    {
+        return Catalog.CardsById.Values
+            .Select(CloneCard)
+            .OrderBy(card => card.Cost)
+            .ThenBy(card => card.Name)
+            .ToList();
+    }
+
     private static CardData CloneCard(CardData source)
     {
         var effects = source.Effects
