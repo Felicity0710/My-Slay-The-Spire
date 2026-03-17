@@ -1,4 +1,6 @@
 using Godot;
+using System.Collections.Generic;
+using System.Linq;
 
 public partial class MainMenu : Control
 {
@@ -18,12 +20,7 @@ public partial class MainMenu : Control
     private Label _musicVolumeLabel = null!;
     private Button _settingsCloseButton = null!;
 
-    private readonly Vector2I[] _windowSizes =
-    {
-        new(1280, 720),
-        new(1600, 900),
-        new(1920, 1080)
-    };
+    private List<Vector2I> _windowSizes = new();
 
     public override void _Ready()
     {
@@ -96,12 +93,7 @@ public partial class MainMenu : Control
 
     private void SetupSettingsUi()
     {
-        _resolutionOption.Clear();
-        for (var i = 0; i < _windowSizes.Length; i += 1)
-        {
-            var size = _windowSizes[i];
-            _resolutionOption.AddItem($"{size.X} x {size.Y}", i);
-        }
+        PopulateResolutionOptions();
 
         _resolutionOption.ItemSelected += OnResolutionSelected;
         _masterVolumeSlider.ValueChanged += OnMasterVolumeChanged;
@@ -114,23 +106,51 @@ public partial class MainMenu : Control
             ? VolumeDbToPercent(AudioServer.GetBusVolumeDb(musicBus))
             : _masterVolumeSlider.Value;
 
-        var currentSize = DisplayServer.WindowGetSize();
-        for (var i = 0; i < _windowSizes.Length; i += 1)
-        {
-            if (_windowSizes[i] == currentSize)
-            {
-                _resolutionOption.Select(i);
-                break;
-            }
-        }
-
-        if (_resolutionOption.Selected < 0)
-        {
-            _resolutionOption.Select(0);
-        }
-
         _settingsModal.Visible = false;
         RefreshSettingsText();
+    }
+
+    private void PopulateResolutionOptions()
+    {
+        _resolutionOption.Clear();
+        _windowSizes = BuildSupportedResolutionList();
+
+        for (var i = 0; i < _windowSizes.Count; i += 1)
+        {
+            var size = _windowSizes[i];
+            _resolutionOption.AddItem($"{size.X} x {size.Y}", i);
+        }
+
+        var currentSize = DisplayServer.WindowGetSize();
+        var selectedIndex = _windowSizes.FindIndex(size => size == currentSize);
+        _resolutionOption.Select(selectedIndex >= 0 ? selectedIndex : 0);
+    }
+
+    private static List<Vector2I> BuildSupportedResolutionList()
+    {
+        var screen = DisplayServer.WindowGetCurrentScreen();
+        var modeCount = DisplayServer.ScreenGetModeCount(screen);
+
+        var unique = new HashSet<Vector2I>();
+        for (var i = 0; i < modeCount; i += 1)
+        {
+            unique.Add(DisplayServer.ScreenGetMode(i, screen));
+        }
+
+        var currentWindowSize = DisplayServer.WindowGetSize();
+        unique.Add(currentWindowSize);
+
+        if (unique.Count == 0)
+        {
+            unique.Add(new Vector2I(1280, 720));
+            unique.Add(new Vector2I(1920, 1080));
+        }
+
+        return unique
+            .OrderBy(size => size.X * size.Y)
+            .ThenBy(size => size.X)
+            .ThenBy(size => size.Y)
+            .ToList();
     }
 
     private void RefreshSettingsText()
@@ -146,12 +166,12 @@ public partial class MainMenu : Control
 
     private void OnResolutionSelected(long index)
     {
-        if (index < 0 || index >= _windowSizes.Length)
+        if (index < 0 || index >= _windowSizes.Count)
         {
             return;
         }
 
-        DisplayServer.WindowSetSize(_windowSizes[index]);
+        DisplayServer.WindowSetSize(_windowSizes[(int)index]);
     }
 
     private void OnMasterVolumeChanged(double value)
