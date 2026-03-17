@@ -24,7 +24,6 @@ public partial class MainMenu : Control
     private OptionButton _maxFpsOption = null!;
     private CheckBox _vsyncCheckBox = null!;
     private CheckBox _fpsCounterCheckBox = null!;
-    private Label _fpsCounterLabel = null!;
     private Button _settingsCloseButton = null!;
 
     private List<Vector2I> _windowSizes = new();
@@ -52,7 +51,6 @@ public partial class MainMenu : Control
         _maxFpsOption = GetNode<OptionButton>("%MaxFpsOption");
         _vsyncCheckBox = GetNode<CheckBox>("%VsyncCheckBox");
         _fpsCounterCheckBox = GetNode<CheckBox>("%FpsCounterCheckBox");
-        _fpsCounterLabel = GetNode<Label>("%FpsCounterLabel");
         _settingsCloseButton = GetNode<Button>("%SettingsCloseButton");
 
         _startButton.Pressed += OnStartPressed;
@@ -65,16 +63,6 @@ public partial class MainMenu : Control
         SetupSettingsUi();
 
         RefreshLanguageButtonText();
-    }
-
-    public override void _Process(double _delta)
-    {
-        if (!_fpsCounterLabel.Visible)
-        {
-            return;
-        }
-
-        _fpsCounterLabel.Text = $"FPS: {Engine.GetFramesPerSecond()}";
     }
 
     private void OnStartPressed()
@@ -128,17 +116,11 @@ public partial class MainMenu : Control
         _vsyncCheckBox.Toggled += OnVsyncToggled;
         _fpsCounterCheckBox.Toggled += OnFpsCounterToggled;
 
-        _masterVolumeSlider.Value = VolumeDbToPercent(AudioServer.GetBusVolumeDb(0));
-
-        var musicBus = AudioServer.GetBusIndex("Music");
-        _musicVolumeSlider.Value = musicBus >= 0
-            ? VolumeDbToPercent(AudioServer.GetBusVolumeDb(musicBus))
-            : _masterVolumeSlider.Value;
-
-        var vsyncMode = DisplayServer.WindowGetVsyncMode();
-        _vsyncCheckBox.ButtonPressed = vsyncMode != DisplayServer.VSyncMode.Disabled;
-        _fpsCounterCheckBox.ButtonPressed = false;
-        _fpsCounterLabel.Visible = false;
+        var settings = AppSettings.Instance;
+        _masterVolumeSlider.Value = settings.MasterVolumePercent;
+        _musicVolumeSlider.Value = settings.MusicVolumePercent;
+        _vsyncCheckBox.ButtonPressed = settings.VSyncEnabled;
+        _fpsCounterCheckBox.ButtonPressed = settings.ShowFpsCounter;
 
         _settingsModal.Visible = false;
         RefreshSettingsText();
@@ -155,7 +137,7 @@ public partial class MainMenu : Control
             _resolutionOption.AddItem($"{size.X} x {size.Y}", i);
         }
 
-        var currentSize = DisplayServer.WindowGetSize();
+        var currentSize = AppSettings.Instance.WindowSize;
         var selectedIndex = _windowSizes.FindIndex(size => size == currentSize);
         _resolutionOption.Select(selectedIndex >= 0 ? selectedIndex : 0);
     }
@@ -169,7 +151,7 @@ public partial class MainMenu : Control
             _maxFpsOption.AddItem(cap <= 0 ? "Unlimited" : cap.ToString(), i);
         }
 
-        var currentCap = Engine.MaxFps;
+        var currentCap = AppSettings.Instance.MaxFps;
         var index = System.Array.IndexOf(_fpsCaps, currentCap);
         _maxFpsOption.Select(index >= 0 ? index : 0);
     }
@@ -255,7 +237,7 @@ public partial class MainMenu : Control
             return;
         }
 
-        DisplayServer.WindowSetSize(_windowSizes[(int)index]);
+        AppSettings.Instance.SetWindowSize(_windowSizes[(int)index]);
     }
 
     private void OnMaxFpsSelected(long index)
@@ -265,54 +247,27 @@ public partial class MainMenu : Control
             return;
         }
 
-        Engine.MaxFps = _fpsCaps[(int)index];
+        AppSettings.Instance.SetMaxFps(_fpsCaps[(int)index]);
     }
 
     private void OnVsyncToggled(bool enabled)
     {
-        DisplayServer.WindowSetVsyncMode(enabled
-            ? DisplayServer.VSyncMode.Enabled
-            : DisplayServer.VSyncMode.Disabled);
+        AppSettings.Instance.SetVSyncEnabled(enabled);
     }
 
     private void OnFpsCounterToggled(bool enabled)
     {
-        _fpsCounterLabel.Visible = enabled;
+        AppSettings.Instance.SetShowFpsCounter(enabled);
     }
 
     private void OnMasterVolumeChanged(double value)
     {
-        AudioServer.SetBusVolumeDb(0, PercentToVolumeDb((float)value));
+        AppSettings.Instance.SetMasterVolumePercent((float)value);
     }
 
     private void OnMusicVolumeChanged(double value)
     {
-        var musicBus = AudioServer.GetBusIndex("Music");
-        if (musicBus < 0)
-        {
-            return;
-        }
-
-        AudioServer.SetBusVolumeDb(musicBus, PercentToVolumeDb((float)value));
+        AppSettings.Instance.SetMusicVolumePercent((float)value);
     }
 
-    private static float PercentToVolumeDb(float percent)
-    {
-        if (percent <= 0f)
-        {
-            return -80f;
-        }
-
-        return Mathf.LinearToDb(percent / 100f);
-    }
-
-    private static float VolumeDbToPercent(float db)
-    {
-        if (db <= -80f)
-        {
-            return 0f;
-        }
-
-        return Mathf.DbToLinear(db) * 100f;
-    }
 }
