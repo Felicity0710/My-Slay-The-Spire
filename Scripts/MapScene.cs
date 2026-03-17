@@ -8,6 +8,7 @@ public partial class MapScene : Control
     private Label _runInfoLabel = null!;
     private Label _statusLabel = null!;
     private Label _relicLabel = null!;
+    private ScrollContainer _mapScroll = null!;
     private MapCanvas _mapCanvas = null!;
 
     public override void _Ready()
@@ -15,6 +16,7 @@ public partial class MapScene : Control
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
+        _mapScroll = GetNode<ScrollContainer>("%MapScroll");
         _mapCanvas = GetNode<MapCanvas>("%MapCanvas");
 
         GetNode<Button>("%MenuButton").Pressed += OnMenuPressed;
@@ -95,13 +97,16 @@ public partial class MapScene : Control
                 var canSelect = state.CanChooseMapNode(row, col);
 
                 var nodeButton = new Button();
-                nodeButton.Size = new Vector2(54, 54);
-                nodeButton.CustomMinimumSize = new Vector2(54, 54);
+                var nodeSize = canSelect ? 70f : 54f;
+                nodeButton.Size = new Vector2(nodeSize, nodeSize);
+                nodeButton.CustomMinimumSize = new Vector2(nodeSize, nodeSize);
                 nodeButton.Text = state.MapNodeSymbol(nodeType);
                 nodeButton.TooltipText = $"{row + 1:00}F - {state.MapNodeLabel(nodeType)}";
                 nodeButton.Position = positions[row][col] - nodeButton.Size / 2f;
                 nodeButton.Disabled = !canSelect;
-                nodeButton.AddThemeFontSizeOverride("font_size", 26);
+                nodeButton.AddThemeFontSizeOverride("font_size", canSelect ? 34 : 26);
+                nodeButton.AddThemeColorOverride("font_color", canSelect ? new Color(1f, 0.98f, 0.88f) : Colors.White);
+                nodeButton.AddThemeColorOverride("font_focus_color", canSelect ? new Color(1f, 0.98f, 0.88f) : Colors.White);
 
                 nodeButton.Modulate = NodeTint(nodeType, row, state.CurrentMapRow, canSelect);
 
@@ -114,6 +119,47 @@ public partial class MapScene : Control
                 _mapCanvas.AddChild(nodeButton);
             }
         }
+
+        EnsureCurrentSelectableRowVisible(positions, state);
+    }
+
+    private void EnsureCurrentSelectableRowVisible(List<List<Vector2>> positions, GameState state)
+    {
+        if (positions.Count == 0 || state.CurrentMapRow < 0 || state.CurrentMapRow >= positions.Count)
+        {
+            return;
+        }
+
+        var focusYs = new List<float>();
+        for (var col = 0; col < positions[state.CurrentMapRow].Count; col++)
+        {
+            if (state.CanChooseMapNode(state.CurrentMapRow, col))
+            {
+                focusYs.Add(positions[state.CurrentMapRow][col].Y);
+            }
+        }
+
+        if (focusYs.Count == 0)
+        {
+            return;
+        }
+
+        var averageY = 0f;
+        foreach (var y in focusYs)
+        {
+            averageY += y;
+        }
+
+        averageY /= focusYs.Count;
+        CallDeferred(MethodName.ApplyScrollFocus, averageY);
+    }
+
+    private void ApplyScrollFocus(float focusY)
+    {
+        var viewHeight = _mapScroll.Size.Y;
+        var maxScroll = Mathf.Max(0f, _mapCanvas.Size.Y - viewHeight);
+        var desired = Mathf.Clamp(focusY - viewHeight * 0.72f, 0f, maxScroll);
+        _mapScroll.ScrollVertical = Mathf.RoundToInt(desired);
     }
 
     private List<List<Vector2>> BuildNodePositions(GameState state)
@@ -184,7 +230,7 @@ public partial class MapScene : Control
 
         if (canSelect)
         {
-            return baseColor.Lightened(0.14f);
+            return baseColor.Lightened(0.3f);
         }
 
         return baseColor;

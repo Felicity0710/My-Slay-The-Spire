@@ -61,6 +61,7 @@ layout_mode = 2
 text = "⚔ 普通战斗   ☠ 精英战   ? 事件   ✚ 休息   $ 商店"
 
 [node name="MapScroll" type="ScrollContainer" parent="Margin/VBox"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
