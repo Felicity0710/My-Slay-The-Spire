@@ -582,6 +582,277 @@
         }
       ],
       "descriptionZh": "获得10点格挡。获得1点力量。"
+    },
+    {
+      "id": "spark_loop",
+      "name": "Spark Loop",
+      "description": "Gain 1 Energy. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GainEnergy",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "获得1点能量。抽1张牌。"
+    },
+    {
+      "id": "hand_overflow",
+      "name": "Hand Overflow",
+      "description": "Draw 3 cards.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 3,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "抽3张牌。"
+    },
+    {
+      "id": "mana_turbine",
+      "name": "Mana Turbine",
+      "description": "Gain 2 Energy. Apply 1 Vulnerable to yourself.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "GainEnergy",
+          "target": "Player",
+          "amount": 2,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ],
+      "descriptionZh": "获得2点能量。对自己施加1层易伤。"
+    },
+    {
+      "id": "infinite_fireball",
+      "name": "Infinite Fireball",
+      "description": "Deal 5 damage four times.",
+      "kind": "Attack",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 5,
+          "repeat": 4
+        }
+      ],
+      "descriptionZh": "造成5点伤害，重复4次。"
+    },
+    {
+      "id": "ember_wheel",
+      "name": "Ember Wheel",
+      "description": "Deal 3 damage to all enemies twice. Draw 1 card.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "AllEnemies",
+          "amount": 3,
+          "repeat": 2
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "对所有敌人造成3点伤害，重复2次。抽1张牌。"
+    },
+    {
+      "id": "arcane_recycle",
+      "name": "Arcane Recycle",
+      "description": "Gain 1 Energy. Draw 2 cards.",
+      "kind": "Skill",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "GainEnergy",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 2,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "获得1点能量。抽2张牌。"
+    },
+    {
+      "id": "grave_whisper",
+      "name": "Grave Whisper",
+      "description": "Apply 2 Vulnerable to all enemies. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "ApplyVulnerable",
+          "target": "AllEnemies",
+          "amount": 2,
+          "useAttackerStrength": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "对所有敌人施加2层易伤。抽1张牌。"
+    },
+    {
+      "id": "bone_shrapnel",
+      "name": "Bone Shrapnel",
+      "description": "Deal 4 damage. Apply 1 Vulnerable.",
+      "kind": "Attack",
+      "cost": 0,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 4
+        },
+        {
+          "type": "ApplyVulnerable",
+          "target": "SelectedEnemy",
+          "amount": 1,
+          "useAttackerStrength": false
+        }
+      ],
+      "descriptionZh": "造成4点伤害。施加1层易伤。"
+    },
+    {
+      "id": "death_chorus",
+      "name": "Death Chorus",
+      "description": "Gain 3 Strength. Draw 2 cards.",
+      "kind": "Skill",
+      "cost": 2,
+      "effects": [
+        {
+          "type": "GainStrength",
+          "target": "Player",
+          "amount": 3,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 2,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "获得3点力量。抽2张牌。"
+    },
+    {
+      "id": "soul_siphon",
+      "name": "Soul Siphon",
+      "description": "Deal 8 damage. Heal 5 HP.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 8
+        },
+        {
+          "type": "Heal",
+          "target": "Player",
+          "amount": 5,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "造成8点伤害。回复5点生命。"
+    },
+    {
+      "id": "phoenix_cycle",
+      "name": "Phoenix Cycle",
+      "description": "Heal 4 HP. Gain 1 Energy. Draw 1 card.",
+      "kind": "Skill",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Heal",
+          "target": "Player",
+          "amount": 4,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "GainEnergy",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "回复4点生命。获得1点能量。抽1张牌。"
+    },
+    {
+      "id": "arcane_barrage",
+      "name": "Arcane Barrage",
+      "description": "Deal 3 damage three times. Draw 1 card.",
+      "kind": "Attack",
+      "cost": 1,
+      "effects": [
+        {
+          "type": "Damage",
+          "target": "SelectedEnemy",
+          "amount": 3,
+          "repeat": 3
+        },
+        {
+          "type": "DrawCards",
+          "target": "Player",
+          "amount": 1,
+          "useAttackerStrength": false,
+          "useTargetVulnerable": false
+        }
+      ],
+      "descriptionZh": "造成3点伤害，重复3次。抽1张牌。"
     }
   ],
   "starterDeck": [
@@ -623,6 +894,18 @@
     "crushing_blow",
     "chain_lightning",
     "meditate",
-    "fortress_stance"
+    "fortress_stance",
+    "spark_loop",
+    "hand_overflow",
+    "mana_turbine",
+    "infinite_fireball",
+    "ember_wheel",
+    "arcane_recycle",
+    "grave_whisper",
+    "bone_shrapnel",
+    "death_chorus",
+    "soul_siphon",
+    "phoenix_cycle",
+    "arcane_barrage"
   ]
 }

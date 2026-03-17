@@ -20,6 +20,8 @@ public partial class GameState : Node
     public List<string> RelicIds { get; } = new();
     public List<string> PotionIds { get; } = new();
 
+    public string SelectedDeckPresetId { get; private set; } = "starter";
+
     public List<List<MapNodeType>> MapLayout { get; } = new();
     public List<List<List<int>>> MapConnections { get; } = new();
 
@@ -42,8 +44,7 @@ public partial class GameState : Node
         BattlesWon = 0;
         PotionCharges = 0;
 
-        DeckCardIds.Clear();
-        DeckCardIds.AddRange(CardData.StarterDeckIds());
+        ApplySelectedDeckPreset();
 
         RelicIds.Clear();
         PotionIds.Clear();
@@ -58,6 +59,36 @@ public partial class GameState : Node
         PendingMapColumn = -1;
 
         GenerateMap();
+    }
+
+    public IReadOnlyList<DeckPresetData> DeckPresets()
+    {
+        return DeckPresetCatalog.All();
+    }
+
+    public void SetDeckPreset(string presetId)
+    {
+        SelectedDeckPresetId = DeckPresetCatalog.Resolve(presetId).Id;
+    }
+
+    public void StartBattleTestRun(string? presetId = null)
+    {
+        if (!string.IsNullOrWhiteSpace(presetId))
+        {
+            SetDeckPreset(presetId);
+        }
+
+        StartNewRun();
+        BeginEncounter(MapNodeType.NormalBattle);
+    }
+
+    private void ApplySelectedDeckPreset()
+    {
+        var preset = DeckPresetCatalog.Resolve(SelectedDeckPresetId);
+        SelectedDeckPresetId = preset.Id;
+
+        DeckCardIds.Clear();
+        DeckCardIds.AddRange(preset.CardIds);
     }
 
     public bool HasRelic(string id)

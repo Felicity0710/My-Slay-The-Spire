@@ -9,6 +9,7 @@ public partial class EnemyCardView : Button
     private Label _hpLabel = null!;
     private ProgressBar _hpBar = null!;
     private Label _nameLabel = null!;
+    private Label _traitLabel = null!;
     private HBoxContainer _statusRow = null!;
 
     public override void _Ready()
@@ -35,6 +36,7 @@ public partial class EnemyCardView : Button
         _hpLabel = GetNode<Label>("Margin/VBox/HpLabel");
         _hpBar = GetNode<ProgressBar>("Margin/VBox/HpBar");
         _nameLabel = GetNode<Label>("Margin/VBox/NameLabel");
+        _traitLabel = GetNode<Label>("Margin/VBox/TraitLabel");
         _statusRow = GetNode<HBoxContainer>("Margin/VBox/StatusRow");
     }
 
@@ -54,6 +56,9 @@ public partial class EnemyCardView : Button
 
         Disabled = !enemy.IsAlive || inputLocked;
 
+        var traitSummary = CombatVisualCatalog.GetEnemyTraitSummary(enemy.ArchetypeId);
+        var traitAccent = CombatVisualCatalog.GetEnemyTraitAccent(enemy.ArchetypeId);
+
         var cardStyle = new StyleBoxFlat
         {
             BgColor = enemy.IsAlive
@@ -62,11 +67,11 @@ public partial class EnemyCardView : Button
             BorderColor = !enemy.IsAlive
                 ? new Color("374151")
                 : isHovered
-                    ? new Color("86efac")
+                    ? traitAccent.Lightened(0.12f)
                     : isSelected
-                        ? new Color("7dd3fc")
+                        ? traitAccent
                         : isTargetable
-                            ? new Color("4ade80")
+                            ? traitAccent.Darkened(0.2f)
                             : new Color("4b5563"),
             BorderWidthLeft = isHovered || isSelected ? 3 : 2,
             BorderWidthTop = isHovered || isSelected ? 3 : 2,
@@ -92,19 +97,23 @@ public partial class EnemyCardView : Button
         _intentLabel.Modulate = enemy.IsAlive ? intentTint : new Color("6b7280");
         _intentLabel.TooltipText = enemy.IsAlive ? intentTooltip : "Defeated";
 
+        TooltipText = enemy.IsAlive
+            ? $"{enemy.Name}\n{traitSummary}\n下一步意图：{intentTooltip}"
+            : $"{enemy.Name}\nDefeated";
+
         _portraitBg.Color = new Color(stageTint.R, stageTint.G, stageTint.B, enemy.IsAlive ? 1f : 0.45f);
         _portrait.Texture = portraitTexture;
 
         var glowAlpha = !enemy.IsAlive
             ? 0f
             : isHovered
-                ? 0.16f
+                ? 0.18f
                 : isSelected
-                    ? 0.22f
+                    ? 0.24f
                     : isTargetable
-                        ? 0.08f
+                        ? 0.1f
                         : 0f;
-        _targetGlow.Color = new Color(0.49f, 0.83f, 0.99f, glowAlpha);
+        _targetGlow.Color = new Color(traitAccent.R, traitAccent.G, traitAccent.B, glowAlpha);
 
         _hpLabel.Text = $"{enemy.Hp}/{enemy.MaxHp}";
         _hpBar.MaxValue = Mathf.Max(enemy.MaxHp, 1);
@@ -112,6 +121,10 @@ public partial class EnemyCardView : Button
 
         _nameLabel.Text = enemy.Name;
         _nameLabel.Modulate = enemy.IsAlive ? Colors.White : new Color("6b7280");
+
+        _traitLabel.Text = traitSummary;
+        _traitLabel.Modulate = enemy.IsAlive ? traitAccent.Lightened(0.25f) : new Color("6b7280");
+        _traitLabel.TooltipText = traitSummary;
 
         foreach (Node child in _statusRow.GetChildren())
         {
