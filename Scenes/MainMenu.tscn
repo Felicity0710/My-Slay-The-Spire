@@ -129,6 +129,29 @@ theme_override_font_sizes/font_size = 38
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
 text = "开始游戏"
 
+
+[node name="DeckPresetLabel" type="Label" parent="LeftMenu/Panel/Content"]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.86)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "测试卡组预设"
+
+[node name="DeckPresetOption" type="OptionButton" parent="LeftMenu/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+
+[node name="BattleTestButton" type="Button" parent="LeftMenu/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+text = "直接战斗测试"
+
 [node name="ContinueButton" type="Button" parent="LeftMenu/Panel/Content"]
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2

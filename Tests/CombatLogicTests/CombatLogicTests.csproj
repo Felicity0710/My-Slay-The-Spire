@@ -12,6 +12,7 @@
     <Compile Include="..\..\Scripts\CardEffectPipeline.cs" Link="CardEffectPipeline.cs" />
     <Compile Include="..\..\Scripts\CombatResolver.cs" Link="CombatResolver.cs" />
     <Compile Include="..\..\Scripts\DeckFlowResolver.cs" Link="DeckFlowResolver.cs" />
+    <Compile Include="..\..\Scripts\DeckPresetCatalog.cs" Link="DeckPresetCatalog.cs" />
     <Compile Include="..\..\Scripts\EnemyEncounterCatalog.cs" Link="EnemyEncounterCatalog.cs" />
     <Compile Include="..\..\Scripts\EnemyEncounterBuilder.cs" Link="EnemyEncounterBuilder.cs" />
     <Compile Include="..\..\Scripts\EnemyIntentType.cs" Link="EnemyIntentType.cs" />
