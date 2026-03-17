@@ -60,6 +60,24 @@ public partial class BattleScene : Control
     private RichTextLabel _keywordTooltipText = null!;
 
     private Button _endTurnButton = null!;
+    private Button _settingsButton = null!;
+    private Control _settingsModal = null!;
+    private OptionButton _resolutionOption = null!;
+    private OptionButton _maxFpsOption = null!;
+    private CheckBox _vsyncCheckBox = null!;
+    private CheckBox _fpsCounterCheckBox = null!;
+    private HSlider _masterVolumeSlider = null!;
+    private HSlider _musicVolumeSlider = null!;
+    private Label _settingsTitle = null!;
+    private Label _resolutionLabel = null!;
+    private Label _maxFpsLabel = null!;
+    private Label _vsyncLabel = null!;
+    private Label _fpsCounterLabelText = null!;
+    private Label _masterVolumeLabel = null!;
+    private Label _musicVolumeLabel = null!;
+    private Button _settingsCloseButton = null!;
+    private readonly int[] _fpsCaps = { 0, 30, 60, 120, 144, 165, 240 };
+    private List<Vector2I> _windowSizes = new();
 
     private readonly StyleBoxFlat _dropNormalStyle = new();
     private readonly StyleBoxFlat _dropHotStyle = new();
@@ -152,6 +170,23 @@ public partial class BattleScene : Control
         _keywordTooltip.MouseFilter = MouseFilterEnum.Ignore;
 
         _endTurnButton = GetNode<Button>("%EndTurnButton");
+        _settingsButton = GetNode<Button>("%SettingsButton");
+        _settingsModal = GetNode<Control>("%SettingsModal");
+        _resolutionOption = GetNode<OptionButton>("%ResolutionOption");
+        _maxFpsOption = GetNode<OptionButton>("%MaxFpsOption");
+        _vsyncCheckBox = GetNode<CheckBox>("%VsyncCheckBox");
+        _fpsCounterCheckBox = GetNode<CheckBox>("%FpsCounterCheckBox");
+        _masterVolumeSlider = GetNode<HSlider>("%MasterVolumeSlider");
+        _musicVolumeSlider = GetNode<HSlider>("%MusicVolumeSlider");
+        _settingsTitle = GetNode<Label>("%SettingsTitle");
+        _resolutionLabel = GetNode<Label>("%ResolutionLabel");
+        _maxFpsLabel = GetNode<Label>("%MaxFpsLabel");
+        _vsyncLabel = GetNode<Label>("%VsyncLabel");
+        _fpsCounterLabelText = GetNode<Label>("%FpsCounterLabelText");
+        _masterVolumeLabel = GetNode<Label>("%MasterVolumeLabel");
+        _musicVolumeLabel = GetNode<Label>("%MusicVolumeLabel");
+        _settingsCloseButton = GetNode<Button>("%SettingsCloseButton");
+
         SetupDragGuide();
         SetupEnemyQuickUi();
 
@@ -165,6 +200,9 @@ public partial class BattleScene : Control
         }
 
         _endTurnButton.Pressed += EndTurn;
+        _settingsButton.Pressed += OnOpenSettingsPressed;
+        _settingsCloseButton.Pressed += OnCloseSettingsPressed;
+        SetupSettingsUi();
         GetNode<Button>("%BackButton").Pressed += BackToMap;
         GetNode<Button>("%TestVictoryButton").Pressed += OnTestVictoryPressed;
         _handContainer.Resized += () => LayoutHandCards(false);
@@ -296,6 +334,150 @@ public partial class BattleScene : Control
                 return;
             }
         }
+    }
+
+    private void SetupSettingsUi()
+    {
+        PopulateResolutionOptions();
+        PopulateMaxFpsOptions();
+
+        _resolutionOption.ItemSelected += OnResolutionSelected;
+        _maxFpsOption.ItemSelected += OnMaxFpsSelected;
+        _vsyncCheckBox.Toggled += OnVsyncToggled;
+        _fpsCounterCheckBox.Toggled += OnFpsCounterToggled;
+        _masterVolumeSlider.ValueChanged += OnMasterVolumeChanged;
+        _musicVolumeSlider.ValueChanged += OnMusicVolumeChanged;
+
+        var settings = AppSettings.Instance;
+        _vsyncCheckBox.ButtonPressed = settings.VSyncEnabled;
+        _fpsCounterCheckBox.ButtonPressed = settings.ShowFpsCounter;
+        _masterVolumeSlider.Value = settings.MasterVolumePercent;
+        _musicVolumeSlider.Value = settings.MusicVolumePercent;
+
+        _settingsModal.Visible = false;
+        RefreshSettingsText();
+    }
+
+    private void RefreshSettingsText()
+    {
+        var isZh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
+        _settingsButton.Text = isZh ? "设置" : "Settings";
+        _settingsTitle.Text = isZh ? "设置" : "Settings";
+        _resolutionLabel.Text = isZh ? "分辨率" : "Resolution";
+        _maxFpsLabel.Text = isZh ? "最大帧率" : "Max FPS";
+        _vsyncLabel.Text = isZh ? "垂直同步" : "VSync";
+        _fpsCounterLabelText.Text = isZh ? "显示帧率" : "Show FPS";
+        _masterVolumeLabel.Text = isZh ? "主音量" : "Master Volume";
+        _musicVolumeLabel.Text = isZh ? "音乐音量" : "Music Volume";
+        _settingsCloseButton.Text = isZh ? "关闭" : "Close";
+        if (_maxFpsOption.ItemCount > 0)
+        {
+            _maxFpsOption.SetItemText(0, isZh ? "不限制" : "Unlimited");
+        }
+    }
+
+    private void PopulateResolutionOptions()
+    {
+        _resolutionOption.Clear();
+        _windowSizes = BuildSupportedResolutionList();
+        for (var i = 0; i < _windowSizes.Count; i++)
+        {
+            var size = _windowSizes[i];
+            _resolutionOption.AddItem($"{size.X} x {size.Y}", i);
+        }
+
+        var selectedIndex = _windowSizes.FindIndex(s => s == AppSettings.Instance.WindowSize);
+        _resolutionOption.Select(selectedIndex >= 0 ? selectedIndex : 0);
+    }
+
+    private void PopulateMaxFpsOptions()
+    {
+        _maxFpsOption.Clear();
+        for (var i = 0; i < _fpsCaps.Length; i++)
+        {
+            var cap = _fpsCaps[i];
+            _maxFpsOption.AddItem(cap <= 0 ? "Unlimited" : cap.ToString(), i);
+        }
+
+        var currentCap = AppSettings.Instance.MaxFps;
+        var index = Array.IndexOf(_fpsCaps, currentCap);
+        _maxFpsOption.Select(index >= 0 ? index : 0);
+    }
+
+    private static List<Vector2I> BuildSupportedResolutionList()
+    {
+        var screen = DisplayServer.WindowGetCurrentScreen();
+        var screenSize = DisplayServer.ScreenGetSize(screen);
+        var presets = new[]
+        {
+            new Vector2I(1024, 576), new Vector2I(1152, 648), new Vector2I(1280, 720),
+            new Vector2I(1280, 800), new Vector2I(1366, 768), new Vector2I(1600, 900),
+            new Vector2I(1920, 1080), new Vector2I(2560, 1440), new Vector2I(3440, 1440), new Vector2I(3840, 2160)
+        };
+
+        var unique = new HashSet<Vector2I>();
+        foreach (var preset in presets)
+        {
+            if (preset.X <= screenSize.X && preset.Y <= screenSize.Y)
+            {
+                unique.Add(preset);
+            }
+        }
+
+        unique.Add(AppSettings.Instance.WindowSize);
+
+        return unique.OrderBy(s => s.X * s.Y).ThenBy(s => s.X).ThenBy(s => s.Y).ToList();
+    }
+
+    private void OnOpenSettingsPressed()
+    {
+        _settingsModal.Visible = true;
+        RefreshSettingsText();
+    }
+
+    private void OnCloseSettingsPressed()
+    {
+        _settingsModal.Visible = false;
+    }
+
+    private void OnResolutionSelected(long index)
+    {
+        if (index < 0 || index >= _windowSizes.Count)
+        {
+            return;
+        }
+
+        AppSettings.Instance.SetWindowSize(_windowSizes[(int)index]);
+    }
+
+    private void OnMaxFpsSelected(long index)
+    {
+        if (index < 0 || index >= _fpsCaps.Length)
+        {
+            return;
+        }
+
+        AppSettings.Instance.SetMaxFps(_fpsCaps[(int)index]);
+    }
+
+    private void OnVsyncToggled(bool enabled)
+    {
+        AppSettings.Instance.SetVSyncEnabled(enabled);
+    }
+
+    private void OnFpsCounterToggled(bool enabled)
+    {
+        AppSettings.Instance.SetShowFpsCounter(enabled);
+    }
+
+    private void OnMasterVolumeChanged(double value)
+    {
+        AppSettings.Instance.SetMasterVolumePercent((float)value);
+    }
+
+    private void OnMusicVolumeChanged(double value)
+    {
+        AppSettings.Instance.SetMusicVolumePercent((float)value);
     }
 
     public override void _ExitTree()
@@ -492,7 +674,7 @@ public partial class BattleScene : Control
                 continue;
             }
 
-            var intent = IntentResolver.RollEnemyIntent(_isElite, _rng);
+            var intent = IntentResolver.RollEnemyIntent(enemy, _enemies, _isElite, _turn, _rng);
             enemy.IntentType = intent.Type;
             enemy.IntentValue = intent.Value;
         }
