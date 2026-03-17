@@ -31,6 +31,7 @@ public partial class MainMenu : Control
     private readonly int[] _fpsCaps = { 0, 30, 60, 120, 144, 165, 240 };
     private OptionButton _deckPresetOption = null!;
     private Label _deckPresetLabel = null!;
+    private Button _relicCompendiumButton = null!;
 
     public override void _Ready()
     {
@@ -39,6 +40,7 @@ public partial class MainMenu : Control
         _quitButton = GetNode<Button>("%QuitButton");
         _languageButton = GetNode<Button>("%LanguageButton");
         _cardEditorButton = GetNode<Button>("%CardEditorButton");
+        _relicCompendiumButton = GetNode<Button>("%RelicCompendiumButton");
         _deckPresetOption = GetNode<OptionButton>("%DeckPresetOption");
         _deckPresetLabel = GetNode<Label>("%DeckPresetLabel");
         _optionsButton = GetNode<Button>("%OptionsButton");
@@ -64,6 +66,7 @@ public partial class MainMenu : Control
         _quitButton.Pressed += OnQuitPressed;
         _languageButton.Pressed += OnLanguagePressed;
         _cardEditorButton.Pressed += OnCardEditorPressed;
+        _relicCompendiumButton.Pressed += OnRelicCompendiumPressed;
         _deckPresetOption.ItemSelected += OnDeckPresetSelected;
         _optionsButton.Pressed += OnOptionsPressed;
         _settingsCloseButton.Pressed += OnSettingsClosePressed;
@@ -100,6 +103,11 @@ public partial class MainMenu : Control
     private void OnCardEditorPressed()
     {
         GetTree().ChangeSceneToFile("res://Scenes/CardEditorScene.tscn");
+    }
+
+    private void OnRelicCompendiumPressed()
+    {
+        GetTree().ChangeSceneToFile("res://Scenes/RelicCompendiumScene.tscn");
     }
 
     private void OnLanguagePressed()
