@@ -11,7 +11,7 @@
     {
       "id": "cultist_scout",
       "displayName": "Scout",
-      "visualId": "cultist",
+      "visualId": "cultist_scout",
       "nameTemplate": "{displayName} {suffix}",
       "baseHp": 32,
       "hpPerFloor": 6
@@ -19,7 +19,7 @@
     {
       "id": "cultist_shaman",
       "displayName": "Shaman",
-      "visualId": "cultist",
+      "visualId": "cultist_shaman",
       "nameTemplate": "{displayName} {suffix}",
       "baseHp": 28,
       "hpPerFloor": 5
@@ -27,7 +27,7 @@
     {
       "id": "cultist_guard",
       "displayName": "Guard",
-      "visualId": "cultist",
+      "visualId": "cultist_guard",
       "nameTemplate": "{displayName} {suffix}",
       "baseHp": 40,
       "hpPerFloor": 7
@@ -35,7 +35,7 @@
     {
       "id": "cultist_brute",
       "displayName": "Brute",
-      "visualId": "cultist",
+      "visualId": "cultist_brute",
       "nameTemplate": "{displayName} {suffix}",
       "baseHp": 50,
       "hpPerFloor": 9

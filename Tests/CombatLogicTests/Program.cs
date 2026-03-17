@@ -301,6 +301,9 @@ internal static class Program
         ExpectEqual(5, later.Count, "later.Count");
         ExpectEqual("Brute E", later[4].Name, "later[4].Name");
         ExpectEqual(104, later[4].Hp, "later[4].Hp");
+        ExpectEqual("cultist_guard", later[0].VisualId, "later[0].VisualId");
+        ExpectEqual("cultist_shaman", later[2].VisualId, "later[2].VisualId");
+        ExpectEqual("cultist_brute", later[4].VisualId, "later[4].VisualId");
     }
 
     private static void TestEliteEncounterRoster()
