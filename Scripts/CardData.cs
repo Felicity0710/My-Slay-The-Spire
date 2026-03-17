@@ -148,6 +148,8 @@ public sealed class CardData
     {
         return Catalog.CardsById.Values
             .Select(CloneCard)
+            .OrderBy(card => card.Cost)
+            .ThenBy(card => card.Name)
             .ToList();
     }
 
