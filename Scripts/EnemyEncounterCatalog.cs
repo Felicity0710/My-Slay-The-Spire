@@ -23,8 +23,7 @@ public sealed class EnemyEncounterCatalog
 
     public static EnemyEncounterCatalog Load()
     {
-        var path = ResolveEnemiesJsonPath();
-        var json = File.ReadAllText(path);
+        var (json, source) = ReadEnemiesJson();
         var dto = JsonSerializer.Deserialize<EnemyCatalogDto>(json, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -32,7 +31,7 @@ public sealed class EnemyEncounterCatalog
 
         if (dto == null || dto.Archetypes == null || dto.Archetypes.Count == 0)
         {
-            throw new InvalidOperationException($"Invalid enemy catalog JSON: {path}");
+            throw new InvalidOperationException($"Invalid enemy catalog JSON: {source}");
         }
 
         var archetypes = new Dictionary<string, EnemyArchetype>();
@@ -97,7 +96,7 @@ public sealed class EnemyEncounterCatalog
             .Replace("{suffix}", suffix);
     }
 
-    private static string ResolveEnemiesJsonPath()
+    private static (string Json, string Source) ReadEnemiesJson()
     {
         var candidates = new List<string>();
         var envPath = Environment.GetEnvironmentVariable("SLAY_THE_HS_ENEMIES_JSON");
@@ -108,12 +107,16 @@ public sealed class EnemyEncounterCatalog
 
         candidates.AddRange(EnumerateCandidates(AppContext.BaseDirectory));
         candidates.AddRange(EnumerateCandidates(Directory.GetCurrentDirectory()));
+        candidates.AddRange(EnumerateTestProjectCandidates(AppContext.BaseDirectory));
+        candidates.AddRange(EnumerateTestProjectCandidates(Directory.GetCurrentDirectory()));
+        candidates.AddRange(EnumerateExportDataCandidates(AppContext.BaseDirectory));
+        candidates.AddRange(EnumerateExportDataCandidates(Directory.GetCurrentDirectory()));
 
         foreach (var path in candidates.Distinct())
         {
             if (File.Exists(path))
             {
-                return path;
+                return (File.ReadAllText(path), path);
             }
         }
 
@@ -130,6 +133,45 @@ public sealed class EnemyEncounterCatalog
         }
     }
 
+
+
+    private static IEnumerable<string> EnumerateTestProjectCandidates(string startDir)
+    {
+        var current = new DirectoryInfo(startDir);
+        for (var i = 0; i < 8 && current != null; i++)
+        {
+            yield return Path.Combine(current.FullName, "Tests", "CombatLogicTests", "Data", "enemies.json");
+            current = current.Parent;
+        }
+    }
+
+    private static IEnumerable<string> EnumerateExportDataCandidates(string startDir)
+    {
+        if (string.IsNullOrWhiteSpace(startDir) || !Directory.Exists(startDir))
+        {
+            yield break;
+        }
+
+        var baseDir = new DirectoryInfo(startDir);
+        var roots = new List<DirectoryInfo> { baseDir };
+        if (baseDir.Parent != null)
+        {
+            roots.Add(baseDir.Parent);
+        }
+
+        foreach (var root in roots)
+        {
+            foreach (var dir in root.EnumerateDirectories())
+            {
+                if (!dir.Name.StartsWith("data_", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                yield return Path.Combine(dir.FullName, "Data", "enemies.json");
+            }
+        }
+    }
     private static T ParseEnum<T>(string? raw, string label) where T : struct
     {
         if (!string.IsNullOrWhiteSpace(raw) && Enum.TryParse<T>(raw, true, out var parsed))
