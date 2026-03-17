@@ -433,7 +433,19 @@ internal static class Program
             "crushing_blow",
             "chain_lightning",
             "meditate",
-            "fortress_stance"
+            "fortress_stance",
+            "spark_loop",
+            "hand_overflow",
+            "mana_turbine",
+            "infinite_fireball",
+            "ember_wheel",
+            "arcane_recycle",
+            "grave_whisper",
+            "bone_shrapnel",
+            "death_chorus",
+            "soul_siphon",
+            "phoenix_cycle",
+            "arcane_barrage"
         };
 
         foreach (var cardId in newBuildCards)
