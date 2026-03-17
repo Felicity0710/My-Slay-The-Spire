@@ -51,13 +51,11 @@ public partial class RewardCardOptionView : PanelContainer
         MouseEntered += () =>
         {
             AddThemeStyleboxOverride("panel", hoverStyle);
-            Scale = new Vector2(1.04f, 1.04f);
         };
 
         MouseExited += () =>
         {
             AddThemeStyleboxOverride("panel", normalStyle);
-            Scale = Vector2.One;
         };
     }
 
