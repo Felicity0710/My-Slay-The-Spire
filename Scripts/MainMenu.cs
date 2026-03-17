@@ -4,14 +4,19 @@ public partial class MainMenu : Control
 {
     private Button _startButton = null!;
     private Button _quitButton = null!;
+    private Button _languageButton = null!;
 
     public override void _Ready()
     {
         _startButton = GetNode<Button>("%StartButton");
         _quitButton = GetNode<Button>("%QuitButton");
+        _languageButton = GetNode<Button>("%LanguageButton");
 
         _startButton.Pressed += OnStartPressed;
         _quitButton.Pressed += OnQuitPressed;
+        _languageButton.Pressed += OnLanguagePressed;
+
+        RefreshLanguageButtonText();
     }
 
     private void OnStartPressed()
@@ -24,5 +29,16 @@ public partial class MainMenu : Control
     private void OnQuitPressed()
     {
         GetTree().Quit();
+    }
+
+    private void OnLanguagePressed()
+    {
+        LocalizationSettings.ToggleLanguage();
+        RefreshLanguageButtonText();
+    }
+
+    private void RefreshLanguageButtonText()
+    {
+        _languageButton.Text = LocalizationSettings.LanguageButtonText();
     }
 }

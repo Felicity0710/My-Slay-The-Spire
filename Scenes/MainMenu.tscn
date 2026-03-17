@@ -145,6 +145,14 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 disabled = true
 text = "设置（即将开放）"
 
+[node name="LanguageButton" type="Button" parent="LeftMenu/Panel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+text = "Language: English"
+
 [node name="QuitButton" type="Button" parent="LeftMenu/Panel/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)

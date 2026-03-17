@@ -450,14 +450,8 @@ public partial class CardView : PanelContainer
     private void RefreshText()
     {
         _nameLabel.Text = Card.Name;
-        _costLabel.Text = $"Cost: {Card.Cost}";
-        var text = Card.Description
-            .Replace("Deal", "[color=#fca5a5]Deal[/color]")
-            .Replace("Gain", "[color=#93c5fd]Gain[/color]")
-            .Replace("Block", "[color=#93c5fd]Block[/color]")
-            .Replace("Vulnerable", "[color=#e9d5ff]Vulnerable[/color]")
-            .Replace("Draw", "[color=#a5f3fc]Draw[/color]")
-            .Replace("damage", "[color=#fda4af]damage[/color]");
+        _costLabel.Text = $"{LocalizationSettings.CostLabel()}: {Card.Cost}";
+        var text = LocalizationSettings.HighlightCardDescription(Card.GetLocalizedDescription());
         _descLabel.Text = text;
     }
 }
