@@ -89,6 +89,51 @@ public static class DeckPresetCatalog
                 "death_chorus", "soul_siphon",
                 "rending_wave", "meteor_shower",
                 "phoenix_cycle", "fortify", "reaper_touch"
+            }),
+
+        new DeckPresetData(
+            id: "berserker_slam",
+            name: "Berserker Slam",
+            nameZh: "狂战重击",
+            description: "Strength stacking and heavy blows to end fights in a few turns.",
+            descriptionZh: "叠力量后连续重击，几回合内压垮敌人。",
+            cardIds: new List<string>
+            {
+                "war_cry", "war_cry",
+                "berserker_form", "berserker_form",
+                "adrenaline_rush", "adrenaline_rush",
+                "heavy_slash", "crushing_blow",
+                "twin_strike", "bash", "reaper_touch"
+            }),
+
+        new DeckPresetData(
+            id: "fortress_control",
+            name: "Fortress Control",
+            nameZh: "壁垒控制",
+            description: "High defense core with block conversion and delayed finishing damage.",
+            descriptionZh: "高格挡体系，控节奏后用盾击与AOE收尾。",
+            cardIds: new List<string>
+            {
+                "fortress_stance", "fortress_stance",
+                "iron_wall", "iron_wall",
+                "fortify", "fortify",
+                "shield_bash", "shield_bash",
+                "second_wind", "shrug", "meteor_shower"
+            }),
+
+        new DeckPresetData(
+            id: "storm_engine",
+            name: "Storm Engine",
+            nameZh: "风暴引擎",
+            description: "Draw + energy machine that loops Chain Lightning and Arcane Barrage.",
+            descriptionZh: "抽牌回能引擎，循环连锁闪电与奥术弹幕。",
+            cardIds: new List<string>
+            {
+                "chain_lightning", "chain_lightning",
+                "arcane_barrage", "arcane_barrage",
+                "spark_loop", "spark_loop",
+                "arcane_recycle", "hand_overflow",
+                "mana_turbine", "meditate", "overclock"
             })
     };
 

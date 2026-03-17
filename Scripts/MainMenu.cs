@@ -29,6 +29,7 @@ public partial class MainMenu : Control
 
     private List<Vector2I> _windowSizes = new();
     private readonly int[] _fpsCaps = { 0, 30, 60, 120, 144, 165, 240 };
+    private Button _deckEditorButton = null!;
     private OptionButton _deckPresetOption = null!;
     private Label _deckPresetLabel = null!;
     private Button _relicCompendiumButton = null!;
@@ -40,6 +41,7 @@ public partial class MainMenu : Control
         _quitButton = GetNode<Button>("%QuitButton");
         _languageButton = GetNode<Button>("%LanguageButton");
         _cardEditorButton = GetNode<Button>("%CardEditorButton");
+        _deckEditorButton = GetNode<Button>("%DeckEditorButton");
         _relicCompendiumButton = GetNode<Button>("%RelicCompendiumButton");
         _deckPresetOption = GetNode<OptionButton>("%DeckPresetOption");
         _deckPresetLabel = GetNode<Label>("%DeckPresetLabel");
@@ -66,6 +68,7 @@ public partial class MainMenu : Control
         _quitButton.Pressed += OnQuitPressed;
         _languageButton.Pressed += OnLanguagePressed;
         _cardEditorButton.Pressed += OnCardEditorPressed;
+        _deckEditorButton.Pressed += OnDeckEditorPressed;
         _relicCompendiumButton.Pressed += OnRelicCompendiumPressed;
         _deckPresetOption.ItemSelected += OnDeckPresetSelected;
         _optionsButton.Pressed += OnOptionsPressed;
@@ -110,6 +113,11 @@ public partial class MainMenu : Control
         GetTree().ChangeSceneToFile("res://Scenes/RelicCompendiumScene.tscn");
     }
 
+    private void OnDeckEditorPressed()
+    {
+        GetTree().ChangeSceneToFile("res://Scenes/DeckEditorScene.tscn");
+    }
+
     private void OnLanguagePressed()
     {
         LocalizationSettings.ToggleLanguage();
@@ -152,6 +160,12 @@ public partial class MainMenu : Control
         _battleTestButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
             ? "直接战斗测试"
             : "Battle Test";
+        _cardEditorButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
+            ? "卡牌编辑器"
+            : "Card Editor";
+        _deckEditorButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
+            ? "流派卡组编辑器"
+            : "Deck Archetype Editor";
     }
 
     private void PopulateDeckPresets()
