@@ -42,6 +42,7 @@ internal static class Program
             ("New build cards resolve from catalog", TestNewBuildCardsResolve),
             ("Deck presets resolve to known cards", TestDeckPresetsResolveToKnownCards),
             ("Deck preset resolver falls back to starter", TestDeckPresetResolverFallback),
+            ("Deck presets include multiple archetypes", TestDeckPresetArchetypeCoverage),
             ("Card catalog validation rejects duplicate ids", TestCardCatalogValidationRejectsDuplicates),
             ("Card catalog validation rejects unknown pool references", TestCardCatalogValidationRejectsUnknownPoolRefs),
             ("Card catalog save/load roundtrip preserves entries", TestCardCatalogSaveLoadRoundtrip),
@@ -515,6 +516,19 @@ internal static class Program
         var fallback = DeckPresetCatalog.Resolve("definitely_missing");
         ExpectEqual("starter", fallback.Id, "missing preset fallback id");
         ExpectEqual(true, fallback.CardIds.Count > 0, "fallback preset should have cards");
+    }
+
+    private static void TestDeckPresetArchetypeCoverage()
+    {
+        var presets = DeckPresetCatalog.All();
+        ExpectEqual(true, presets.Count >= 7, "preset archetype count");
+
+        var ids = new HashSet<string>(presets.Select(preset => preset.Id));
+        var required = new[] { "berserker_slam", "fortress_control", "storm_engine" };
+        foreach (var id in required)
+        {
+            ExpectEqual(true, ids.Contains(id), $"missing expected preset: {id}");
+        }
     }
 
     private static void TestCardCatalogValidationRejectsDuplicates()

@@ -144,6 +144,13 @@ public sealed class CardData
         return new List<string>(Catalog.RewardPool);
     }
 
+    public static List<CardData> AllCards()
+    {
+        return Catalog.CardsById.Values
+            .Select(CloneCard)
+            .ToList();
+    }
+
     private static CardData CloneCard(CardData source)
     {
         var effects = source.Effects

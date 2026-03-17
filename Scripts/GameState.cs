@@ -21,6 +21,9 @@ public partial class GameState : Node
     public List<string> PotionIds { get; } = new();
 
     public string SelectedDeckPresetId { get; private set; } = "starter";
+    public bool HasCustomDeckOverride { get; private set; }
+
+    private readonly List<string> _customDeckOverrideIds = new();
 
     public List<List<MapNodeType>> MapLayout { get; } = new();
     public List<List<List<int>>> MapConnections { get; } = new();
@@ -71,6 +74,28 @@ public partial class GameState : Node
         SelectedDeckPresetId = DeckPresetCatalog.Resolve(presetId).Id;
     }
 
+    public void SetCustomDeck(IEnumerable<string> cardIds)
+    {
+        _customDeckOverrideIds.Clear();
+        foreach (var id in cardIds)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                continue;
+            }
+
+            _customDeckOverrideIds.Add(id.Trim());
+        }
+
+        HasCustomDeckOverride = _customDeckOverrideIds.Count > 0;
+    }
+
+    public void ClearCustomDeckOverride()
+    {
+        _customDeckOverrideIds.Clear();
+        HasCustomDeckOverride = false;
+    }
+
     public void StartBattleTestRun(string? presetId = null)
     {
         if (!string.IsNullOrWhiteSpace(presetId))
@@ -84,10 +109,16 @@ public partial class GameState : Node
 
     private void ApplySelectedDeckPreset()
     {
+        DeckCardIds.Clear();
+
+        if (HasCustomDeckOverride && _customDeckOverrideIds.Count > 0)
+        {
+            DeckCardIds.AddRange(_customDeckOverrideIds);
+            return;
+        }
+
         var preset = DeckPresetCatalog.Resolve(SelectedDeckPresetId);
         SelectedDeckPresetId = preset.Id;
-
-        DeckCardIds.Clear();
         DeckCardIds.AddRange(preset.CardIds);
     }
 
