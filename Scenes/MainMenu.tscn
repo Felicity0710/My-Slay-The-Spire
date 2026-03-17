@@ -78,17 +78,15 @@ grow_vertical = 2
 color = Color(0, 0, 0, 0.2)
 
 [node name="FpsCounterLabel" type="Label" parent="."]
-visible = false
 unique_name_in_owner = true
+visible = false
 layout_mode = 1
-anchors_preset = 0
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 176.0
 offset_bottom = 56.0
 theme_override_font_sizes/font_size = 24
 text = "FPS: 0"
-
 
 [node name="LeftMenu" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -97,12 +95,13 @@ anchor_left = 0.42
 anchor_top = 1.0
 anchor_right = 0.42
 anchor_bottom = 1.0
-offset_left = -693.39996
-offset_top = -698.0
-offset_right = -208.39996
-offset_bottom = -81.0
+offset_left = -713.39996
+offset_top = -1047.0
+offset_right = -228.39996
+offset_bottom = 166.0
 grow_horizontal = 0
 grow_vertical = 2
+scale = Vector2(0.86221564, 0.8260859)
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 14
@@ -141,7 +140,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 38
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
 text = "开始游戏"
-
 
 [node name="DeckPresetLabel" type="Label" parent="LeftMenu/Panel/Content"]
 unique_name_in_owner = true
@@ -213,7 +211,6 @@ theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "遗物图鉴"
 
-
 [node name="DeckEditorButton" type="Button" parent="LeftMenu/Panel/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
@@ -221,6 +218,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 28
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "流派卡组编辑器"
+
 [node name="QuitButton" type="Button" parent="LeftMenu/Panel/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
@@ -236,10 +234,9 @@ size_flags_vertical = 10
 text = "提示：你后续可把 BackgroundImage 换成自己的全屏背景图。"
 vertical_alignment = 2
 
-
 [node name="SettingsModal" type="Control" parent="."]
-visible = false
 unique_name_in_owner = true
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -313,8 +310,6 @@ text = "主音量"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
-step = 1.0
 value = 70.0
 
 [node name="MusicVolumeRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
@@ -332,8 +327,6 @@ text = "音乐音量"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
-step = 1.0
 value = 70.0
 
 [node name="MaxFpsRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
@@ -368,7 +361,6 @@ text = "垂直同步"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = ""
 
 [node name="FpsCounterRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
 layout_mode = 2
@@ -385,7 +377,6 @@ text = "显示帧率"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-text = ""
 
 [node name="BottomSpacer" type="Control" parent="SettingsModal/Dialog/Content"]
 custom_minimum_size = Vector2(0, 8)
