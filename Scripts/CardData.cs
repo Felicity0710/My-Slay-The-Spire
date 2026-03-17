@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 
 public enum CardKind
 {
@@ -184,18 +182,8 @@ public sealed class CardData
 
         public static CardCatalog Load()
         {
-            var path = ResolveCardsJsonPath();
-            var json = File.ReadAllText(path);
-
-            var dto = JsonSerializer.Deserialize<CardCatalogDto>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            if (dto == null || dto.Cards == null || dto.Cards.Count == 0)
-            {
-                throw new InvalidOperationException($"Invalid card catalog JSON: {path}");
-            }
+            var path = CardCatalogPersistence.ResolveCardsJsonPath();
+            var dto = CardCatalogPersistence.LoadFromFile(path);
 
             var cardsById = new Dictionary<string, CardData>();
             foreach (var cardDto in dto.Cards)
@@ -206,7 +194,7 @@ public sealed class CardData
                 }
 
                 var effects = new List<CardEffectData>();
-                foreach (var effectDto in cardDto.Effects ?? new List<CardEffectDto>())
+                foreach (var effectDto in cardDto.Effects)
                 {
                     effects.Add(new CardEffectData(
                         ParseEnum<CardEffectType>(effectDto.Type, "effect type"),
@@ -230,43 +218,9 @@ public sealed class CardData
                 cardsById[card.Id] = card;
             }
 
-            var starterDeck = dto.StarterDeck ?? new List<string>();
-            var rewardPool = dto.RewardPool ?? new List<string>();
+            var starterDeck = dto.StarterDeck;
+            var rewardPool = dto.RewardPool;
             return new CardCatalog(cardsById, starterDeck, rewardPool);
-        }
-
-        private static string ResolveCardsJsonPath()
-        {
-            var candidates = new List<string>();
-
-            var envPath = Environment.GetEnvironmentVariable("SLAY_THE_HS_CARDS_JSON");
-            if (!string.IsNullOrWhiteSpace(envPath))
-            {
-                candidates.Add(envPath);
-            }
-
-            candidates.AddRange(EnumerateCardsJsonCandidates(AppContext.BaseDirectory));
-            candidates.AddRange(EnumerateCardsJsonCandidates(Directory.GetCurrentDirectory()));
-
-            foreach (var path in candidates.Distinct())
-            {
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-            }
-
-            throw new FileNotFoundException("Cannot locate Data/cards.json for card catalog loading.");
-        }
-
-        private static IEnumerable<string> EnumerateCardsJsonCandidates(string startDir)
-        {
-            var current = new DirectoryInfo(startDir);
-            for (var i = 0; i < 8 && current != null; i++)
-            {
-                yield return Path.Combine(current.FullName, "Data", "cards.json");
-                current = current.Parent;
-            }
         }
 
         private static T ParseEnum<T>(string? raw, string label) where T : struct
@@ -280,34 +234,6 @@ public sealed class CardData
         }
     }
 
-    private sealed class CardCatalogDto
-    {
-        public List<CardDto>? Cards { get; set; }
-        public List<string>? StarterDeck { get; set; }
-        public List<string>? RewardPool { get; set; }
-    }
-
-    private sealed class CardDto
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string? DescriptionZh { get; set; }
-        public string Kind { get; set; } = string.Empty;
-        public int Cost { get; set; }
-        public List<CardEffectDto>? Effects { get; set; }
-    }
-
-    private sealed class CardEffectDto
-    {
-        public string Type { get; set; } = string.Empty;
-        public string Target { get; set; } = string.Empty;
-        public int Amount { get; set; }
-        public int Repeat { get; set; } = 1;
-        public bool UseAttackerStrength { get; set; } = true;
-        public bool UseTargetVulnerable { get; set; } = true;
-        public int FlatBonus { get; set; }
-    }
 }
 
 public enum GameLanguage
