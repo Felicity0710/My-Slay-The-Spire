@@ -360,7 +360,7 @@ public partial class GameState : Node
         MapLayout[0][_rng.Next(MapWidth)] = MapNodeType.NormalBattle;
         MapLayout[3][_rng.Next(MapWidth)] = MapNodeType.Shop;
         MapLayout[6][_rng.Next(MapWidth)] = MapNodeType.Rest;
-        MapLayout[9][_rng.Next(MapWidth)] = MapNodeType.EliteBattle;
+        MapLayout[7][_rng.Next(MapWidth)] = MapNodeType.EliteBattle;
     }
 
     private MapNodeType RollNodeType(int row)

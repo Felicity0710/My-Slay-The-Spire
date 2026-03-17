@@ -12,7 +12,7 @@ if exist "%EXPORT_DIR%" rmdir /s /q "%EXPORT_DIR%"
 mkdir "%EXPORT_DIR%"
 
 echo [2/3] Exporting project...
-"%GODOT_EXE%" --headless --path "%PROJECT_DIR%" --export-release "Windows Desktop" "%OUTPUT_EXE%"
+"%GODOT_EXE%" --headless --path "%PROJECT_DIR%" --export-debug "Windows Desktop" "%OUTPUT_EXE%"
 
 if errorlevel 1 (
     echo Export failed.
