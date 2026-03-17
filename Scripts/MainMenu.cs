@@ -8,6 +8,7 @@ public partial class MainMenu : Control
     private Button _battleTestButton = null!;
     private Button _quitButton = null!;
     private Button _languageButton = null!;
+    private Button _cardBrowserButton = null!;
     private Button _cardEditorButton = null!;
     private Button _optionsButton = null!;
 
@@ -40,6 +41,7 @@ public partial class MainMenu : Control
         _battleTestButton = GetNode<Button>("%BattleTestButton");
         _quitButton = GetNode<Button>("%QuitButton");
         _languageButton = GetNode<Button>("%LanguageButton");
+        _cardBrowserButton = GetNode<Button>("%CardBrowserButton");
         _cardEditorButton = GetNode<Button>("%CardEditorButton");
         _deckEditorButton = GetNode<Button>("%DeckEditorButton");
         _relicCompendiumButton = GetNode<Button>("%RelicCompendiumButton");
@@ -67,6 +69,7 @@ public partial class MainMenu : Control
         _battleTestButton.Pressed += OnBattleTestPressed;
         _quitButton.Pressed += OnQuitPressed;
         _languageButton.Pressed += OnLanguagePressed;
+        _cardBrowserButton.Pressed += OnCardBrowserPressed;
         _cardEditorButton.Pressed += OnCardEditorPressed;
         _deckEditorButton.Pressed += OnDeckEditorPressed;
         _relicCompendiumButton.Pressed += OnRelicCompendiumPressed;
@@ -160,6 +163,9 @@ public partial class MainMenu : Control
         _battleTestButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
             ? "直接战斗测试"
             : "Battle Test";
+        _cardBrowserButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
+            ? "卡牌图鉴"
+            : "Card Compendium";
         _cardEditorButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
             ? "卡牌编辑器"
             : "Card Editor";
