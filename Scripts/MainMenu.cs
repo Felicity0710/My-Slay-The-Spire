@@ -38,13 +38,17 @@ public partial class MainMenu : Control
         GetTree().ChangeSceneToFile("res://Scenes/MapScene.tscn");
     }
 
+    private void OnCardBrowserPressed()
+    {
+        GetTree().ChangeSceneToFile("res://Scenes/CardBrowserScene.tscn");
+    }
+
     private void OnBattleTestPressed()
     {
         var state = GetNode<GameState>("/root/GameState");
         state.StartBattleTestRun();
         GetTree().ChangeSceneToFile("res://Scenes/BattleScene.tscn");
     }
-
     private void OnQuitPressed()
     {
         GetTree().Quit();

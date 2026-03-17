@@ -46,6 +46,8 @@ internal static class Program
             ("Card catalog validation rejects unknown pool references", TestCardCatalogValidationRejectsUnknownPoolRefs),
             ("Card catalog save/load roundtrip preserves entries", TestCardCatalogSaveLoadRoundtrip),
             ("Card catalog validation requires strike fallback", TestCardCatalogValidationRequiresStrike)
+            ("New build cards resolve from catalog", TestNewBuildCardsResolve),
+            ("Card browser filters by kind/cost/effect/search", TestCardBrowserFilterCombinations)
         };
 
         var failed = 0;
@@ -665,6 +667,41 @@ internal static class Program
 
         var errors = CardCatalogPersistence.Validate(catalog);
         ExpectEqual(true, errors.Exists(e => e.Contains("required fallback card id missing")), "missing strike error exists");
+    }
+
+
+    private static void TestCardBrowserFilterCombinations()
+    {
+        var cards = CardData.AllCards();
+
+        var attackCostOne = CardBrowserFilter.Apply(cards, new CardBrowserFilterState
+        {
+            Kind = CardKind.Attack,
+            Cost = 1
+        });
+
+        if (attackCostOne.Count == 0 || attackCostOne.Any(card => card.Kind != CardKind.Attack || card.Cost != 1))
+        {
+            throw new InvalidOperationException("attack+cost filter should only keep cost-1 attacks.");
+        }
+
+        var drawCards = CardBrowserFilter.Apply(cards, new CardBrowserFilterState
+        {
+            EffectType = CardEffectType.DrawCards
+        });
+        if (drawCards.Count == 0 || drawCards.Any(card => !card.HasEffect(CardEffectType.DrawCards)))
+        {
+            throw new InvalidOperationException("effect filter should only keep cards with the selected effect.");
+        }
+
+        var keyword = CardBrowserFilter.Apply(cards, new CardBrowserFilterState
+        {
+            SearchText = "易伤"
+        });
+        if (keyword.Count == 0 || keyword.Any(card => !card.DescriptionZh.Contains("易伤", StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException("search filter should match chinese descriptions.");
+        }
     }
 
     private sealed class RecordingEffectExecutor : ICardEffectRuntime
