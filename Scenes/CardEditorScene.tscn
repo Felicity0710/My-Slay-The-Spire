@@ -18,118 +18,276 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
 
-[node name="RootVBox" type="VBoxContainer" parent="Margin"]
+[node name="Root" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 8
 
-[node name="TopBar" type="HBoxContainer" parent="Margin/RootVBox"]
+[node name="TopBar" type="HBoxContainer" parent="Margin/Root"]
 layout_mode = 2
+theme_override_constants/separation = 6
 
-[node name="BackButton" type="Button" parent="Margin/RootVBox/TopBar"]
+[node name="BackButton" type="Button" parent="Margin/Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "返回主菜单"
 
-[node name="ReloadButton" type="Button" parent="Margin/RootVBox/TopBar"]
+[node name="ReloadButton" type="Button" parent="Margin/Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "重新加载"
+text = "重载"
 
-[node name="SaveButton" type="Button" parent="Margin/RootVBox/TopBar"]
+[node name="ValidateButton" type="Button" parent="Margin/Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "保存 cards.json"
+text = "校验"
 
-[node name="NewButton" type="Button" parent="Margin/RootVBox/TopBar"]
+[node name="SaveButton" type="Button" parent="Margin/Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "新增卡牌"
+text = "保存"
 
-[node name="DeleteButton" type="Button" parent="Margin/RootVBox/TopBar"]
+[node name="NewButton" type="Button" parent="Margin/Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "删除卡牌"
+text = "新增"
 
-[node name="ApplyButton" type="Button" parent="Margin/RootVBox/TopBar"]
+[node name="DuplicateButton" type="Button" parent="Margin/Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "应用当前编辑"
+text = "复制"
 
-[node name="Split" type="HSplitContainer" parent="Margin/RootVBox"]
+[node name="DeleteButton" type="Button" parent="Margin/Root/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "删除"
+
+[node name="Split" type="HSplitContainer" parent="Margin/Root"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 325
+
+[node name="LeftPanel" type="VBoxContainer" parent="Margin/Root/Split"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SearchEdit" type="LineEdit" parent="Margin/Root/Split/LeftPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "搜索 id / 名称"
+
+[node name="SummaryLabel" type="Label" parent="Margin/Root/Split/LeftPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "统计"
+
+[node name="CardList" type="ItemList" parent="Margin/Root/Split/LeftPanel"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Left" type="VBoxContainer" parent="Margin/RootVBox/Split"]
+[node name="RightPanel" type="VBoxContainer" parent="Margin/Root/Split"]
 layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="CardListLabel" type="Label" parent="Margin/RootVBox/Split/Left"]
-layout_mode = 2
-text = "卡牌列表"
-
-[node name="CardList" type="ItemList" parent="Margin/RootVBox/Split/Left"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="Right" type="VBoxContainer" parent="Margin/RootVBox/Split"]
-layout_mode = 2
-size_flags_horizontal = 5
-size_flags_vertical = 3
-
 theme_override_constants/separation = 8
 
-[node name="IdEdit" type="LineEdit" parent="Margin/RootVBox/Split/Right"]
+[node name="CardTitle" type="Label" parent="Margin/Root/Split/RightPanel"]
+layout_mode = 2
+text = "卡牌基础信息"
+
+[node name="CardGrid" type="GridContainer" parent="Margin/Root/Split/RightPanel"]
+layout_mode = 2
+columns = 2
+
+[node name="IdLabel" type="Label" parent="Margin/Root/Split/RightPanel/CardGrid"]
+layout_mode = 2
+text = "ID"
+
+[node name="IdEdit" type="LineEdit" parent="Margin/Root/Split/RightPanel/CardGrid"]
 unique_name_in_owner = true
 layout_mode = 2
-placeholder_text = "id"
+placeholder_text = "唯一 id"
 
-[node name="NameEdit" type="LineEdit" parent="Margin/RootVBox/Split/Right"]
+[node name="NameLabel" type="Label" parent="Margin/Root/Split/RightPanel/CardGrid"]
+layout_mode = 2
+text = "Name"
+
+[node name="NameEdit" type="LineEdit" parent="Margin/Root/Split/RightPanel/CardGrid"]
 unique_name_in_owner = true
 layout_mode = 2
-placeholder_text = "name"
+placeholder_text = "卡牌名称"
 
-[node name="KindCostRow" type="HBoxContainer" parent="Margin/RootVBox/Split/Right"]
+[node name="KindLabel" type="Label" parent="Margin/Root/Split/RightPanel/CardGrid"]
 layout_mode = 2
+text = "Kind"
 
-[node name="KindOption" type="OptionButton" parent="Margin/RootVBox/Split/Right/KindCostRow"]
+[node name="KindOption" type="OptionButton" parent="Margin/Root/Split/RightPanel/CardGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="CostSpin" type="SpinBox" parent="Margin/RootVBox/Split/Right/KindCostRow"]
+[node name="CostLabel" type="Label" parent="Margin/Root/Split/RightPanel/CardGrid"]
+layout_mode = 2
+text = "Cost"
+
+[node name="CostSpin" type="SpinBox" parent="Margin/Root/Split/RightPanel/CardGrid"]
 unique_name_in_owner = true
 layout_mode = 2
 min_value = 0.0
 max_value = 10.0
 step = 1.0
 
-[node name="DescriptionEdit" type="TextEdit" parent="Margin/RootVBox/Split/Right"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 80)
+[node name="PoolRow" type="HBoxContainer" parent="Margin/Root/Split/RightPanel"]
 layout_mode = 2
-placeholder_text = "description (en)"
 
-[node name="DescriptionZhEdit" type="TextEdit" parent="Margin/RootVBox/Split/Right"]
+[node name="InStarterDeckCheck" type="CheckBox" parent="Margin/Root/Split/RightPanel/PoolRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+text = "加入 starterDeck"
+
+[node name="InRewardPoolCheck" type="CheckBox" parent="Margin/Root/Split/RightPanel/PoolRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "加入 rewardPool"
+
+[node name="DescriptionEdit" type="TextEdit" parent="Margin/Root/Split/RightPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+placeholder_text = "description (English)"
+
+[node name="DescriptionZhEdit" type="TextEdit" parent="Margin/Root/Split/RightPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 70)
 layout_mode = 2
 placeholder_text = "descriptionZh (中文)"
 
-[node name="EffectsLabel" type="Label" parent="Margin/RootVBox/Split/Right"]
+[node name="ApplyCardButton" type="Button" parent="Margin/Root/Split/RightPanel"]
+unique_name_in_owner = true
 layout_mode = 2
-text = "Effects JSON 数组"
+text = "应用卡牌信息"
 
-[node name="EffectsEdit" type="TextEdit" parent="Margin/RootVBox/Split/Right"]
+[node name="EffectTitle" type="Label" parent="Margin/Root/Split/RightPanel"]
+layout_mode = 2
+text = "卡牌效果编辑"
+
+[node name="EffectSplit" type="HSplitContainer" parent="Margin/Root/Split/RightPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 360
+
+[node name="EffectLeft" type="VBoxContainer" parent="Margin/Root/Split/RightPanel/EffectSplit"]
+layout_mode = 2
+
+[node name="EffectList" type="ItemList" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectLeft"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="StatusLabel" type="Label" parent="Margin/RootVBox"]
+[node name="EffectButtons" type="HBoxContainer" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectLeft"]
+layout_mode = 2
+
+[node name="AddEffectButton" type="Button" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectLeft/EffectButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "+ 效果"
+
+[node name="RemoveEffectButton" type="Button" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectLeft/EffectButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "- 效果"
+
+[node name="EffectRight" type="VBoxContainer" parent="Margin/Root/Split/RightPanel/EffectSplit"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="EffectGrid" type="GridContainer" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight"]
+layout_mode = 2
+columns = 2
+
+[node name="EffectTypeLabel" type="Label" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+layout_mode = 2
+text = "Type"
+
+[node name="EffectTypeOption" type="OptionButton" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="EffectTargetLabel" type="Label" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+layout_mode = 2
+text = "Target"
+
+[node name="EffectTargetOption" type="OptionButton" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="EffectAmountLabel" type="Label" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+layout_mode = 2
+text = "Amount"
+
+[node name="EffectAmountSpin" type="SpinBox" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -99.0
+max_value = 999.0
+step = 1.0
+
+[node name="EffectRepeatLabel" type="Label" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+layout_mode = 2
+text = "Repeat"
+
+[node name="EffectRepeatSpin" type="SpinBox" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 1.0
+max_value = 99.0
+step = 1.0
+
+[node name="EffectFlatBonusLabel" type="Label" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+layout_mode = 2
+text = "FlatBonus"
+
+[node name="EffectFlatBonusSpin" type="SpinBox" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = -99.0
+max_value = 999.0
+step = 1.0
+
+[node name="EffectUseAttackerStrengthCheck" type="CheckBox" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "UseAttackerStrength"
+button_pressed = true
+
+[node name="EffectUseTargetVulnerableCheck" type="CheckBox" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "UseTargetVulnerable"
+button_pressed = true
+
+[node name="ApplyEffectButton" type="Button" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "应用效果字段"
+
+[node name="EffectsPreviewEdit" type="TextEdit" parent="Margin/Root/Split/RightPanel/EffectSplit/EffectRight"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+editable = false
+
+[node name="StatusLabel" type="Label" parent="Margin/Root"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "状态："
+
+[node name="ValidationLabel" type="RichTextLabel" parent="Margin/Root"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 130)
+bbcode_enabled = false
+scroll_active = true

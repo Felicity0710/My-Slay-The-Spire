@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 internal static class Program
 {
@@ -37,7 +38,9 @@ internal static class Program
             ("Potion catalog exposes potion ids", TestPotionCatalogCoverage),
             ("New build cards resolve from catalog", TestNewBuildCardsResolve),
             ("Card catalog validation rejects duplicate ids", TestCardCatalogValidationRejectsDuplicates),
-            ("Card catalog validation rejects unknown pool references", TestCardCatalogValidationRejectsUnknownPoolRefs)
+            ("Card catalog validation rejects unknown pool references", TestCardCatalogValidationRejectsUnknownPoolRefs),
+            ("Card catalog save/load roundtrip preserves entries", TestCardCatalogSaveLoadRoundtrip),
+            ("Card catalog validation requires strike fallback", TestCardCatalogValidationRequiresStrike)
         };
 
         var failed = 0;
@@ -513,6 +516,85 @@ internal static class Program
         var errors = CardCatalogPersistence.Validate(catalog);
         ExpectEqual(true, errors.Exists(e => e.Contains("starterDeck references unknown id")), "starterDeck unknown id error exists");
         ExpectEqual(true, errors.Exists(e => e.Contains("rewardPool references unknown id")), "rewardPool unknown id error exists");
+    }
+
+
+    private static void TestCardCatalogSaveLoadRoundtrip()
+    {
+        var catalog = new CardCatalogData
+        {
+            Cards = new List<CardEntryData>
+            {
+                new()
+                {
+                    Id = "strike",
+                    Name = "Strike",
+                    Kind = nameof(CardKind.Attack),
+                    Cost = 1,
+                    Description = "Deal 6 damage.",
+                    DescriptionZh = "造成6点伤害。",
+                    Effects = new List<CardEffectEntryData>
+                    {
+                        new()
+                        {
+                            Type = nameof(CardEffectType.Damage),
+                            Target = nameof(CardEffectTarget.SelectedEnemy),
+                            Amount = 6,
+                            Repeat = 1
+                        }
+                    }
+                }
+            },
+            StarterDeck = new List<string> { "strike" },
+            RewardPool = new List<string> { "strike" }
+        };
+
+        var path = Path.Combine(Path.GetTempPath(), $"cards_test_{Guid.NewGuid():N}.json");
+        try
+        {
+            CardCatalogPersistence.SaveToFile(path, catalog);
+            var loaded = CardCatalogPersistence.LoadFromFile(path);
+            ExpectEqual(1, loaded.Cards.Count, "roundtrip card count");
+            ExpectEqual("strike", loaded.Cards[0].Id, "roundtrip card id");
+            ExpectEqual(1, loaded.StarterDeck.Count, "roundtrip starterDeck count");
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+    }
+
+    private static void TestCardCatalogValidationRequiresStrike()
+    {
+        var catalog = new CardCatalogData
+        {
+            Cards = new List<CardEntryData>
+            {
+                new()
+                {
+                    Id = "defend",
+                    Name = "Defend",
+                    Kind = nameof(CardKind.Skill),
+                    Cost = 1,
+                    Effects = new List<CardEffectEntryData>
+                    {
+                        new()
+                        {
+                            Type = nameof(CardEffectType.GainBlock),
+                            Target = nameof(CardEffectTarget.Player),
+                            Amount = 5,
+                            Repeat = 1
+                        }
+                    }
+                }
+            }
+        };
+
+        var errors = CardCatalogPersistence.Validate(catalog);
+        ExpectEqual(true, errors.Exists(e => e.Contains("required fallback card id missing")), "missing strike error exists");
     }
 
     private sealed class RecordingEffectExecutor : ICardEffectRuntime
