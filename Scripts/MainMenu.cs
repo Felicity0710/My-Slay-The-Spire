@@ -128,13 +128,43 @@ public partial class MainMenu : Control
 
     private static List<Vector2I> BuildSupportedResolutionList()
     {
+        // Godot C# in this project version does not expose screen mode enumeration APIs
+        // (e.g. ScreenGetModeCount/ScreenGetMode). So we provide a broad preset list,
+        // then filter by current monitor max size.
         var screen = DisplayServer.WindowGetCurrentScreen();
-        var modeCount = DisplayServer.ScreenGetModeCount(screen);
+        var screenSize = DisplayServer.ScreenGetSize(screen);
+
+        var presets = new[]
+        {
+            new Vector2I(1024, 576),
+            new Vector2I(1152, 648),
+            new Vector2I(1280, 720),
+            new Vector2I(1280, 800),
+            new Vector2I(1280, 960),
+            new Vector2I(1366, 768),
+            new Vector2I(1440, 900),
+            new Vector2I(1536, 864),
+            new Vector2I(1600, 900),
+            new Vector2I(1680, 1050),
+            new Vector2I(1920, 1080),
+            new Vector2I(1920, 1200),
+            new Vector2I(2048, 1152),
+            new Vector2I(2048, 1536),
+            new Vector2I(2560, 1080),
+            new Vector2I(2560, 1440),
+            new Vector2I(2560, 1600),
+            new Vector2I(3440, 1440),
+            new Vector2I(3840, 1600),
+            new Vector2I(3840, 2160)
+        };
 
         var unique = new HashSet<Vector2I>();
-        for (var i = 0; i < modeCount; i += 1)
+        foreach (var preset in presets)
         {
-            unique.Add(DisplayServer.ScreenGetMode(i, screen));
+            if (preset.X <= screenSize.X && preset.Y <= screenSize.Y)
+            {
+                unique.Add(preset);
+            }
         }
 
         var currentWindowSize = DisplayServer.WindowGetSize();
