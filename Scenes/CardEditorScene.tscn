@@ -1,0 +1,135 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/CardEditorScene.cs" id="1_editor"]
+
+[node name="CardEditorScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_editor")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="RootVBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="Margin/RootVBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "返回主菜单"
+
+[node name="ReloadButton" type="Button" parent="Margin/RootVBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "重新加载"
+
+[node name="SaveButton" type="Button" parent="Margin/RootVBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "保存 cards.json"
+
+[node name="NewButton" type="Button" parent="Margin/RootVBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "新增卡牌"
+
+[node name="DeleteButton" type="Button" parent="Margin/RootVBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "删除卡牌"
+
+[node name="ApplyButton" type="Button" parent="Margin/RootVBox/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "应用当前编辑"
+
+[node name="Split" type="HSplitContainer" parent="Margin/RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Left" type="VBoxContainer" parent="Margin/RootVBox/Split"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CardListLabel" type="Label" parent="Margin/RootVBox/Split/Left"]
+layout_mode = 2
+text = "卡牌列表"
+
+[node name="CardList" type="ItemList" parent="Margin/RootVBox/Split/Left"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Right" type="VBoxContainer" parent="Margin/RootVBox/Split"]
+layout_mode = 2
+size_flags_horizontal = 5
+size_flags_vertical = 3
+
+theme_override_constants/separation = 8
+
+[node name="IdEdit" type="LineEdit" parent="Margin/RootVBox/Split/Right"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "id"
+
+[node name="NameEdit" type="LineEdit" parent="Margin/RootVBox/Split/Right"]
+unique_name_in_owner = true
+layout_mode = 2
+placeholder_text = "name"
+
+[node name="KindCostRow" type="HBoxContainer" parent="Margin/RootVBox/Split/Right"]
+layout_mode = 2
+
+[node name="KindOption" type="OptionButton" parent="Margin/RootVBox/Split/Right/KindCostRow"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="CostSpin" type="SpinBox" parent="Margin/RootVBox/Split/Right/KindCostRow"]
+unique_name_in_owner = true
+layout_mode = 2
+min_value = 0.0
+max_value = 10.0
+step = 1.0
+
+[node name="DescriptionEdit" type="TextEdit" parent="Margin/RootVBox/Split/Right"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+placeholder_text = "description (en)"
+
+[node name="DescriptionZhEdit" type="TextEdit" parent="Margin/RootVBox/Split/Right"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+placeholder_text = "descriptionZh (中文)"
+
+[node name="EffectsLabel" type="Label" parent="Margin/RootVBox/Split/Right"]
+layout_mode = 2
+text = "Effects JSON 数组"
+
+[node name="EffectsEdit" type="TextEdit" parent="Margin/RootVBox/Split/Right"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StatusLabel" type="Label" parent="Margin/RootVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "状态："

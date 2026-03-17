@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\Scripts\CardCatalogPersistence.cs" Link="CardCatalogPersistence.cs" />
     <Compile Include="..\..\Scripts\CardData.cs" Link="CardData.cs" />
     <Compile Include="..\..\Scripts\CardEffectPipeline.cs" Link="CardEffectPipeline.cs" />
     <Compile Include="..\..\Scripts\CombatResolver.cs" Link="CombatResolver.cs" />

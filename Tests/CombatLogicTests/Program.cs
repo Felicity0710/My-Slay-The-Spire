@@ -35,7 +35,9 @@ internal static class Program
             ("Card description supports language toggle", TestCardDescriptionLanguageToggle),
             ("Relic catalog exposes extended relic ids", TestRelicCatalogCoverage),
             ("Potion catalog exposes potion ids", TestPotionCatalogCoverage),
-            ("New build cards resolve from catalog", TestNewBuildCardsResolve)
+            ("New build cards resolve from catalog", TestNewBuildCardsResolve),
+            ("Card catalog validation rejects duplicate ids", TestCardCatalogValidationRejectsDuplicates),
+            ("Card catalog validation rejects unknown pool references", TestCardCatalogValidationRejectsUnknownPoolRefs)
         };
 
         var failed = 0;
@@ -440,6 +442,77 @@ internal static class Program
                 throw new InvalidOperationException($"new build card should have effects: {cardId}");
             }
         }
+    }
+
+    private static void TestCardCatalogValidationRejectsDuplicates()
+    {
+        var catalog = new CardCatalogData
+        {
+            Cards = new List<CardEntryData>
+            {
+                new()
+                {
+                    Id = "strike",
+                    Name = "Strike",
+                    Kind = nameof(CardKind.Attack),
+                    Cost = 1,
+                    Effects = new List<CardEffectEntryData>
+                    {
+                        new()
+                        {
+                            Type = nameof(CardEffectType.Damage),
+                            Target = nameof(CardEffectTarget.SelectedEnemy),
+                            Amount = 6,
+                            Repeat = 1
+                        }
+                    }
+                },
+                new()
+                {
+                    Id = "strike",
+                    Name = "Other",
+                    Kind = nameof(CardKind.Attack),
+                    Cost = 1,
+                    Effects = new List<CardEffectEntryData>()
+                }
+            }
+        };
+
+        var errors = CardCatalogPersistence.Validate(catalog);
+        ExpectEqual(true, errors.Exists(e => e.Contains("duplicate card id")), "duplicate id error exists");
+    }
+
+    private static void TestCardCatalogValidationRejectsUnknownPoolRefs()
+    {
+        var catalog = new CardCatalogData
+        {
+            Cards = new List<CardEntryData>
+            {
+                new()
+                {
+                    Id = "strike",
+                    Name = "Strike",
+                    Kind = nameof(CardKind.Attack),
+                    Cost = 1,
+                    Effects = new List<CardEffectEntryData>
+                    {
+                        new()
+                        {
+                            Type = nameof(CardEffectType.Damage),
+                            Target = nameof(CardEffectTarget.SelectedEnemy),
+                            Amount = 6,
+                            Repeat = 1
+                        }
+                    }
+                }
+            },
+            StarterDeck = new List<string> { "ghost_card" },
+            RewardPool = new List<string> { "ghost_card" }
+        };
+
+        var errors = CardCatalogPersistence.Validate(catalog);
+        ExpectEqual(true, errors.Exists(e => e.Contains("starterDeck references unknown id")), "starterDeck unknown id error exists");
+        ExpectEqual(true, errors.Exists(e => e.Contains("rewardPool references unknown id")), "rewardPool unknown id error exists");
     }
 
     private sealed class RecordingEffectExecutor : ICardEffectRuntime
