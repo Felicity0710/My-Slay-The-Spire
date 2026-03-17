@@ -37,6 +37,8 @@ internal static class Program
             ("Relic catalog exposes extended relic ids", TestRelicCatalogCoverage),
             ("Potion catalog exposes potion ids", TestPotionCatalogCoverage),
             ("New build cards resolve from catalog", TestNewBuildCardsResolve),
+            ("Deck presets resolve to known cards", TestDeckPresetsResolveToKnownCards),
+            ("Deck preset resolver falls back to starter", TestDeckPresetResolverFallback),
             ("Card catalog validation rejects duplicate ids", TestCardCatalogValidationRejectsDuplicates),
             ("Card catalog validation rejects unknown pool references", TestCardCatalogValidationRejectsUnknownPoolRefs),
             ("Card catalog save/load roundtrip preserves entries", TestCardCatalogSaveLoadRoundtrip),
@@ -457,6 +459,31 @@ internal static class Program
                 throw new InvalidOperationException($"new build card should have effects: {cardId}");
             }
         }
+    }
+
+
+    private static void TestDeckPresetsResolveToKnownCards()
+    {
+        var presets = DeckPresetCatalog.All();
+        ExpectEqual(true, presets.Count >= 4, "preset count");
+
+        foreach (var preset in presets)
+        {
+            ExpectEqual(false, string.IsNullOrWhiteSpace(preset.Id), "preset id non-empty");
+            ExpectEqual(true, preset.CardIds.Count > 0, "preset has cards");
+            foreach (var id in preset.CardIds)
+            {
+                var card = CardData.CreateById(id);
+                ExpectEqual(id, card.Id, "preset card id resolution");
+            }
+        }
+    }
+
+    private static void TestDeckPresetResolverFallback()
+    {
+        var fallback = DeckPresetCatalog.Resolve("definitely_missing");
+        ExpectEqual("starter", fallback.Id, "missing preset fallback id");
+        ExpectEqual(true, fallback.CardIds.Count > 0, "fallback preset should have cards");
     }
 
     private static void TestCardCatalogValidationRejectsDuplicates()
