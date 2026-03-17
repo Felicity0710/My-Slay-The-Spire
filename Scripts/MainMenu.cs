@@ -18,9 +18,17 @@ public partial class MainMenu : Control
     private Label _resolutionLabel = null!;
     private Label _masterVolumeLabel = null!;
     private Label _musicVolumeLabel = null!;
+    private Label _maxFpsLabel = null!;
+    private Label _vsyncLabel = null!;
+    private Label _fpsCounterLabelText = null!;
+    private OptionButton _maxFpsOption = null!;
+    private CheckBox _vsyncCheckBox = null!;
+    private CheckBox _fpsCounterCheckBox = null!;
+    private Label _fpsCounterLabel = null!;
     private Button _settingsCloseButton = null!;
 
     private List<Vector2I> _windowSizes = new();
+    private readonly int[] _fpsCaps = { 0, 30, 60, 120, 144, 165, 240 };
 
     public override void _Ready()
     {
@@ -38,6 +46,13 @@ public partial class MainMenu : Control
         _resolutionLabel = GetNode<Label>("%ResolutionLabel");
         _masterVolumeLabel = GetNode<Label>("%MasterVolumeLabel");
         _musicVolumeLabel = GetNode<Label>("%MusicVolumeLabel");
+        _maxFpsLabel = GetNode<Label>("%MaxFpsLabel");
+        _vsyncLabel = GetNode<Label>("%VsyncLabel");
+        _fpsCounterLabelText = GetNode<Label>("%FpsCounterLabelText");
+        _maxFpsOption = GetNode<OptionButton>("%MaxFpsOption");
+        _vsyncCheckBox = GetNode<CheckBox>("%VsyncCheckBox");
+        _fpsCounterCheckBox = GetNode<CheckBox>("%FpsCounterCheckBox");
+        _fpsCounterLabel = GetNode<Label>("%FpsCounterLabel");
         _settingsCloseButton = GetNode<Button>("%SettingsCloseButton");
 
         _startButton.Pressed += OnStartPressed;
@@ -50,6 +65,16 @@ public partial class MainMenu : Control
         SetupSettingsUi();
 
         RefreshLanguageButtonText();
+    }
+
+    public override void _Process(double _delta)
+    {
+        if (!_fpsCounterLabel.Visible)
+        {
+            return;
+        }
+
+        _fpsCounterLabel.Text = $"FPS: {Engine.GetFramesPerSecond()}";
     }
 
     private void OnStartPressed()
@@ -94,10 +119,14 @@ public partial class MainMenu : Control
     private void SetupSettingsUi()
     {
         PopulateResolutionOptions();
+        PopulateMaxFpsOptions();
 
         _resolutionOption.ItemSelected += OnResolutionSelected;
         _masterVolumeSlider.ValueChanged += OnMasterVolumeChanged;
         _musicVolumeSlider.ValueChanged += OnMusicVolumeChanged;
+        _maxFpsOption.ItemSelected += OnMaxFpsSelected;
+        _vsyncCheckBox.Toggled += OnVsyncToggled;
+        _fpsCounterCheckBox.Toggled += OnFpsCounterToggled;
 
         _masterVolumeSlider.Value = VolumeDbToPercent(AudioServer.GetBusVolumeDb(0));
 
@@ -105,6 +134,11 @@ public partial class MainMenu : Control
         _musicVolumeSlider.Value = musicBus >= 0
             ? VolumeDbToPercent(AudioServer.GetBusVolumeDb(musicBus))
             : _masterVolumeSlider.Value;
+
+        var vsyncMode = DisplayServer.WindowGetVsyncMode();
+        _vsyncCheckBox.ButtonPressed = vsyncMode != DisplayServer.VSyncMode.Disabled;
+        _fpsCounterCheckBox.ButtonPressed = false;
+        _fpsCounterLabel.Visible = false;
 
         _settingsModal.Visible = false;
         RefreshSettingsText();
@@ -126,11 +160,22 @@ public partial class MainMenu : Control
         _resolutionOption.Select(selectedIndex >= 0 ? selectedIndex : 0);
     }
 
+    private void PopulateMaxFpsOptions()
+    {
+        _maxFpsOption.Clear();
+        for (var i = 0; i < _fpsCaps.Length; i += 1)
+        {
+            var cap = _fpsCaps[i];
+            _maxFpsOption.AddItem(cap <= 0 ? "Unlimited" : cap.ToString(), i);
+        }
+
+        var currentCap = Engine.MaxFps;
+        var index = System.Array.IndexOf(_fpsCaps, currentCap);
+        _maxFpsOption.Select(index >= 0 ? index : 0);
+    }
+
     private static List<Vector2I> BuildSupportedResolutionList()
     {
-        // Godot C# in this project version does not expose screen mode enumeration APIs
-        // (e.g. ScreenGetModeCount/ScreenGetMode). So we provide a broad preset list,
-        // then filter by current monitor max size.
         var screen = DisplayServer.WindowGetCurrentScreen();
         var screenSize = DisplayServer.ScreenGetSize(screen);
 
@@ -191,7 +236,16 @@ public partial class MainMenu : Control
         _resolutionLabel.Text = isZh ? "分辨率" : "Resolution";
         _masterVolumeLabel.Text = isZh ? "主音量" : "Master Volume";
         _musicVolumeLabel.Text = isZh ? "音乐音量" : "Music Volume";
+        _maxFpsLabel.Text = isZh ? "最大帧率" : "Max FPS";
+        _vsyncLabel.Text = isZh ? "垂直同步" : "VSync";
+        _fpsCounterLabelText.Text = isZh ? "显示帧率" : "Show FPS";
         _settingsCloseButton.Text = isZh ? "关闭" : "Close";
+
+        var noLimitText = isZh ? "不限制" : "Unlimited";
+        if (_maxFpsOption.ItemCount > 0)
+        {
+            _maxFpsOption.SetItemText(0, noLimitText);
+        }
     }
 
     private void OnResolutionSelected(long index)
@@ -202,6 +256,28 @@ public partial class MainMenu : Control
         }
 
         DisplayServer.WindowSetSize(_windowSizes[(int)index]);
+    }
+
+    private void OnMaxFpsSelected(long index)
+    {
+        if (index < 0 || index >= _fpsCaps.Length)
+        {
+            return;
+        }
+
+        Engine.MaxFps = _fpsCaps[(int)index];
+    }
+
+    private void OnVsyncToggled(bool enabled)
+    {
+        DisplayServer.WindowSetVsyncMode(enabled
+            ? DisplayServer.VSyncMode.Enabled
+            : DisplayServer.VSyncMode.Disabled);
+    }
+
+    private void OnFpsCounterToggled(bool enabled)
+    {
+        _fpsCounterLabel.Visible = enabled;
     }
 
     private void OnMasterVolumeChanged(double value)
