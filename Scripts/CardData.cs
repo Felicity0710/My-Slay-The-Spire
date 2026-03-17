@@ -318,7 +318,7 @@ public enum GameLanguage
 
 public static class LocalizationSettings
 {
-    public static GameLanguage CurrentLanguage { get; private set; } = GameLanguage.En;
+    public static GameLanguage CurrentLanguage { get; private set; } = GameLanguage.ZhHans;
 
     public static event Action? LanguageChanged;
 
