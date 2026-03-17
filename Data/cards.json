@@ -12,7 +12,8 @@
           "target": "SelectedEnemy",
           "amount": 6
         }
-      ]
+      ],
+      "descriptionZh": "造成6点伤害。"
     },
     {
       "id": "defend",
@@ -28,7 +29,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得5点格挡。"
     },
     {
       "id": "heavy_slash",
@@ -42,7 +44,8 @@
           "target": "SelectedEnemy",
           "amount": 12
         }
-      ]
+      ],
+      "descriptionZh": "造成12点伤害。"
     },
     {
       "id": "bash",
@@ -62,7 +65,8 @@
           "amount": 2,
           "useAttackerStrength": false
         }
-      ]
+      ],
+      "descriptionZh": "造成8点伤害。施加2层易伤。"
     },
     {
       "id": "shrug",
@@ -85,7 +89,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得8点格挡。抽1张牌。"
     },
     {
       "id": "quick_slash",
@@ -106,7 +111,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "造成7点伤害。抽1张牌。"
     },
     {
       "id": "whirlwind",
@@ -121,7 +127,8 @@
           "amount": 4,
           "repeat": 2
         }
-      ]
+      ],
+      "descriptionZh": "对所有敌人造成4点伤害，重复2次。"
     },
     {
       "id": "battle_focus",
@@ -137,7 +144,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得2点力量。"
     },
     {
       "id": "adrenaline_rush",
@@ -160,7 +168,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得1点能量。抽1张牌。"
     },
     {
       "id": "second_wind",
@@ -183,7 +192,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得6点格挡。回复4点生命。"
     },
     {
       "id": "rending_wave",
@@ -203,7 +213,8 @@
           "amount": 1,
           "useAttackerStrength": false
         }
-      ]
+      ],
+      "descriptionZh": "对所有敌人造成5点伤害。对所有敌人施加1层易伤。"
     },
     {
       "id": "twin_strike",
@@ -218,7 +229,8 @@
           "amount": 4,
           "repeat": 2
         }
-      ]
+      ],
+      "descriptionZh": "造成4点伤害，重复2次。"
     },
     {
       "id": "shield_bash",
@@ -239,7 +251,8 @@
           "target": "SelectedEnemy",
           "amount": 6
         }
-      ]
+      ],
+      "descriptionZh": "获得6点格挡。造成6点伤害。"
     },
     {
       "id": "iron_wall",
@@ -255,7 +268,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得12点格挡。"
     },
     {
       "id": "rend_armor",
@@ -275,7 +289,8 @@
           "amount": 2,
           "useAttackerStrength": false
         }
-      ]
+      ],
+      "descriptionZh": "造成6点伤害。施加2层易伤。"
     },
     {
       "id": "blood_pact",
@@ -297,7 +312,8 @@
           "amount": 1,
           "useAttackerStrength": false
         }
-      ]
+      ],
+      "descriptionZh": "获得2点力量。对自己施加1层易伤。"
     },
     {
       "id": "tactical_step",
@@ -320,7 +336,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得4点格挡。抽1张牌。"
     },
     {
       "id": "reaper_touch",
@@ -341,7 +358,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "造成9点伤害。回复4点生命。"
     },
     {
       "id": "fortify",
@@ -364,7 +382,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得16点格挡。抽1张牌。"
     },
     {
       "id": "meteor_shower",
@@ -379,7 +398,8 @@
           "amount": 3,
           "repeat": 3
         }
-      ]
+      ],
+      "descriptionZh": "对所有敌人造成3点伤害，重复3次。"
     },
     {
       "id": "glass_cannon",
@@ -399,7 +419,8 @@
           "amount": 1,
           "useAttackerStrength": false
         }
-      ]
+      ],
+      "descriptionZh": "造成11点伤害。对自己施加1层易伤。"
     },
     {
       "id": "war_cry",
@@ -422,7 +443,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "抽2张牌。获得1点能量。"
     },
     {
       "id": "berserker_form",
@@ -444,7 +466,8 @@
           "amount": 1,
           "useAttackerStrength": false
         }
-      ]
+      ],
+      "descriptionZh": "获得3点力量。对自己施加1层易伤。"
     },
     {
       "id": "overclock",
@@ -466,7 +489,8 @@
           "amount": 1,
           "useAttackerStrength": false
         }
-      ]
+      ],
+      "descriptionZh": "获得2点能量。对自己施加1层易伤。"
     },
     {
       "id": "crushing_blow",
@@ -486,7 +510,8 @@
           "amount": 1,
           "useAttackerStrength": false
         }
-      ]
+      ],
+      "descriptionZh": "造成14点伤害。施加1层易伤。"
     },
     {
       "id": "chain_lightning",
@@ -507,7 +532,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "对所有敌人造成4点伤害。抽1张牌。"
     },
     {
       "id": "meditate",
@@ -530,7 +556,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "回复3点生命。抽1张牌。"
     },
     {
       "id": "fortress_stance",
@@ -553,7 +580,8 @@
           "useAttackerStrength": false,
           "useTargetVulnerable": false
         }
-      ]
+      ],
+      "descriptionZh": "获得10点格挡。获得1点力量。"
     }
   ],
   "starterDeck": [

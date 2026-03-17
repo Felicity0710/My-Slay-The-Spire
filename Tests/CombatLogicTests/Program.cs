@@ -32,6 +32,7 @@ internal static class Program
             ("Card effect pipeline preserves execution order", TestCardEffectPipelineOrder),
             ("Card effect pipeline handles new buff effects", TestCardEffectPipelineExtendedEffects),
             ("Card text uses real line breaks", TestCardTextUsesLineBreaks),
+            ("Card description supports language toggle", TestCardDescriptionLanguageToggle),
             ("Relic catalog exposes extended relic ids", TestRelicCatalogCoverage),
             ("Potion catalog exposes potion ids", TestPotionCatalogCoverage),
             ("New build cards resolve from catalog", TestNewBuildCardsResolve)
@@ -332,6 +333,7 @@ internal static class Program
             id: "combo",
             name: "Combo",
             description: "Deal 4. Apply 2 Vulnerable. Draw 1.",
+            descriptionZh: "造成4点伤害。施加2层易伤。抽1张牌。",
             kind: CardKind.Attack,
             cost: 1,
             effects: new List<CardEffectData>
@@ -356,6 +358,7 @@ internal static class Program
             id: "support",
             name: "Support",
             description: "Gain 2 Strength. Gain 1 Energy. Heal 3.",
+            descriptionZh: "获得2点力量。获得1点能量。回复3点生命。",
             kind: CardKind.Skill,
             cost: 1,
             effects: new List<CardEffectData>
@@ -376,10 +379,24 @@ internal static class Program
 
     private static void TestCardTextUsesLineBreaks()
     {
+        LocalizationSettings.SetLanguage(GameLanguage.En);
         var card = CardData.CreateById("strike");
         var text = card.ToCardText();
         ExpectEqual(true, text.Contains("\n"), "card text includes newline");
         ExpectEqual(false, text.Contains("\\n"), "card text should not include escaped literal \\\\n");
+    }
+
+    private static void TestCardDescriptionLanguageToggle()
+    {
+        var card = CardData.CreateById("strike");
+
+        LocalizationSettings.SetLanguage(GameLanguage.En);
+        ExpectEqual("Deal 6 damage.", card.GetLocalizedDescription(), "english description");
+
+        LocalizationSettings.SetLanguage(GameLanguage.ZhHans);
+        ExpectEqual("造成6点伤害。", card.GetLocalizedDescription(), "chinese description");
+
+        LocalizationSettings.SetLanguage(GameLanguage.En);
     }
 
     private static void TestRelicCatalogCoverage()

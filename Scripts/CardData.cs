@@ -64,6 +64,7 @@ public sealed class CardData
     public string Id { get; }
     public string Name { get; }
     public string Description { get; }
+    public string DescriptionZh { get; }
     public CardKind Kind { get; }
     public int Cost { get; }
     public IReadOnlyList<CardEffectData> Effects { get; }
@@ -78,6 +79,7 @@ public sealed class CardData
         string id,
         string name,
         string description,
+        string descriptionZh,
         CardKind kind,
         int cost,
         IReadOnlyList<CardEffectData> effects)
@@ -85,6 +87,7 @@ public sealed class CardData
         Id = id;
         Name = name;
         Description = description;
+        DescriptionZh = string.IsNullOrWhiteSpace(descriptionZh) ? description : descriptionZh;
         Kind = kind;
         Cost = cost;
         Effects = effects;
@@ -105,7 +108,12 @@ public sealed class CardData
 
     public string ToCardText()
     {
-        return $"{Name}\nCost: {Cost}\n{Description}";
+        return $"{Name}\n{LocalizationSettings.CostLabel()}: {Cost}\n{GetLocalizedDescription()}";
+    }
+
+    public string GetLocalizedDescription()
+    {
+        return LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans ? DescriptionZh : Description;
     }
 
     public bool HasEffect(CardEffectType type)
@@ -155,6 +163,7 @@ public sealed class CardData
             source.Id,
             source.Name,
             source.Description,
+            source.DescriptionZh,
             source.Kind,
             source.Cost,
             effects);
@@ -213,6 +222,7 @@ public sealed class CardData
                     cardDto.Id,
                     cardDto.Name ?? cardDto.Id,
                     cardDto.Description ?? string.Empty,
+                    cardDto.DescriptionZh ?? cardDto.Description ?? string.Empty,
                     ParseEnum<CardKind>(cardDto.Kind, "card kind"),
                     cardDto.Cost,
                     effects);
@@ -282,6 +292,7 @@ public sealed class CardData
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string? DescriptionZh { get; set; }
         public string Kind { get; set; } = string.Empty;
         public int Cost { get; set; }
         public List<CardEffectDto>? Effects { get; set; }
@@ -296,5 +307,68 @@ public sealed class CardData
         public bool UseAttackerStrength { get; set; } = true;
         public bool UseTargetVulnerable { get; set; } = true;
         public int FlatBonus { get; set; }
+    }
+}
+
+public enum GameLanguage
+{
+    En,
+    ZhHans
+}
+
+public static class LocalizationSettings
+{
+    public static GameLanguage CurrentLanguage { get; private set; } = GameLanguage.En;
+
+    public static event Action? LanguageChanged;
+
+    public static void ToggleLanguage()
+    {
+        SetLanguage(CurrentLanguage == GameLanguage.En ? GameLanguage.ZhHans : GameLanguage.En);
+    }
+
+    public static void SetLanguage(GameLanguage language)
+    {
+        if (CurrentLanguage == language)
+        {
+            return;
+        }
+
+        CurrentLanguage = language;
+        LanguageChanged?.Invoke();
+    }
+
+    public static string CostLabel()
+    {
+        return CurrentLanguage == GameLanguage.ZhHans ? "费用" : "Cost";
+    }
+
+    public static string LanguageButtonText()
+    {
+        return CurrentLanguage == GameLanguage.ZhHans ? "语言：中文" : "Language: English";
+    }
+
+    public static string HighlightCardDescription(string text)
+    {
+        if (CurrentLanguage == GameLanguage.ZhHans)
+        {
+            return text
+                .Replace("造成", "[color=#fca5a5]造成[/color]")
+                .Replace("获得", "[color=#93c5fd]获得[/color]")
+                .Replace("格挡", "[color=#93c5fd]格挡[/color]")
+                .Replace("易伤", "[color=#e9d5ff]易伤[/color]")
+                .Replace("抽", "[color=#a5f3fc]抽[/color]")
+                .Replace("回复", "[color=#86efac]回复[/color]")
+                .Replace("伤害", "[color=#fda4af]伤害[/color]");
+        }
+
+        return text
+            .Replace("Deal", "[color=#fca5a5]Deal[/color]")
+            .Replace("Gain", "[color=#93c5fd]Gain[/color]")
+            .Replace("Block", "[color=#93c5fd]Block[/color]")
+            .Replace("Vulnerable", "[color=#e9d5ff]Vulnerable[/color]")
+            .Replace("Draw", "[color=#a5f3fc]Draw[/color]")
+            .Replace("Heal", "[color=#86efac]Heal[/color]")
+            .Replace("damage", "[color=#fda4af]damage[/color]");
     }
 }

@@ -79,16 +79,9 @@ public partial class RewardCardOptionView : PanelContainer
 
         CardId = card.Id;
         _nameLabel!.Text = card.Name;
-        _costLabel!.Text = $"Cost: {card.Cost}";
+        _costLabel!.Text = $"{LocalizationSettings.CostLabel()}: {card.Cost}";
 
-        var text = card.Description
-            .Replace("Deal", "[color=#fca5a5]Deal[/color]")
-            .Replace("Gain", "[color=#93c5fd]Gain[/color]")
-            .Replace("Block", "[color=#93c5fd]Block[/color]")
-            .Replace("Vulnerable", "[color=#e9d5ff]Vulnerable[/color]")
-            .Replace("Draw", "[color=#a5f3fc]Draw[/color]")
-            .Replace("Heal", "[color=#86efac]Heal[/color]")
-            .Replace("damage", "[color=#fda4af]damage[/color]");
+        var text = LocalizationSettings.HighlightCardDescription(card.GetLocalizedDescription());
 
         _descLabel!.Text = text;
     }
