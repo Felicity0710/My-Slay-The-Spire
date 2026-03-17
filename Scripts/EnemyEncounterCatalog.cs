@@ -1,3 +1,4 @@
+using Godot;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,8 +24,7 @@ public sealed class EnemyEncounterCatalog
 
     public static EnemyEncounterCatalog Load()
     {
-        var path = ResolveEnemiesJsonPath();
-        var json = File.ReadAllText(path);
+        var (json, source) = ReadEnemiesJson();
         var dto = JsonSerializer.Deserialize<EnemyCatalogDto>(json, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -32,7 +32,7 @@ public sealed class EnemyEncounterCatalog
 
         if (dto == null || dto.Archetypes == null || dto.Archetypes.Count == 0)
         {
-            throw new InvalidOperationException($"Invalid enemy catalog JSON: {path}");
+            throw new InvalidOperationException($"Invalid enemy catalog JSON: {source}");
         }
 
         var archetypes = new Dictionary<string, EnemyArchetype>();
@@ -97,8 +97,17 @@ public sealed class EnemyEncounterCatalog
             .Replace("{suffix}", suffix);
     }
 
-    private static string ResolveEnemiesJsonPath()
+    private static (string Json, string Source) ReadEnemiesJson()
     {
+        const string resourcePath = "res://Data/enemies.json";
+        using (var file = Godot.FileAccess.Open(resourcePath, Godot.FileAccess.ModeFlags.Read))
+        {
+            if (file != null)
+            {
+                return (file.GetAsText(), resourcePath);
+            }
+        }
+
         var candidates = new List<string>();
         var envPath = Environment.GetEnvironmentVariable("SLAY_THE_HS_ENEMIES_JSON");
         if (!string.IsNullOrWhiteSpace(envPath))
@@ -113,7 +122,7 @@ public sealed class EnemyEncounterCatalog
         {
             if (File.Exists(path))
             {
-                return path;
+                return (File.ReadAllText(path), path);
             }
         }
 
