@@ -107,6 +107,8 @@ public sealed class EnemyEncounterCatalog
 
         candidates.AddRange(EnumerateCandidates(AppContext.BaseDirectory));
         candidates.AddRange(EnumerateCandidates(Directory.GetCurrentDirectory()));
+        candidates.AddRange(EnumerateTestProjectCandidates(AppContext.BaseDirectory));
+        candidates.AddRange(EnumerateTestProjectCandidates(Directory.GetCurrentDirectory()));
         candidates.AddRange(EnumerateExportDataCandidates(AppContext.BaseDirectory));
         candidates.AddRange(EnumerateExportDataCandidates(Directory.GetCurrentDirectory()));
 
@@ -131,6 +133,17 @@ public sealed class EnemyEncounterCatalog
         }
     }
 
+
+
+    private static IEnumerable<string> EnumerateTestProjectCandidates(string startDir)
+    {
+        var current = new DirectoryInfo(startDir);
+        for (var i = 0; i < 8 && current != null; i++)
+        {
+            yield return Path.Combine(current.FullName, "Tests", "CombatLogicTests", "Data", "enemies.json");
+            current = current.Parent;
+        }
+    }
 
     private static IEnumerable<string> EnumerateExportDataCandidates(string startDir)
     {
