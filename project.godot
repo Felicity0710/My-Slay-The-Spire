@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 GameState="*res://Scripts/Autoload/GameState.cs"
 AppSettings="*res://Scripts/Autoload/AppSettings.cs"
+ExternalControlService="*res://Scripts/Autoload/ExternalControlService.cs"
 
 [display]
 

@@ -13,6 +13,7 @@ public partial class MapScene : Control
 
     public override void _Ready()
     {
+        GetNode<GameState>("/root/GameState").SetUiPhase("map");
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
@@ -264,6 +265,18 @@ public partial class MapScene : Control
                 RefreshUi("你在商店完成补给，继续下一层路线。");
                 break;
         }
+    }
+
+    public string? TryChooseNodeExternally(int column)
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        if (!state.CanChooseMapNode(state.CurrentMapRow, column))
+        {
+            return $"Map column {column} is not selectable right now.";
+        }
+
+        OnNodePressed(column);
+        return null;
     }
 
     private void OnMenuPressed()

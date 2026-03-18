@@ -37,6 +37,7 @@ public partial class MainMenu : Control
 
     public override void _Ready()
     {
+        GetNode<GameState>("/root/GameState").SetUiPhase("main_menu");
         _startButton = GetNode<Button>("%StartButton");
         _battleTestButton = GetNode<Button>("%BattleTestButton");
         _quitButton = GetNode<Button>("%QuitButton");

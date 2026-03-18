@@ -15,6 +15,7 @@ public partial class GameState : Node
     public int Floor { get; private set; } = 1;
     public int BattlesWon { get; private set; }
     public int PotionCharges { get; private set; }
+    public string CurrentUiPhase { get; private set; } = "main_menu";
 
     public List<string> DeckCardIds { get; } = new();
     public List<string> RelicIds { get; } = new();
@@ -41,6 +42,7 @@ public partial class GameState : Node
 
     public void StartNewRun()
     {
+        SetUiPhase("map");
         MaxHp = 80;
         PlayerHp = 80;
         Floor = 1;
@@ -104,7 +106,13 @@ public partial class GameState : Node
         }
 
         StartNewRun();
+        SetUiPhase("battle");
         BeginEncounter(MapNodeType.NormalBattle);
+    }
+
+    public void SetUiPhase(string phase)
+    {
+        CurrentUiPhase = string.IsNullOrWhiteSpace(phase) ? "unknown" : phase.Trim().ToLowerInvariant();
     }
 
     private void ApplySelectedDeckPreset()

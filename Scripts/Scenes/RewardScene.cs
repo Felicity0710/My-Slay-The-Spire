@@ -23,6 +23,7 @@ public partial class RewardScene : Control
 
     public override void _Ready()
     {
+        GetNode<GameState>("/root/GameState").SetUiPhase("reward");
         _titleLabel = GetNode<Label>("%Title");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicRewardButton = GetNode<Button>("%RelicRewardButton");
@@ -225,7 +226,157 @@ public partial class RewardScene : Control
             state.PendingRewardOptions.Clear();
         }
 
+        state.SetUiPhase("map");
         GD.Print(message);
         GetTree().ChangeSceneToFile("res://Scenes/MapScene.tscn");
+    }
+
+    public RewardSnapshot BuildRewardSnapshot()
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        var snapshot = new RewardSnapshot
+        {
+            Mode = _isChoosingFromCardPack ? "card_pack" : "reward_type",
+            RewardTypes = new List<string> { "relic", "card_pack", "potion", "random", "skip" }
+        };
+
+        for (var i = 0; i < state.PendingRewardOptions.Count; i++)
+        {
+            var card = CardData.CreateById(state.PendingRewardOptions[i]);
+            snapshot.CardOptions.Add(new RewardOptionSnapshot
+            {
+                OptionIndex = i,
+                Id = card.Id,
+                Name = card.Name,
+                Description = card.GetLocalizedDescription()
+            });
+        }
+
+        for (var i = 0; i < state.PendingRelicOptions.Count; i++)
+        {
+            var relic = RelicData.CreateById(state.PendingRelicOptions[i]);
+            snapshot.RelicOptions.Add(new RewardOptionSnapshot
+            {
+                OptionIndex = i,
+                Id = relic.Id,
+                Name = relic.Name,
+                Description = relic.Description
+            });
+        }
+
+        return snapshot;
+    }
+
+    public List<LegalActionSnapshot> BuildLegalActions()
+    {
+        var actions = new List<LegalActionSnapshot>();
+        if (_isChoosingFromCardPack)
+        {
+            var state = GetNode<GameState>("/root/GameState");
+            for (var i = 0; i < state.PendingRewardOptions.Count; i++)
+            {
+                actions.Add(new LegalActionSnapshot
+                {
+                    Kind = "choose_reward_card",
+                    Label = $"Choose reward card option {i}",
+                    Parameters = new Dictionary<string, object?>
+                    {
+                        ["optionIndex"] = i,
+                        ["cardId"] = state.PendingRewardOptions[i]
+                    }
+                });
+            }
+
+            actions.Add(new LegalActionSnapshot
+            {
+                Kind = "skip_reward",
+                Label = "Skip the card reward"
+            });
+            return actions;
+        }
+
+        foreach (var rewardType in new[] { "relic", "card_pack", "potion", "random" })
+        {
+            actions.Add(new LegalActionSnapshot
+            {
+                Kind = "choose_reward_type",
+                Label = $"Choose reward type {rewardType}",
+                Parameters = new Dictionary<string, object?>
+                {
+                    ["rewardType"] = rewardType
+                }
+            });
+        }
+
+        actions.Add(new LegalActionSnapshot
+        {
+            Kind = "skip_reward",
+            Label = "Skip this reward scene"
+        });
+        return actions;
+    }
+
+    public string? TryChooseRewardTypeExternally(string? rewardType)
+    {
+        if (_isChoosingFromCardPack)
+        {
+            return "Reward type can no longer be changed after opening the card pack.";
+        }
+
+        var normalized = rewardType?.Trim().ToLowerInvariant() ?? string.Empty;
+        switch (normalized)
+        {
+            case "relic":
+                OnPickRelicReward();
+                return null;
+            case "card_pack":
+                OnPickCardPackReward();
+                return null;
+            case "potion":
+                OnPickPotionReward();
+                return null;
+            case "random":
+                OnPickRandomReward();
+                return null;
+            case "skip":
+                OnSkipPressed();
+                return null;
+            default:
+                return $"Unsupported reward type '{rewardType}'.";
+        }
+    }
+
+    public string? TryChooseRewardCardExternally(int? optionIndex, string? cardId)
+    {
+        if (!_isChoosingFromCardPack)
+        {
+            return "choose_reward_card is only available after selecting the card pack reward.";
+        }
+
+        var state = GetNode<GameState>("/root/GameState");
+        var resolvedIndex = -1;
+        if (optionIndex.HasValue && optionIndex.Value >= 0 && optionIndex.Value < state.PendingRewardOptions.Count)
+        {
+            resolvedIndex = optionIndex.Value;
+        }
+        else if (!string.IsNullOrWhiteSpace(cardId))
+        {
+            resolvedIndex = state.PendingRewardOptions.FindIndex(id =>
+                string.Equals(id, cardId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (resolvedIndex < 0 || resolvedIndex >= state.PendingRewardOptions.Count)
+        {
+            return "Requested reward card is not available.";
+        }
+
+        OnPickCardFromPack(state.PendingRewardOptions[resolvedIndex]);
+        return null;
+    }
+
+    public string? TrySkipRewardExternally()
+    {
+        OnSkipPressed();
+        return null;
     }
 }
