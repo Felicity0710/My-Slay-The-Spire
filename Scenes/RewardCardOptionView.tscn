@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://Scripts/RewardCardOptionView.cs" id="1_f2rwo"]
+[ext_resource type="Script" path="res://Scripts/UI/RewardCardOptionView.cs" id="1_f2rwo"]
 
 [node name="RewardCardOptionView" type="PanelContainer"]
 custom_minimum_size = Vector2(220, 320)

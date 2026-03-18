@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://Scripts/RelicRewardScene.cs" id="1_rel"]
+[ext_resource type="Script" path="res://Scripts/Scenes/RelicRewardScene.cs" id="1_rel"]
 
 [node name="RelicRewardScene" type="Control"]
 layout_mode = 3

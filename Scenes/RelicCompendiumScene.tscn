@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://Scripts/RelicCompendiumScene.cs" id="1_relic_compendium"]
+[ext_resource type="Script" path="res://Scripts/Scenes/RelicCompendiumScene.cs" id="1_relic_compendium"]
 
 [node name="RelicCompendiumScene" type="Control"]
 layout_mode = 3

@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://Scripts/MapScene.cs" id="1_3a1rv"]
-[ext_resource type="Script" path="res://Scripts/MapCanvas.cs" id="2_4m1kd"]
+[ext_resource type="Script" path="res://Scripts/Scenes/MapScene.cs" id="1_3a1rv"]
+[ext_resource type="Script" path="res://Scripts/Scenes/MapCanvas.cs" id="2_4m1kd"]
 
 [node name="MapScene" type="Control"]
 layout_mode = 3

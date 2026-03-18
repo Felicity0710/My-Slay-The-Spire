@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://Scripts/DeckEditorScene.cs" id="1_deck"]
+[ext_resource type="Script" path="res://Scripts/Scenes/DeckEditorScene.cs" id="1_deck"]
 
 [node name="DeckEditorScene" type="Control"]
 layout_mode = 3

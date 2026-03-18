@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://Scripts/PlayerCardView.cs" id="1_j7m0g"]
+[ext_resource type="Script" path="res://Scripts/UI/PlayerCardView.cs" id="1_j7m0g"]
 
 [node name="PlayerCardView" type="Control"]
 layout_mode = 2

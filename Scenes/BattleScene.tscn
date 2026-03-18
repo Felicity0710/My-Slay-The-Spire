@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://dhl63infi0nua"]
 
-[ext_resource type="Script" uid="uid://p8rbtdgwkm3l" path="res://Scripts/BattleScene.cs" id="1_fh80r"]
+[ext_resource type="Script" uid="uid://p8rbtdgwkm3l" path="res://Scripts/Scenes/BattleScene.cs" id="1_fh80r"]
 [ext_resource type="PackedScene" path="res://Scenes/PlayerCardView.tscn" id="2_84p6t"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]

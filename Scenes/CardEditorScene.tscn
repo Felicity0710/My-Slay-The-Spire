@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://Scripts/CardEditorScene.cs" id="1_editor"]
+[ext_resource type="Script" path="res://Scripts/Scenes/CardEditorScene.cs" id="1_editor"]
 
 [node name="CardEditorScene" type="Control"]
 layout_mode = 3

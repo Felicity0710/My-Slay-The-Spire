@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dtr7m8fng0q3v"]
 
-[ext_resource type="Script" path="res://Scripts/EnemyCardView.cs" id="1_2yhir"]
+[ext_resource type="Script" path="res://Scripts/UI/EnemyCardView.cs" id="1_2yhir"]
 
 [node name="EnemyCardView" type="Button"]
 custom_minimum_size = Vector2(196, 300)
