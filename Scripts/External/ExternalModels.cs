@@ -5,6 +5,7 @@ public sealed class ExternalCommandRequest
     public string Command { get; set; } = string.Empty;
     public ExternalActionRequest? Action { get; set; }
     public long? ExpectedStateVersion { get; set; }
+    public bool? FastMode { get; set; }
 }
 
 public sealed class ExternalActionRequest
@@ -18,6 +19,10 @@ public sealed class ExternalActionRequest
     public int? OptionIndex { get; set; }
     public string? EventOption { get; set; }
     public string? PresetId { get; set; }
+    public string? EncounterType { get; set; }
+    public int? Floor { get; set; }
+    public int? Seed { get; set; }
+    public bool? Randomized { get; set; }
 }
 
 public sealed class ExternalCommandResponse

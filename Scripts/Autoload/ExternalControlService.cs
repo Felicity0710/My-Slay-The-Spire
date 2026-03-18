@@ -170,6 +170,7 @@ public partial class ExternalControlService : Node
     private async Task<ExternalCommandResponse> BuildResponseAsync(ExternalCommandRequest request)
     {
         var command = request.Command?.Trim().ToLowerInvariant() ?? string.Empty;
+        ApplyFastModeForExternalControl(request.FastMode);
         if (command == "ping")
         {
             var snapshot = await WaitForStableSnapshotAsync();
@@ -242,6 +243,17 @@ public partial class ExternalControlService : Node
         };
     }
 
+    private void ApplyFastModeForExternalControl(bool? fastMode)
+    {
+        var state = GetNodeOrNull<GameState>("/root/GameState");
+        if (state == null)
+        {
+            return;
+        }
+
+        state.SetExternalFastMode(fastMode ?? true);
+    }
+
     private async Task<string?> ExecuteActionAsync(ExternalActionRequest action)
     {
         var kind = action.Kind?.Trim().ToLowerInvariant() ?? string.Empty;
@@ -257,7 +269,7 @@ public partial class ExternalControlService : Node
                 tree.ChangeSceneToFile("res://Scenes/MapScene.tscn");
                 return null;
             case "start_battle_test_run":
-                state.StartBattleTestRun(action.PresetId);
+                state.StartBattleTestRun(action.PresetId, action.EncounterType, action.Floor, action.Seed, action.Randomized);
                 tree.ChangeSceneToFile("res://Scenes/BattleScene.tscn");
                 return null;
             case "choose_map_node":

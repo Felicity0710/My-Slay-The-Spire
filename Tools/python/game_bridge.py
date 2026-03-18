@@ -1,22 +1,34 @@
 import json
+import os
 import socket
 from typing import Any, Dict, Optional
 
 
 class GameBridgeClient:
-    def __init__(self, host: str = "127.0.0.1", port: int = 47077, timeout: float = 10.0) -> None:
+    def __init__(
+        self,
+        host: str = "127.0.0.1",
+        port: Optional[int] = None,
+        timeout: float = 10.0,
+        default_fast_mode: bool = True,
+    ) -> None:
         self.host = host
-        self.port = port
+        self.port = port if port is not None else int(os.environ.get("SLAY_THE_HS_BRIDGE_PORT", "47077"))
         self.timeout = timeout
+        self.default_fast_mode = default_fast_mode
 
-    def get_snapshot(self) -> Dict[str, Any]:
-        return self._send({"command": "get_snapshot"})
+    def get_snapshot(self, *, fast_mode: Optional[bool] = None) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {"command": "get_snapshot"}
+        if fast_mode is not None:
+            payload["fastMode"] = fast_mode
+        return self._send(payload)
 
     def execute_action(
         self,
         kind: str,
         *,
         expected_state_version: Optional[int] = None,
+        fast_mode: Optional[bool] = None,
         **action_fields: Any,
     ) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
@@ -24,6 +36,7 @@ class GameBridgeClient:
             "action": {
                 "kind": kind,
             },
+            "fastMode": self.default_fast_mode if fast_mode is None else fast_mode,
         }
         if expected_state_version is not None:
             payload["expectedStateVersion"] = expected_state_version

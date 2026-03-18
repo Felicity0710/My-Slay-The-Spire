@@ -127,6 +127,7 @@ public partial class BattleScene : Control
     private CardView _hoveredCard = null!;
     private GameState _state = null!;
     public Action<string> UiSfxRequested = _ => { };
+    private bool IsFastMode => _state != null && _state.ExternalFastMode;
     private const float HoverSwitchDeadzone = 18f;
 
     public override void _Ready()
@@ -516,6 +517,13 @@ public partial class BattleScene : Control
         _enemyEntrancePlayed = true;
         _enemyDropArea.Scale = _enemyDropAreaBaseScale * 0.86f;
         _enemyDropArea.Modulate = new Color(1, 1, 1, 0f);
+
+        if (IsFastMode)
+        {
+            _enemyDropArea.Scale = _enemyDropAreaBaseScale;
+            _enemyDropArea.Modulate = Colors.White;
+            return;
+        }
 
         var tween = CreateTween();
         tween.SetEase(Tween.EaseType.Out);
@@ -1713,6 +1721,13 @@ public partial class BattleScene : Control
 
         _enemyAnimState = EnemyAnimState.Dying;
 
+        if (IsFastMode)
+        {
+            _enemyDropArea.Modulate = new Color(1f, 1f, 1f, 0.15f);
+            _enemyDropArea.Scale = _enemyDropAreaBaseScale * 0.78f;
+            return;
+        }
+
         var tween = CreateTween();
         tween.SetEase(Tween.EaseType.Out);
         tween.SetTrans(Tween.TransitionType.Cubic);
@@ -1824,6 +1839,11 @@ public partial class BattleScene : Control
             return;
         }
 
+        if (IsFastMode)
+        {
+            return;
+        }
+
         var original = _mainMargin.Position;
         for (var i = 0; i < steps; i++)
         {
@@ -1841,6 +1861,12 @@ public partial class BattleScene : Control
 
     private async Task ShowTurnBanner(string text, Color tint)
     {
+        if (IsFastMode)
+        {
+            _turnBanner.Visible = false;
+            return;
+        }
+
         _turnBannerLabel.Text = text;
         _turnBanner.Modulate = new Color(tint, 0f);
         _turnBanner.Visible = true;
@@ -2049,6 +2075,12 @@ public partial class BattleScene : Control
 
         if (entrants.Count == 0)
         {
+            return;
+        }
+
+        if (IsFastMode)
+        {
+            LayoutHandCards(true);
             return;
         }
 
@@ -2691,6 +2723,11 @@ public partial class BattleScene : Control
 
     private async Task AnimateDrawEntry(CardView card, Vector2 from, int index)
     {
+        if (IsFastMode)
+        {
+            return;
+        }
+
         var delay = 0.026f * index;
         if (delay > 0f)
         {

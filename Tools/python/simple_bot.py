@@ -169,11 +169,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Simple rule-based bot for Slay the HS.")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=47077)
+    parser.add_argument("--fast-mode", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--steps", type=int, default=500)
     args = parser.parse_args()
 
-    client = GameBridgeClient(host=args.host, port=args.port)
-    result = client.get_snapshot()
+    client = GameBridgeClient(host=args.host, port=args.port, default_fast_mode=args.fast_mode)
+    result = client.get_snapshot(fast_mode=args.fast_mode)
     snapshot = result.get("snapshot")
     if not snapshot:
         raise RuntimeError("The game bridge did not return a snapshot.")
@@ -190,6 +191,7 @@ def main() -> int:
         response = client.execute_action(
             action["kind"],
             expected_state_version=snapshot.get("stateVersion"),
+            fast_mode=args.fast_mode,
             **{k: v for k, v in action.items() if k != "kind"},
         )
         if not response.get("ok"):
