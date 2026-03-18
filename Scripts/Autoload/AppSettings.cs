@@ -20,6 +20,7 @@ public partial class AppSettings : Node
     public override void _Ready()
     {
         Instance = this;
+        LocalizationService.EnsureLoaded();
 
         MasterVolumePercent = VolumeDbToPercent(AudioServer.GetBusVolumeDb(0));
         var musicBus = AudioServer.GetBusIndex("Music");
@@ -32,6 +33,7 @@ public partial class AppSettings : Node
         WindowSize = DisplayServer.WindowGetSize();
 
         SetupFpsOverlay();
+        LocalizationSettings.LanguageChanged += () => _fpsLabel.Text = LocalizationService.Format("ui.hud.fps", "FPS: {0}", Engine.GetFramesPerSecond());
         ApplyAll();
     }
 
@@ -42,7 +44,7 @@ public partial class AppSettings : Node
             return;
         }
 
-        _fpsLabel.Text = $"FPS: {Engine.GetFramesPerSecond()}";
+        _fpsLabel.Text = LocalizationService.Format("ui.hud.fps", "FPS: {0}", Engine.GetFramesPerSecond());
     }
 
     public void SetWindowSize(Vector2I size)
@@ -119,7 +121,7 @@ public partial class AppSettings : Node
 
         _fpsLabel = new Label
         {
-            Text = "FPS: 0",
+            Text = LocalizationService.Format("ui.hud.fps", "FPS: {0}", 0),
             Visible = false
         };
         _fpsLabel.SetAnchorsPreset(Control.LayoutPreset.TopLeft);

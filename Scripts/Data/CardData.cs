@@ -1,3 +1,4 @@
+using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,12 +58,19 @@ public sealed class CardEffectData
 
 public sealed class CardData
 {
+    private const string DefaultArtPath = "res://icon.svg";
+    private const string DefaultArtFolder = "res://Assets/Cards";
     private static readonly CardCatalog Catalog = CardCatalog.Load();
+    private readonly string _fallbackName;
+    private readonly string _fallbackDescription;
 
     public string Id { get; }
     public string Name { get; }
     public string Description { get; }
     public string DescriptionZh { get; }
+    public string ArtPath { get; }
+    public string NameKey { get; }
+    public string DescriptionKey { get; }
     public CardKind Kind { get; }
     public int Cost { get; }
     public IReadOnlyList<CardEffectData> Effects { get; }
@@ -78,14 +86,22 @@ public sealed class CardData
         string name,
         string description,
         string descriptionZh,
+        string? nameKey,
+        string? descriptionKey,
+        string artPath,
         CardKind kind,
         int cost,
         IReadOnlyList<CardEffectData> effects)
     {
         Id = id;
-        Name = name;
-        Description = description;
-        DescriptionZh = string.IsNullOrWhiteSpace(descriptionZh) ? description : descriptionZh;
+        _fallbackName = string.IsNullOrWhiteSpace(name) ? id : name;
+        _fallbackDescription = string.IsNullOrWhiteSpace(description) ? string.Empty : description;
+        NameKey = string.IsNullOrWhiteSpace(nameKey) ? $"card.{id}.name" : nameKey.Trim();
+        DescriptionKey = string.IsNullOrWhiteSpace(descriptionKey) ? $"card.{id}.description" : descriptionKey.Trim();
+        Name = _fallbackName;
+        Description = _fallbackDescription;
+        DescriptionZh = descriptionZh;
+        ArtPath = ResolveArtPath(id, artPath);
         Kind = kind;
         Cost = cost;
         Effects = effects;
@@ -106,12 +122,40 @@ public sealed class CardData
 
     public string ToCardText()
     {
-        return $"{Name}\n{LocalizationSettings.CostLabel()}: {Cost}\n{GetLocalizedDescription()}";
+        return $"{GetLocalizedName()}\n{LocalizationSettings.CostLabel()}: {Cost}\n{GetLocalizedDescription()}";
     }
 
     public string GetLocalizedDescription()
     {
-        return LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans ? DescriptionZh : Description;
+        return ResolveLocalizedText(_fallbackDescription, DescriptionKey, DescriptionZh, _fallbackDescription);
+    }
+
+    public string GetLocalizedName()
+    {
+        return ResolveLocalizedText(_fallbackName, NameKey, _fallbackName, _fallbackName);
+    }
+
+    private static string ResolveLocalizedText(
+        string fallback,
+        string key,
+        string localizedFallback,
+        string englishFallback)
+    {
+        if (LocalizationSettings.CurrentLanguage == GameLanguage.En)
+        {
+            return fallback;
+        }
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            var localized = LocalizationService.Get(key, string.Empty);
+            if (!string.IsNullOrWhiteSpace(localized))
+            {
+                return localized;
+            }
+        }
+
+        return !string.IsNullOrWhiteSpace(localizedFallback) ? localizedFallback : englishFallback;
     }
 
     public bool HasEffect(CardEffectType type)
@@ -171,9 +215,46 @@ public sealed class CardData
             source.Name,
             source.Description,
             source.DescriptionZh,
+            source.NameKey,
+            source.DescriptionKey,
+            source.ArtPath,
             source.Kind,
             source.Cost,
             effects);
+    }
+
+    private static string ResolveArtPath(string id, string? path)
+    {
+        var normalized = string.IsNullOrWhiteSpace(path) ? $"{DefaultArtFolder}/{id}.png" : path.Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return DefaultArtPath;
+        }
+
+        if (!normalized.StartsWith("res://", StringComparison.OrdinalIgnoreCase)
+            && !normalized.StartsWith("user://", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = $"res://{normalized.TrimStart('/', '\\')}";
+        }
+
+        if (ResourceLoader.Exists(normalized))
+        {
+            return normalized;
+        }
+
+        var fallbackById = $"{DefaultArtFolder}/{id}.png";
+        if (ResourceLoader.Exists(fallbackById))
+        {
+            return fallbackById;
+        }
+
+        var placeholder = "res://Assets/Cards/placeholder.svg";
+        if (ResourceLoader.Exists(placeholder))
+        {
+            return placeholder;
+        }
+
+        return DefaultArtPath;
     }
 
     private sealed class CardCatalog
@@ -220,6 +301,9 @@ public sealed class CardData
                     cardDto.Name ?? cardDto.Id,
                     cardDto.Description ?? string.Empty,
                     cardDto.DescriptionZh ?? cardDto.Description ?? string.Empty,
+                    cardDto.NameKey,
+                    cardDto.DescriptionKey,
+                    cardDto.ArtPath,
                     ParseEnum<CardKind>(cardDto.Kind, "card kind"),
                     cardDto.Cost,
                     effects);
@@ -243,12 +327,6 @@ public sealed class CardData
         }
     }
 
-}
-
-public enum GameLanguage
-{
-    En,
-    ZhHans
 }
 
 public static class LocalizationSettings
@@ -275,12 +353,14 @@ public static class LocalizationSettings
 
     public static string CostLabel()
     {
-        return CurrentLanguage == GameLanguage.ZhHans ? "费用" : "Cost";
+        return LocalizationService.Get("ui.cost", "Cost");
     }
 
     public static string LanguageButtonText()
     {
-        return CurrentLanguage == GameLanguage.ZhHans ? "语言：中文" : "Language: English";
+        return CurrentLanguage == GameLanguage.ZhHans
+            ? LocalizationService.Get("ui.language_button", "\u8bed\u8a00: \u4e2d\u6587")
+            : LocalizationService.Get("ui.language_button", "Language: English");
     }
 
     public static string HighlightCardDescription(string text)
@@ -288,13 +368,11 @@ public static class LocalizationSettings
         if (CurrentLanguage == GameLanguage.ZhHans)
         {
             return text
-                .Replace("造成", "[color=#fca5a5]造成[/color]")
-                .Replace("获得", "[color=#93c5fd]获得[/color]")
-                .Replace("格挡", "[color=#93c5fd]格挡[/color]")
-                .Replace("易伤", "[color=#e9d5ff]易伤[/color]")
-                .Replace("抽", "[color=#a5f3fc]抽[/color]")
-                .Replace("回复", "[color=#86efac]回复[/color]")
-                .Replace("伤害", "[color=#fda4af]伤害[/color]");
+                .Replace("\u53d1\u52a8", "[color=#fca5a5]\u53d1\u52a8[/color]")
+                .Replace("\u683c\u6321", "[color=#93c5fd]\u683c\u6321[/color]")
+                .Replace("\u4fbf\u5bb9", "[color=#e9d5ff]\u4fbf\u5bb9[/color]")
+                .Replace("\u7075\u9b42", "[color=#a5f3fc]\u7075\u9b42[/color]")
+                .Replace("\u4fee\u590d", "[color=#86efac]\u4fee\u590d[/color]");
         }
 
         return text
@@ -307,3 +385,4 @@ public static class LocalizationSettings
             .Replace("damage", "[color=#fda4af]damage[/color]");
     }
 }
+

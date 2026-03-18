@@ -1,911 +1,1031 @@
-{
-  "cards": [
-    {
-      "id": "strike",
-      "name": "Strike",
-      "description": "Deal 6 damage.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 6
-        }
-      ],
-      "descriptionZh": "造成6点伤害。"
-    },
-    {
-      "id": "defend",
-      "name": "Defend",
-      "description": "Gain 5 Block.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "GainBlock",
-          "target": "Player",
-          "amount": 5,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得5点格挡。"
-    },
-    {
-      "id": "heavy_slash",
-      "name": "Heavy Slash",
-      "description": "Deal 12 damage.",
-      "kind": "Attack",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 12
-        }
-      ],
-      "descriptionZh": "造成12点伤害。"
-    },
-    {
-      "id": "bash",
-      "name": "Bash",
-      "description": "Deal 8 damage. Apply 2 Vulnerable.",
-      "kind": "Attack",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 8
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "SelectedEnemy",
-          "amount": 2,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "造成8点伤害。施加2层易伤。"
-    },
-    {
-      "id": "shrug",
-      "name": "Shrug It Off",
-      "description": "Gain 8 Block. Draw 1 card.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "GainBlock",
-          "target": "Player",
-          "amount": 8,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得8点格挡。抽1张牌。"
-    },
-    {
-      "id": "quick_slash",
-      "name": "Quick Slash",
-      "description": "Deal 7 damage. Draw 1 card.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 7
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "造成7点伤害。抽1张牌。"
-    },
-    {
-      "id": "whirlwind",
-      "name": "Whirlwind",
-      "description": "Deal 4 damage to all enemies twice.",
-      "kind": "Attack",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "AllEnemies",
-          "amount": 4,
-          "repeat": 2
-        }
-      ],
-      "descriptionZh": "对所有敌人造成4点伤害，重复2次。"
-    },
-    {
-      "id": "battle_focus",
-      "name": "Battle Focus",
-      "description": "Gain 2 Strength.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "GainStrength",
-          "target": "Player",
-          "amount": 2,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得2点力量。"
-    },
-    {
-      "id": "adrenaline_rush",
-      "name": "Adrenaline Rush",
-      "description": "Gain 1 Energy. Draw 1 card.",
-      "kind": "Skill",
-      "cost": 0,
-      "effects": [
-        {
-          "type": "GainEnergy",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得1点能量。抽1张牌。"
-    },
-    {
-      "id": "second_wind",
-      "name": "Second Wind",
-      "description": "Gain 6 Block. Heal 4 HP.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "GainBlock",
-          "target": "Player",
-          "amount": 6,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "Heal",
-          "target": "Player",
-          "amount": 4,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得6点格挡。回复4点生命。"
-    },
-    {
-      "id": "rending_wave",
-      "name": "Rending Wave",
-      "description": "Deal 5 damage to all enemies. Apply 1 Vulnerable to all enemies.",
-      "kind": "Attack",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "AllEnemies",
-          "amount": 5
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "AllEnemies",
-          "amount": 1,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "对所有敌人造成5点伤害。对所有敌人施加1层易伤。"
-    },
-    {
-      "id": "twin_strike",
-      "name": "Twin Strike",
-      "description": "Deal 4 damage twice.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 4,
-          "repeat": 2
-        }
-      ],
-      "descriptionZh": "造成4点伤害，重复2次。"
-    },
-    {
-      "id": "shield_bash",
-      "name": "Shield Bash",
-      "description": "Gain 6 Block. Deal 6 damage.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "GainBlock",
-          "target": "Player",
-          "amount": 6,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 6
-        }
-      ],
-      "descriptionZh": "获得6点格挡。造成6点伤害。"
-    },
-    {
-      "id": "iron_wall",
-      "name": "Iron Wall",
-      "description": "Gain 12 Block.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "GainBlock",
-          "target": "Player",
-          "amount": 12,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得12点格挡。"
-    },
-    {
-      "id": "rend_armor",
-      "name": "Rend Armor",
-      "description": "Deal 6 damage. Apply 2 Vulnerable.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 6
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "SelectedEnemy",
-          "amount": 2,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "造成6点伤害。施加2层易伤。"
-    },
-    {
-      "id": "blood_pact",
-      "name": "Blood Pact",
-      "description": "Gain 2 Strength. Apply 1 Vulnerable to yourself.",
-      "kind": "Skill",
-      "cost": 0,
-      "effects": [
-        {
-          "type": "GainStrength",
-          "target": "Player",
-          "amount": 2,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "获得2点力量。对自己施加1层易伤。"
-    },
-    {
-      "id": "tactical_step",
-      "name": "Tactical Step",
-      "description": "Gain 4 Block. Draw 1 card.",
-      "kind": "Skill",
-      "cost": 0,
-      "effects": [
-        {
-          "type": "GainBlock",
-          "target": "Player",
-          "amount": 4,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得4点格挡。抽1张牌。"
-    },
-    {
-      "id": "reaper_touch",
-      "name": "Reaper Touch",
-      "description": "Deal 9 damage. Heal 4 HP.",
-      "kind": "Attack",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 9
-        },
-        {
-          "type": "Heal",
-          "target": "Player",
-          "amount": 4,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "造成9点伤害。回复4点生命。"
-    },
-    {
-      "id": "fortify",
-      "name": "Fortify",
-      "description": "Gain 16 Block. Draw 1 card.",
-      "kind": "Skill",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "GainBlock",
-          "target": "Player",
-          "amount": 16,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得16点格挡。抽1张牌。"
-    },
-    {
-      "id": "meteor_shower",
-      "name": "Meteor Shower",
-      "description": "Deal 3 damage to all enemies three times.",
-      "kind": "Attack",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "AllEnemies",
-          "amount": 3,
-          "repeat": 3
-        }
-      ],
-      "descriptionZh": "对所有敌人造成3点伤害，重复3次。"
-    },
-    {
-      "id": "glass_cannon",
-      "name": "Glass Cannon",
-      "description": "Deal 11 damage. Apply 1 Vulnerable to yourself.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 11
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "造成11点伤害。对自己施加1层易伤。"
-    },
-    {
-      "id": "war_cry",
-      "name": "War Cry",
-      "description": "Draw 2 cards. Gain 1 Energy.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 2,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "GainEnergy",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "抽2张牌。获得1点能量。"
-    },
-    {
-      "id": "berserker_form",
-      "name": "Berserker Form",
-      "description": "Gain 3 Strength. Apply 1 Vulnerable to yourself.",
-      "kind": "Skill",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "GainStrength",
-          "target": "Player",
-          "amount": 3,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "获得3点力量。对自己施加1层易伤。"
-    },
-    {
-      "id": "overclock",
-      "name": "Overclock",
-      "description": "Gain 2 Energy. Apply 1 Vulnerable to yourself.",
-      "kind": "Skill",
-      "cost": 0,
-      "effects": [
-        {
-          "type": "GainEnergy",
-          "target": "Player",
-          "amount": 2,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "获得2点能量。对自己施加1层易伤。"
-    },
-    {
-      "id": "crushing_blow",
-      "name": "Crushing Blow",
-      "description": "Deal 14 damage. Apply 1 Vulnerable.",
-      "kind": "Attack",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 14
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "SelectedEnemy",
-          "amount": 1,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "造成14点伤害。施加1层易伤。"
-    },
-    {
-      "id": "chain_lightning",
-      "name": "Chain Lightning",
-      "description": "Deal 4 damage to all enemies. Draw 1 card.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "AllEnemies",
-          "amount": 4
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "对所有敌人造成4点伤害。抽1张牌。"
-    },
-    {
-      "id": "meditate",
-      "name": "Meditate",
-      "description": "Heal 3 HP. Draw 1 card.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Heal",
-          "target": "Player",
-          "amount": 3,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "回复3点生命。抽1张牌。"
-    },
-    {
-      "id": "fortress_stance",
-      "name": "Fortress Stance",
-      "description": "Gain 10 Block. Gain 1 Strength.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "GainBlock",
-          "target": "Player",
-          "amount": 10,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "GainStrength",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得10点格挡。获得1点力量。"
-    },
-    {
-      "id": "spark_loop",
-      "name": "Spark Loop",
-      "description": "Gain 1 Energy. Draw 1 card.",
-      "kind": "Skill",
-      "cost": 0,
-      "effects": [
-        {
-          "type": "GainEnergy",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得1点能量。抽1张牌。"
-    },
-    {
-      "id": "hand_overflow",
-      "name": "Hand Overflow",
-      "description": "Draw 3 cards.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 3,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "抽3张牌。"
-    },
-    {
-      "id": "mana_turbine",
-      "name": "Mana Turbine",
-      "description": "Gain 2 Energy. Apply 1 Vulnerable to yourself.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "GainEnergy",
-          "target": "Player",
-          "amount": 2,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "获得2点能量。对自己施加1层易伤。"
-    },
-    {
-      "id": "infinite_fireball",
-      "name": "Infinite Fireball",
-      "description": "Deal 5 damage four times.",
-      "kind": "Attack",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 5,
-          "repeat": 4
-        }
-      ],
-      "descriptionZh": "造成5点伤害，重复4次。"
-    },
-    {
-      "id": "ember_wheel",
-      "name": "Ember Wheel",
-      "description": "Deal 3 damage to all enemies twice. Draw 1 card.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "AllEnemies",
-          "amount": 3,
-          "repeat": 2
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "对所有敌人造成3点伤害，重复2次。抽1张牌。"
-    },
-    {
-      "id": "arcane_recycle",
-      "name": "Arcane Recycle",
-      "description": "Gain 1 Energy. Draw 2 cards.",
-      "kind": "Skill",
-      "cost": 0,
-      "effects": [
-        {
-          "type": "GainEnergy",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 2,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得1点能量。抽2张牌。"
-    },
-    {
-      "id": "grave_whisper",
-      "name": "Grave Whisper",
-      "description": "Apply 2 Vulnerable to all enemies. Draw 1 card.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "ApplyVulnerable",
-          "target": "AllEnemies",
-          "amount": 2,
-          "useAttackerStrength": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "对所有敌人施加2层易伤。抽1张牌。"
-    },
-    {
-      "id": "bone_shrapnel",
-      "name": "Bone Shrapnel",
-      "description": "Deal 4 damage. Apply 1 Vulnerable.",
-      "kind": "Attack",
-      "cost": 0,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 4
-        },
-        {
-          "type": "ApplyVulnerable",
-          "target": "SelectedEnemy",
-          "amount": 1,
-          "useAttackerStrength": false
-        }
-      ],
-      "descriptionZh": "造成4点伤害。施加1层易伤。"
-    },
-    {
-      "id": "death_chorus",
-      "name": "Death Chorus",
-      "description": "Gain 3 Strength. Draw 2 cards.",
-      "kind": "Skill",
-      "cost": 2,
-      "effects": [
-        {
-          "type": "GainStrength",
-          "target": "Player",
-          "amount": 3,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 2,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "获得3点力量。抽2张牌。"
-    },
-    {
-      "id": "soul_siphon",
-      "name": "Soul Siphon",
-      "description": "Deal 8 damage. Heal 5 HP.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 8
-        },
-        {
-          "type": "Heal",
-          "target": "Player",
-          "amount": 5,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "造成8点伤害。回复5点生命。"
-    },
-    {
-      "id": "phoenix_cycle",
-      "name": "Phoenix Cycle",
-      "description": "Heal 4 HP. Gain 1 Energy. Draw 1 card.",
-      "kind": "Skill",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Heal",
-          "target": "Player",
-          "amount": 4,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "GainEnergy",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "回复4点生命。获得1点能量。抽1张牌。"
-    },
-    {
-      "id": "arcane_barrage",
-      "name": "Arcane Barrage",
-      "description": "Deal 3 damage three times. Draw 1 card.",
-      "kind": "Attack",
-      "cost": 1,
-      "effects": [
-        {
-          "type": "Damage",
-          "target": "SelectedEnemy",
-          "amount": 3,
-          "repeat": 3
-        },
-        {
-          "type": "DrawCards",
-          "target": "Player",
-          "amount": 1,
-          "useAttackerStrength": false,
-          "useTargetVulnerable": false
-        }
-      ],
-      "descriptionZh": "造成3点伤害，重复3次。抽1张牌。"
-    }
-  ],
-  "starterDeck": [
-    "strike",
-    "defend",
-    "strike",
-    "defend",
-    "twin_strike",
-    "shield_bash",
-    "iron_wall",
-    "tactical_step",
-    "battle_focus",
-    "adrenaline_rush",
-    "bash"
-  ],
-  "rewardPool": [
-    "heavy_slash",
-    "shrug",
-    "quick_slash",
-    "whirlwind",
-    "bash",
-    "battle_focus",
-    "adrenaline_rush",
-    "second_wind",
-    "rending_wave",
-    "twin_strike",
-    "shield_bash",
-    "iron_wall",
-    "rend_armor",
-    "blood_pact",
-    "tactical_step",
-    "reaper_touch",
-    "fortify",
-    "meteor_shower",
-    "glass_cannon",
-    "war_cry",
-    "berserker_form",
-    "overclock",
-    "crushing_blow",
-    "chain_lightning",
-    "meditate",
-    "fortress_stance",
-    "spark_loop",
-    "hand_overflow",
-    "mana_turbine",
-    "infinite_fireball",
-    "ember_wheel",
-    "arcane_recycle",
-    "grave_whisper",
-    "bone_shrapnel",
-    "death_chorus",
-    "soul_siphon",
-    "phoenix_cycle",
-    "arcane_barrage"
-  ]
+﻿{
+    "cards":  [
+                  {
+                      "id":  "strike",
+                      "name":  "Strike",
+                      "description":  "Deal 6 damage.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  6
+                                      }
+                                  ],
+                      "descriptionZh":  "造成6点伤害。",
+                      "artPath":  "res://Assets/Cards/strike.png",
+                      "nameKey":  "card.strike.name",
+                      "descriptionKey":  "card.strike.description"
+                  },
+                  {
+                      "id":  "defend",
+                      "name":  "Defend",
+                      "description":  "Gain 5 Block.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "GainBlock",
+                                          "target":  "Player",
+                                          "amount":  5,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得5点格挡。",
+                      "artPath":  "res://Assets/Cards/defend.png",
+                      "nameKey":  "card.defend.name",
+                      "descriptionKey":  "card.defend.description"
+                  },
+                  {
+                      "id":  "heavy_slash",
+                      "name":  "Heavy Slash",
+                      "description":  "Deal 12 damage.",
+                      "kind":  "Attack",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  12
+                                      }
+                                  ],
+                      "descriptionZh":  "造成12点伤害。",
+                      "artPath":  "res://Assets/Cards/heavy_slash.png",
+                      "nameKey":  "card.heavy_slash.name",
+                      "descriptionKey":  "card.heavy_slash.description"
+                  },
+                  {
+                      "id":  "bash",
+                      "name":  "Bash",
+                      "description":  "Deal 8 damage. Apply 2 Vulnerable.",
+                      "kind":  "Attack",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  8
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成8点伤害。施加2层易伤。",
+                      "artPath":  "res://Assets/Cards/bash.png",
+                      "nameKey":  "card.bash.name",
+                      "descriptionKey":  "card.bash.description"
+                  },
+                  {
+                      "id":  "shrug",
+                      "name":  "Shrug It Off",
+                      "description":  "Gain 8 Block. Draw 1 card.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "GainBlock",
+                                          "target":  "Player",
+                                          "amount":  8,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得8点格挡。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/shrug.png",
+                      "nameKey":  "card.shrug.name",
+                      "descriptionKey":  "card.shrug.description"
+                  },
+                  {
+                      "id":  "quick_slash",
+                      "name":  "Quick Slash",
+                      "description":  "Deal 7 damage. Draw 1 card.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  7
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成7点伤害。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/quick_slash.png",
+                      "nameKey":  "card.quick_slash.name",
+                      "descriptionKey":  "card.quick_slash.description"
+                  },
+                  {
+                      "id":  "whirlwind",
+                      "name":  "Whirlwind",
+                      "description":  "Deal 4 damage to all enemies twice.",
+                      "kind":  "Attack",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "AllEnemies",
+                                          "amount":  4,
+                                          "repeat":  2
+                                      }
+                                  ],
+                      "descriptionZh":  "对所有敌人造成4点伤害，重复2次。",
+                      "artPath":  "res://Assets/Cards/whirlwind.png",
+                      "nameKey":  "card.whirlwind.name",
+                      "descriptionKey":  "card.whirlwind.description"
+                  },
+                  {
+                      "id":  "battle_focus",
+                      "name":  "Battle Focus",
+                      "description":  "Gain 2 Strength.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "GainStrength",
+                                          "target":  "Player",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得2点力量。",
+                      "artPath":  "res://Assets/Cards/battle_focus.png",
+                      "nameKey":  "card.battle_focus.name",
+                      "descriptionKey":  "card.battle_focus.description"
+                  },
+                  {
+                      "id":  "adrenaline_rush",
+                      "name":  "Adrenaline Rush",
+                      "description":  "Gain 1 Energy. Draw 1 card.",
+                      "kind":  "Skill",
+                      "cost":  0,
+                      "effects":  [
+                                      {
+                                          "type":  "GainEnergy",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得1点能量。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/adrenaline_rush.png",
+                      "nameKey":  "card.adrenaline_rush.name",
+                      "descriptionKey":  "card.adrenaline_rush.description"
+                  },
+                  {
+                      "id":  "second_wind",
+                      "name":  "Second Wind",
+                      "description":  "Gain 6 Block. Heal 4 HP.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "GainBlock",
+                                          "target":  "Player",
+                                          "amount":  6,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "Heal",
+                                          "target":  "Player",
+                                          "amount":  4,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得6点格挡。回复4点生命。",
+                      "artPath":  "res://Assets/Cards/second_wind.png",
+                      "nameKey":  "card.second_wind.name",
+                      "descriptionKey":  "card.second_wind.description"
+                  },
+                  {
+                      "id":  "rending_wave",
+                      "name":  "Rending Wave",
+                      "description":  "Deal 5 damage to all enemies. Apply 1 Vulnerable to all enemies.",
+                      "kind":  "Attack",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "AllEnemies",
+                                          "amount":  5
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "AllEnemies",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "对所有敌人造成5点伤害。对所有敌人施加1层易伤。",
+                      "artPath":  "res://Assets/Cards/rending_wave.png",
+                      "nameKey":  "card.rending_wave.name",
+                      "descriptionKey":  "card.rending_wave.description"
+                  },
+                  {
+                      "id":  "twin_strike",
+                      "name":  "Twin Strike",
+                      "description":  "Deal 4 damage twice.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  4,
+                                          "repeat":  2
+                                      }
+                                  ],
+                      "descriptionZh":  "造成4点伤害，重复2次。",
+                      "artPath":  "res://Assets/Cards/twin_strike.png",
+                      "nameKey":  "card.twin_strike.name",
+                      "descriptionKey":  "card.twin_strike.description"
+                  },
+                  {
+                      "id":  "shield_bash",
+                      "name":  "Shield Bash",
+                      "description":  "Gain 6 Block. Deal 6 damage.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "GainBlock",
+                                          "target":  "Player",
+                                          "amount":  6,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  6
+                                      }
+                                  ],
+                      "descriptionZh":  "获得6点格挡。造成6点伤害。",
+                      "artPath":  "res://Assets/Cards/shield_bash.png",
+                      "nameKey":  "card.shield_bash.name",
+                      "descriptionKey":  "card.shield_bash.description"
+                  },
+                  {
+                      "id":  "iron_wall",
+                      "name":  "Iron Wall",
+                      "description":  "Gain 12 Block.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "GainBlock",
+                                          "target":  "Player",
+                                          "amount":  12,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得12点格挡。",
+                      "artPath":  "res://Assets/Cards/iron_wall.png",
+                      "nameKey":  "card.iron_wall.name",
+                      "descriptionKey":  "card.iron_wall.description"
+                  },
+                  {
+                      "id":  "rend_armor",
+                      "name":  "Rend Armor",
+                      "description":  "Deal 6 damage. Apply 2 Vulnerable.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  6
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成6点伤害。施加2层易伤。",
+                      "artPath":  "res://Assets/Cards/rend_armor.png",
+                      "nameKey":  "card.rend_armor.name",
+                      "descriptionKey":  "card.rend_armor.description"
+                  },
+                  {
+                      "id":  "blood_pact",
+                      "name":  "Blood Pact",
+                      "description":  "Gain 2 Strength. Apply 1 Vulnerable to yourself.",
+                      "kind":  "Skill",
+                      "cost":  0,
+                      "effects":  [
+                                      {
+                                          "type":  "GainStrength",
+                                          "target":  "Player",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得2点力量。对自己施加1层易伤。",
+                      "artPath":  "res://Assets/Cards/blood_pact.png",
+                      "nameKey":  "card.blood_pact.name",
+                      "descriptionKey":  "card.blood_pact.description"
+                  },
+                  {
+                      "id":  "tactical_step",
+                      "name":  "Tactical Step",
+                      "description":  "Gain 4 Block. Draw 1 card.",
+                      "kind":  "Skill",
+                      "cost":  0,
+                      "effects":  [
+                                      {
+                                          "type":  "GainBlock",
+                                          "target":  "Player",
+                                          "amount":  4,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得4点格挡。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/tactical_step.png",
+                      "nameKey":  "card.tactical_step.name",
+                      "descriptionKey":  "card.tactical_step.description"
+                  },
+                  {
+                      "id":  "reaper_touch",
+                      "name":  "Reaper Touch",
+                      "description":  "Deal 9 damage. Heal 4 HP.",
+                      "kind":  "Attack",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  9
+                                      },
+                                      {
+                                          "type":  "Heal",
+                                          "target":  "Player",
+                                          "amount":  4,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成9点伤害。回复4点生命。",
+                      "artPath":  "res://Assets/Cards/reaper_touch.png",
+                      "nameKey":  "card.reaper_touch.name",
+                      "descriptionKey":  "card.reaper_touch.description"
+                  },
+                  {
+                      "id":  "fortify",
+                      "name":  "Fortify",
+                      "description":  "Gain 16 Block. Draw 1 card.",
+                      "kind":  "Skill",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "GainBlock",
+                                          "target":  "Player",
+                                          "amount":  16,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得16点格挡。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/fortify.png",
+                      "nameKey":  "card.fortify.name",
+                      "descriptionKey":  "card.fortify.description"
+                  },
+                  {
+                      "id":  "meteor_shower",
+                      "name":  "Meteor Shower",
+                      "description":  "Deal 3 damage to all enemies three times.",
+                      "kind":  "Attack",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "AllEnemies",
+                                          "amount":  3,
+                                          "repeat":  3
+                                      }
+                                  ],
+                      "descriptionZh":  "对所有敌人造成3点伤害，重复3次。",
+                      "artPath":  "res://Assets/Cards/meteor_shower.png",
+                      "nameKey":  "card.meteor_shower.name",
+                      "descriptionKey":  "card.meteor_shower.description"
+                  },
+                  {
+                      "id":  "glass_cannon",
+                      "name":  "Glass Cannon",
+                      "description":  "Deal 11 damage. Apply 1 Vulnerable to yourself.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  11
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成11点伤害。对自己施加1层易伤。",
+                      "artPath":  "res://Assets/Cards/glass_cannon.png",
+                      "nameKey":  "card.glass_cannon.name",
+                      "descriptionKey":  "card.glass_cannon.description"
+                  },
+                  {
+                      "id":  "war_cry",
+                      "name":  "War Cry",
+                      "description":  "Draw 2 cards. Gain 1 Energy.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "GainEnergy",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "抽2张牌。获得1点能量。",
+                      "artPath":  "res://Assets/Cards/war_cry.png",
+                      "nameKey":  "card.war_cry.name",
+                      "descriptionKey":  "card.war_cry.description"
+                  },
+                  {
+                      "id":  "berserker_form",
+                      "name":  "Berserker Form",
+                      "description":  "Gain 3 Strength. Apply 1 Vulnerable to yourself.",
+                      "kind":  "Skill",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "GainStrength",
+                                          "target":  "Player",
+                                          "amount":  3,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得3点力量。对自己施加1层易伤。",
+                      "artPath":  "res://Assets/Cards/berserker_form.png",
+                      "nameKey":  "card.berserker_form.name",
+                      "descriptionKey":  "card.berserker_form.description"
+                  },
+                  {
+                      "id":  "overclock",
+                      "name":  "Overclock",
+                      "description":  "Gain 2 Energy. Apply 1 Vulnerable to yourself.",
+                      "kind":  "Skill",
+                      "cost":  0,
+                      "effects":  [
+                                      {
+                                          "type":  "GainEnergy",
+                                          "target":  "Player",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得2点能量。对自己施加1层易伤。",
+                      "artPath":  "res://Assets/Cards/overclock.png",
+                      "nameKey":  "card.overclock.name",
+                      "descriptionKey":  "card.overclock.description"
+                  },
+                  {
+                      "id":  "crushing_blow",
+                      "name":  "Crushing Blow",
+                      "description":  "Deal 14 damage. Apply 1 Vulnerable.",
+                      "kind":  "Attack",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  14
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成14点伤害。施加1层易伤。",
+                      "artPath":  "res://Assets/Cards/crushing_blow.png",
+                      "nameKey":  "card.crushing_blow.name",
+                      "descriptionKey":  "card.crushing_blow.description"
+                  },
+                  {
+                      "id":  "chain_lightning",
+                      "name":  "Chain Lightning",
+                      "description":  "Deal 4 damage to all enemies. Draw 1 card.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "AllEnemies",
+                                          "amount":  4
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "对所有敌人造成4点伤害。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/chain_lightning.png",
+                      "nameKey":  "card.chain_lightning.name",
+                      "descriptionKey":  "card.chain_lightning.description"
+                  },
+                  {
+                      "id":  "meditate",
+                      "name":  "Meditate",
+                      "description":  "Heal 3 HP. Draw 1 card.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Heal",
+                                          "target":  "Player",
+                                          "amount":  3,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "回复3点生命。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/meditate.png",
+                      "nameKey":  "card.meditate.name",
+                      "descriptionKey":  "card.meditate.description"
+                  },
+                  {
+                      "id":  "fortress_stance",
+                      "name":  "Fortress Stance",
+                      "description":  "Gain 10 Block. Gain 1 Strength.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "GainBlock",
+                                          "target":  "Player",
+                                          "amount":  10,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "GainStrength",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得10点格挡。获得1点力量。",
+                      "artPath":  "res://Assets/Cards/fortress_stance.png",
+                      "nameKey":  "card.fortress_stance.name",
+                      "descriptionKey":  "card.fortress_stance.description"
+                  },
+                  {
+                      "id":  "spark_loop",
+                      "name":  "Spark Loop",
+                      "description":  "Gain 1 Energy. Draw 1 card.",
+                      "kind":  "Skill",
+                      "cost":  0,
+                      "effects":  [
+                                      {
+                                          "type":  "GainEnergy",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得1点能量。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/spark_loop.png",
+                      "nameKey":  "card.spark_loop.name",
+                      "descriptionKey":  "card.spark_loop.description"
+                  },
+                  {
+                      "id":  "hand_overflow",
+                      "name":  "Hand Overflow",
+                      "description":  "Draw 3 cards.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  3,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "抽3张牌。",
+                      "artPath":  "res://Assets/Cards/hand_overflow.png",
+                      "nameKey":  "card.hand_overflow.name",
+                      "descriptionKey":  "card.hand_overflow.description"
+                  },
+                  {
+                      "id":  "mana_turbine",
+                      "name":  "Mana Turbine",
+                      "description":  "Gain 2 Energy. Apply 1 Vulnerable to yourself.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "GainEnergy",
+                                          "target":  "Player",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得2点能量。对自己施加1层易伤。",
+                      "artPath":  "res://Assets/Cards/mana_turbine.png",
+                      "nameKey":  "card.mana_turbine.name",
+                      "descriptionKey":  "card.mana_turbine.description"
+                  },
+                  {
+                      "id":  "infinite_fireball",
+                      "name":  "Infinite Fireball",
+                      "description":  "Deal 5 damage four times.",
+                      "kind":  "Attack",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  5,
+                                          "repeat":  4
+                                      }
+                                  ],
+                      "descriptionZh":  "造成5点伤害，重复4次。",
+                      "artPath":  "res://Assets/Cards/infinite_fireball.png",
+                      "nameKey":  "card.infinite_fireball.name",
+                      "descriptionKey":  "card.infinite_fireball.description"
+                  },
+                  {
+                      "id":  "ember_wheel",
+                      "name":  "Ember Wheel",
+                      "description":  "Deal 3 damage to all enemies twice. Draw 1 card.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "AllEnemies",
+                                          "amount":  3,
+                                          "repeat":  2
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "对所有敌人造成3点伤害，重复2次。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/ember_wheel.png",
+                      "nameKey":  "card.ember_wheel.name",
+                      "descriptionKey":  "card.ember_wheel.description"
+                  },
+                  {
+                      "id":  "arcane_recycle",
+                      "name":  "Arcane Recycle",
+                      "description":  "Gain 1 Energy. Draw 2 cards.",
+                      "kind":  "Skill",
+                      "cost":  0,
+                      "effects":  [
+                                      {
+                                          "type":  "GainEnergy",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得1点能量。抽2张牌。",
+                      "artPath":  "res://Assets/Cards/arcane_recycle.png",
+                      "nameKey":  "card.arcane_recycle.name",
+                      "descriptionKey":  "card.arcane_recycle.description"
+                  },
+                  {
+                      "id":  "grave_whisper",
+                      "name":  "Grave Whisper",
+                      "description":  "Apply 2 Vulnerable to all enemies. Draw 1 card.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "AllEnemies",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "对所有敌人施加2层易伤。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/grave_whisper.png",
+                      "nameKey":  "card.grave_whisper.name",
+                      "descriptionKey":  "card.grave_whisper.description"
+                  },
+                  {
+                      "id":  "bone_shrapnel",
+                      "name":  "Bone Shrapnel",
+                      "description":  "Deal 4 damage. Apply 1 Vulnerable.",
+                      "kind":  "Attack",
+                      "cost":  0,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  4
+                                      },
+                                      {
+                                          "type":  "ApplyVulnerable",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成4点伤害。施加1层易伤。",
+                      "artPath":  "res://Assets/Cards/bone_shrapnel.png",
+                      "nameKey":  "card.bone_shrapnel.name",
+                      "descriptionKey":  "card.bone_shrapnel.description"
+                  },
+                  {
+                      "id":  "death_chorus",
+                      "name":  "Death Chorus",
+                      "description":  "Gain 3 Strength. Draw 2 cards.",
+                      "kind":  "Skill",
+                      "cost":  2,
+                      "effects":  [
+                                      {
+                                          "type":  "GainStrength",
+                                          "target":  "Player",
+                                          "amount":  3,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "获得3点力量。抽2张牌。",
+                      "artPath":  "res://Assets/Cards/death_chorus.png",
+                      "nameKey":  "card.death_chorus.name",
+                      "descriptionKey":  "card.death_chorus.description"
+                  },
+                  {
+                      "id":  "soul_siphon",
+                      "name":  "Soul Siphon",
+                      "description":  "Deal 8 damage. Heal 5 HP.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  8
+                                      },
+                                      {
+                                          "type":  "Heal",
+                                          "target":  "Player",
+                                          "amount":  5,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成8点伤害。回复5点生命。",
+                      "artPath":  "res://Assets/Cards/soul_siphon.png",
+                      "nameKey":  "card.soul_siphon.name",
+                      "descriptionKey":  "card.soul_siphon.description"
+                  },
+                  {
+                      "id":  "phoenix_cycle",
+                      "name":  "Phoenix Cycle",
+                      "description":  "Heal 4 HP. Gain 1 Energy. Draw 1 card.",
+                      "kind":  "Skill",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Heal",
+                                          "target":  "Player",
+                                          "amount":  4,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "GainEnergy",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "回复4点生命。获得1点能量。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/phoenix_cycle.png",
+                      "nameKey":  "card.phoenix_cycle.name",
+                      "descriptionKey":  "card.phoenix_cycle.description"
+                  },
+                  {
+                      "id":  "arcane_barrage",
+                      "name":  "Arcane Barrage",
+                      "description":  "Deal 3 damage three times. Draw 1 card.",
+                      "kind":  "Attack",
+                      "cost":  1,
+                      "effects":  [
+                                      {
+                                          "type":  "Damage",
+                                          "target":  "SelectedEnemy",
+                                          "amount":  3,
+                                          "repeat":  3
+                                      },
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "造成3点伤害，重复3次。抽1张牌。",
+                      "artPath":  "res://Assets/Cards/arcane_barrage.png",
+                      "nameKey":  "card.arcane_barrage.name",
+                      "descriptionKey":  "card.arcane_barrage.description"
+                  }
+              ],
+    "starterDeck":  [
+                        "strike",
+                        "defend",
+                        "strike",
+                        "defend",
+                        "twin_strike",
+                        "shield_bash",
+                        "iron_wall",
+                        "tactical_step",
+                        "battle_focus",
+                        "adrenaline_rush",
+                        "bash"
+                    ],
+    "rewardPool":  [
+                       "heavy_slash",
+                       "shrug",
+                       "quick_slash",
+                       "whirlwind",
+                       "bash",
+                       "battle_focus",
+                       "adrenaline_rush",
+                       "second_wind",
+                       "rending_wave",
+                       "twin_strike",
+                       "shield_bash",
+                       "iron_wall",
+                       "rend_armor",
+                       "blood_pact",
+                       "tactical_step",
+                       "reaper_touch",
+                       "fortify",
+                       "meteor_shower",
+                       "glass_cannon",
+                       "war_cry",
+                       "berserker_form",
+                       "overclock",
+                       "crushing_blow",
+                       "chain_lightning",
+                       "meditate",
+                       "fortress_stance",
+                       "spark_loop",
+                       "hand_overflow",
+                       "mana_turbine",
+                       "infinite_fireball",
+                       "ember_wheel",
+                       "arcane_recycle",
+                       "grave_whisper",
+                       "bone_shrapnel",
+                       "death_chorus",
+                       "soul_siphon",
+                       "phoenix_cycle",
+                       "arcane_barrage"
+                   ]
 }

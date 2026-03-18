@@ -60,6 +60,8 @@ public partial class BattleScene : Control
     private RichTextLabel _keywordTooltipText = null!;
 
     private Button _endTurnButton = null!;
+    private Button _backButton = null!;
+    private Button _testVictoryButton = null!;
     private Button _settingsButton = null!;
     private Control _settingsModal = null!;
     private OptionButton _resolutionOption = null!;
@@ -76,6 +78,7 @@ public partial class BattleScene : Control
     private Label _masterVolumeLabel = null!;
     private Label _musicVolumeLabel = null!;
     private Button _settingsCloseButton = null!;
+    private Label _logTitleLabel = null!;
     private readonly int[] _fpsCaps = { 0, 30, 60, 120, 144, 165, 240 };
     private List<Vector2I> _windowSizes = new();
 
@@ -170,6 +173,8 @@ public partial class BattleScene : Control
         _keywordTooltip.MouseFilter = MouseFilterEnum.Ignore;
 
         _endTurnButton = GetNode<Button>("%EndTurnButton");
+        _backButton = GetNode<Button>("%BackButton");
+        _testVictoryButton = GetNode<Button>("%TestVictoryButton");
         _settingsButton = GetNode<Button>("%SettingsButton");
         _settingsModal = GetNode<Control>("%SettingsModal");
         _resolutionOption = GetNode<OptionButton>("%ResolutionOption");
@@ -186,6 +191,7 @@ public partial class BattleScene : Control
         _masterVolumeLabel = GetNode<Label>("%MasterVolumeLabel");
         _musicVolumeLabel = GetNode<Label>("%MusicVolumeLabel");
         _settingsCloseButton = GetNode<Button>("%SettingsCloseButton");
+        _logTitleLabel = GetNode<Label>("LogOverlay/LogMargin/LogVBox/LogTitle");
 
         SetupDragGuide();
         SetupEnemyQuickUi();
@@ -203,9 +209,10 @@ public partial class BattleScene : Control
         _settingsButton.Pressed += OnOpenSettingsPressed;
         _settingsCloseButton.Pressed += OnCloseSettingsPressed;
         SetupSettingsUi();
-        GetNode<Button>("%BackButton").Pressed += BackToMap;
-        GetNode<Button>("%TestVictoryButton").Pressed += OnTestVictoryPressed;
+        _backButton.Pressed += BackToMap;
+        _testVictoryButton.Pressed += OnTestVictoryPressed;
         _handContainer.Resized += () => LayoutHandCards(false);
+        LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
         SetupFromGameState();
         _playerPanelBasePos = _playerPanel.Position;
@@ -214,7 +221,8 @@ public partial class BattleScene : Control
         _enemyShadowBaseSize = _enemyShadow.Size;
         _playerShadowBaseSize = _playerShadow.Size;
 
-        Log("Battle start", "#cbd5e1");
+        RefreshBattleStaticText();
+        Log(LocalizationService.Get("log.battle.start", "Battle start"), "#cbd5e1");
         _ = StartBattleFlow();
     }
 
@@ -360,19 +368,18 @@ public partial class BattleScene : Control
 
     private void RefreshSettingsText()
     {
-        var isZh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
-        _settingsButton.Text = isZh ? "设置" : "Settings";
-        _settingsTitle.Text = isZh ? "设置" : "Settings";
-        _resolutionLabel.Text = isZh ? "分辨率" : "Resolution";
-        _maxFpsLabel.Text = isZh ? "最大帧率" : "Max FPS";
-        _vsyncLabel.Text = isZh ? "垂直同步" : "VSync";
-        _fpsCounterLabelText.Text = isZh ? "显示帧率" : "Show FPS";
-        _masterVolumeLabel.Text = isZh ? "主音量" : "Master Volume";
-        _musicVolumeLabel.Text = isZh ? "音乐音量" : "Music Volume";
-        _settingsCloseButton.Text = isZh ? "关闭" : "Close";
+        _settingsButton.Text = LocalizationService.Get("ui.battle.settings", "Settings");
+        _settingsTitle.Text = LocalizationService.Get("ui.battle.settings", "Settings");
+        _resolutionLabel.Text = LocalizationService.Get("ui.battle.settings_resolution", "Resolution");
+        _maxFpsLabel.Text = LocalizationService.Get("ui.battle.settings_max_fps", "Max FPS");
+        _vsyncLabel.Text = LocalizationService.Get("ui.battle.settings_vsync", "VSync");
+        _fpsCounterLabelText.Text = LocalizationService.Get("ui.battle.settings_fps_counter", "Show FPS");
+        _masterVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_master_volume", "Master Volume");
+        _musicVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_music_volume", "Music Volume");
+        _settingsCloseButton.Text = LocalizationService.Get("ui.common.close", "Close");
         if (_maxFpsOption.ItemCount > 0)
         {
-            _maxFpsOption.SetItemText(0, isZh ? "不限制" : "Unlimited");
+            _maxFpsOption.SetItemText(0, LocalizationService.Get("ui.options.max_fps.unlimited", "Unlimited"));
         }
     }
 
@@ -480,8 +487,25 @@ public partial class BattleScene : Control
         AppSettings.Instance.SetMusicVolumePercent((float)value);
     }
 
+    private void RefreshBattleStaticText()
+    {
+        RefreshSettingsText();
+        _endTurnButton.Text = LocalizationService.Get("ui.battle.end_turn", "End Turn");
+        _backButton.Text = LocalizationService.Get("ui.battle.back_to_map", "Back To Map");
+        _testVictoryButton.Text = LocalizationService.Get("ui.battle.test_victory_button", "Test Victory");
+        _logTitleLabel.Text = LocalizationService.Get("ui.battle.log_title", "Action Log");
+        _turnBannerLabel.Text = LocalizationService.Get("ui.battle.turn_player", "Player Turn");
+    }
+
+    private void OnLanguageChanged()
+    {
+        RefreshBattleStaticText();
+        RefreshUi();
+    }
+
     public override void _ExitTree()
     {
+        LocalizationSettings.LanguageChanged -= OnLanguageChanged;
         foreach (var view in _cardViewPool)
         {
             if (IsInstanceValid(view))
@@ -586,7 +610,7 @@ public partial class BattleScene : Control
             Name = "EnemyIntentListLabel",
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             Modulate = new Color("a5b4fc"),
-            Text = "Intents: -",
+            Text = $"{LocalizationService.Get("ui.battle.intents", "Intents")}: -",
             Visible = false
         };
         enemyInfo.AddChild(_enemyIntentListLabel);
@@ -623,7 +647,7 @@ public partial class BattleScene : Control
 
         PushInputLock();
         ClearRelicTurnMarkers();
-        await ShowTurnBanner("Player Turn", new Color("38bdf8"));
+        await ShowTurnBanner(LocalizationService.Get("ui.battle.turn_player", "Player Turn"), new Color("38bdf8"));
 
         var hasLantern = _state.HasRelic("lantern");
         var hasAnchor = _state.HasRelic("anchor");
@@ -634,12 +658,12 @@ public partial class BattleScene : Control
         if (_state.HasRelic("ember_ring"))
         {
             _energy += 1;
-            Log("Ember Ring grants +1 energy", "#fb923c");
+            Log(LocalizationService.Get("log.battle.ember_ring", "Ember Ring grants +1 energy"), "#fb923c");
             FlashRelic("ember_ring");
         }
         if (_turn == 1 && hasLantern)
         {
-            Log("Lantern grants +1 energy", "#facc15");
+            Log(LocalizationService.Get("log.battle.lantern", "Lantern grants +1 energy"), "#facc15");
             FlashRelic("lantern");
         }
 
@@ -648,12 +672,12 @@ public partial class BattleScene : Control
         if (_state.HasRelic("iron_shell"))
         {
             _playerBlock += 3;
-            Log("Iron Shell grants 3 block", "#93c5fd");
+            Log(LocalizationService.Get("log.battle.iron_shell", "Iron Shell grants 3 block"), "#93c5fd");
             FlashRelic("iron_shell");
         }
         if (_turn == 1 && hasAnchor)
         {
-            Log("Anchor grants 8 block", "#60a5fa");
+            Log(LocalizationService.Get("log.battle.anchor", "Anchor grants 8 block"), "#60a5fa");
             FlashRelic("anchor");
         }
 
@@ -679,16 +703,16 @@ public partial class BattleScene : Control
             enemy.IntentValue = intent.Value;
         }
 
-        Log($"Turn {_turn}: Enemy intents prepared", "#94a3b8");
+        Log(LocalizationService.Format("log.battle.turn_intents_prepared", "Turn {0}: Enemy intents prepared", _turn), "#94a3b8");
     }
 
     private string IntentText(EnemyUnit enemy)
     {
         return enemy.IntentType switch
         {
-            EnemyIntentType.Attack => $"Attack {enemy.IntentValue + enemy.Strength}",
-            EnemyIntentType.Defend => $"Gain {enemy.IntentValue} Block",
-            EnemyIntentType.Buff => $"Gain {enemy.IntentValue} Strength",
+            EnemyIntentType.Attack => LocalizationService.Format("ui.battle.intent.attack", "Attack {0}", enemy.IntentValue + enemy.Strength),
+            EnemyIntentType.Defend => LocalizationService.Format("ui.battle.intent.defend", "Gain {0} Block", enemy.IntentValue),
+            EnemyIntentType.Buff => LocalizationService.Format("ui.battle.intent.strength", "Gain {0} Strength", enemy.IntentValue),
             _ => "-"
         };
     }
@@ -697,9 +721,9 @@ public partial class BattleScene : Control
     {
         return enemy.IntentType switch
         {
-            EnemyIntentType.Attack => $"ATK {enemy.IntentValue + enemy.Strength}",
-            EnemyIntentType.Defend => $"BLK {enemy.IntentValue}",
-            EnemyIntentType.Buff => $"STR +{enemy.IntentValue}",
+            EnemyIntentType.Attack => LocalizationService.Format("ui.battle.intent.attack_short", "ATK {0}", enemy.IntentValue + enemy.Strength),
+            EnemyIntentType.Defend => LocalizationService.Format("ui.battle.intent.defend_short", "BLK {0}", enemy.IntentValue),
+            EnemyIntentType.Buff => LocalizationService.Format("ui.battle.intent.buff_short", "STR +{0}", enemy.IntentValue),
             _ => "-"
         };
     }
@@ -834,7 +858,7 @@ public partial class BattleScene : Control
 
         await RenderHand();
 
-        await ShowTurnBanner("Enemy Turn", new Color("f87171"));
+        await ShowTurnBanner(LocalizationService.Get("ui.battle.turn_enemy", "Enemy Turn"), new Color("f87171"));
 
         // Enemy block expires when their turn begins.
         for (var i = 0; i < _enemies.Count; i++)
@@ -877,7 +901,7 @@ public partial class BattleScene : Control
                         _playerHp);
                     _playerBlock = resolution.RemainingBlock;
                     _playerHp = resolution.RemainingHp;
-                    Log($"{enemy.Name} attacks {resolution.FinalDamage}, blocked {resolution.Blocked}, took {resolution.Taken}", "#f87171");
+                    Log(LocalizationService.Format("log.battle.enemy_attack", "{0} attacks {1}, blocked {2}, took {3}", CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name), resolution.FinalDamage, resolution.Blocked, resolution.Taken), "#f87171");
                     if (resolution.Taken > 0)
                     {
                         TriggerHitStop(0.045f);
@@ -893,7 +917,7 @@ public partial class BattleScene : Control
                 }
                 case EnemyIntentType.Defend:
                     enemy.Block += enemy.IntentValue;
-                    Log($"{enemy.Name} gains {enemy.IntentValue} Block", "#60a5fa");
+                    Log(LocalizationService.Format("log.battle.enemy_gain_block", "{0} gains {1} Block", CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name), enemy.IntentValue), "#60a5fa");
                     SpawnFloatingText(_enemyPanel, $"+{enemy.IntentValue} Block", new Color("93c5fd"));
                     if (i == _selectedEnemyIndex)
                     {
@@ -902,7 +926,7 @@ public partial class BattleScene : Control
                     break;
                 case EnemyIntentType.Buff:
                     enemy.Strength += enemy.IntentValue;
-                    Log($"{enemy.Name} gains {enemy.IntentValue} Strength", "#c084fc");
+                    Log(LocalizationService.Format("log.battle.enemy_gain_strength", "{0} gains {1} Strength", CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name), enemy.IntentValue), "#c084fc");
                     SpawnFloatingText(_enemyPanel, $"+{enemy.IntentValue} STR", new Color("d8b4fe"));
                     if (i == _selectedEnemyIndex)
                     {
@@ -917,7 +941,7 @@ public partial class BattleScene : Control
             {
                 _playerHp = 0;
                 _battleEnded = true;
-                Log("Defeat", "#ef4444");
+                    Log(LocalizationService.Get("log.battle.defeat", "Defeat"), "#ef4444");
                 GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
                 return;
             }
@@ -946,11 +970,11 @@ public partial class BattleScene : Control
 
         if (drawResult.HandLimitReached)
         {
-            Log("Hand is full", "#f59e0b");
+            Log(LocalizationService.Get("log.battle.hand_full", "Hand is full"), "#f59e0b");
         }
         for (var i = 0; i < drawResult.ReshuffleCount; i++)
         {
-            Log("Shuffled discard into draw pile", "#94a3b8");
+            Log(LocalizationService.Get("log.battle.shuffle_discard", "Shuffled discard into draw pile"), "#94a3b8");
         }
 
         var entering = new HashSet<CardData>(drawResult.DrawnCards);
@@ -967,13 +991,13 @@ public partial class BattleScene : Control
 
         if (CardRequiresEnemyTarget(card) && !CurrentEnemy.IsAlive)
         {
-            Log("Target is already defeated", "#f59e0b");
+            Log(LocalizationService.Get("log.battle.target_defeated", "Target is already defeated"), "#f59e0b");
             return false;
         }
 
         if (card.Cost > _energy)
         {
-            Log($"Not enough energy for {card.Name}", "#f59e0b");
+            Log(LocalizationService.Format("log.battle.not_enough_energy", "Not enough energy for {0}", card.GetLocalizedName()), "#f59e0b");
             return false;
         }
 
@@ -988,7 +1012,7 @@ public partial class BattleScene : Control
 
         if (effectResult.DrawCount > 0)
         {
-            Log($"Play {card.Name}: draw {effectResult.DrawCount}", "#93c5fd");
+            Log(LocalizationService.Format("log.battle.play_draw", "Play {0}: draw {1}", card.GetLocalizedName(), effectResult.DrawCount), "#93c5fd");
             await DrawCards(effectResult.DrawCount);
         }
         else
@@ -999,7 +1023,7 @@ public partial class BattleScene : Control
         if (CurrentEnemy.Hp <= 0)
         {
             CurrentEnemy.Hp = 0;
-            Log($"{CurrentEnemy.Name} defeated", "#34d399");
+            Log(LocalizationService.Format("log.battle.enemy_defeated", "{0} defeated", CombatVisualCatalog.GetLocalizedEnemyName(CurrentEnemy.ArchetypeId, CurrentEnemy.Name)), "#34d399");
             SelectNextAliveEnemy();
             SyncEnemyVisualFromSelection();
             if (AliveEnemyCount() <= 0)
@@ -1085,7 +1109,7 @@ public partial class BattleScene : Control
 
         if (!CurrentEnemy.IsAlive)
         {
-            Log("Select a living enemy target", "#f59e0b");
+            Log(LocalizationService.Get("log.battle.select_living_target", "Select a living enemy target"), "#f59e0b");
             EmitUiSfx("error");
             UpdateEnemySelectionUi();
             await view.AnimateBackToHand();
@@ -1095,7 +1119,7 @@ public partial class BattleScene : Control
 
         if (view.Card.Cost > _energy)
         {
-            Log($"Not enough energy for {view.Card.Name}", "#f59e0b");
+            Log(LocalizationService.Format("log.battle.not_enough_energy", "Not enough energy for {0}", view.Card.GetLocalizedName()), "#f59e0b");
             EmitUiSfx("error");
             UpdateEnemySelectionUi();
             await view.AnimateBackToHand();
@@ -1144,10 +1168,10 @@ public partial class BattleScene : Control
         {
             if (!CurrentEnemy.IsAlive)
             {
-                Log("Select a living enemy target", "#f59e0b");
+                Log(LocalizationService.Get("log.battle.select_living_target", "Select a living enemy target"), "#f59e0b");
                 return;
             }
-            Log($"Drag {view.Card.Name} to enemy to play", "#94a3b8");
+            Log(LocalizationService.Format("log.battle.drag_to_play", "Drag {0} to enemy to play", view.Card.GetLocalizedName()), "#94a3b8");
             EmitUiSfx("ui_hint");
             if (IsInstanceValid(view))
             {
@@ -1297,7 +1321,7 @@ public partial class BattleScene : Control
         }
 
         _playerBlock += effect.Amount;
-        Log($"Play {card.Name}: gain {effect.Amount} Block", "#60a5fa");
+        Log(LocalizationService.Format("log.battle.play_gain_block", "Play {0}: gain {1} Block", card.GetLocalizedName(), effect.Amount), "#60a5fa");
         var playerEffectTarget = _playerCardView.EffectTarget();
         SpawnFloatingText(playerEffectTarget, $"+{effect.Amount}", new Color("93c5fd"));
         SpawnShieldEffect(playerEffectTarget, new Color("93c5fd"));
@@ -1313,7 +1337,7 @@ public partial class BattleScene : Control
 
         _playerStrength += effect.Amount;
         var playerEffectTarget = _playerCardView.EffectTarget();
-        Log($"Play {card.Name}: gain {effect.Amount} Strength", "#c084fc");
+        Log(LocalizationService.Format("log.battle.play_gain_strength", "Play {0}: gain {1} Strength", card.GetLocalizedName(), effect.Amount), "#c084fc");
         SpawnFloatingText(playerEffectTarget, $"STR+{effect.Amount}", new Color("d8b4fe"));
         SpawnRuneEffect(playerEffectTarget, new Color("d8b4fe"));
     }
@@ -1327,7 +1351,7 @@ public partial class BattleScene : Control
 
         _energy += effect.Amount;
         var playerEffectTarget = _playerCardView.EffectTarget();
-        Log($"Play {card.Name}: gain {effect.Amount} Energy", "#fde68a");
+        Log(LocalizationService.Format("log.battle.play_gain_energy", "Play {0}: gain {1} Energy", card.GetLocalizedName(), effect.Amount), "#fde68a");
         SpawnFloatingText(playerEffectTarget, $"EN+{effect.Amount}", new Color("fde68a"));
     }
 
@@ -1347,7 +1371,7 @@ public partial class BattleScene : Control
         }
 
         var playerEffectTarget = _playerCardView.EffectTarget();
-        Log($"Play {card.Name}: heal {gained}", "#86efac");
+        Log(LocalizationService.Format("log.battle.play_heal", "Play {0}: heal {1}", card.GetLocalizedName(), gained), "#86efac");
         SpawnFloatingText(playerEffectTarget, $"+{gained} HP", new Color("86efac"));
     }
 
@@ -1419,7 +1443,7 @@ public partial class BattleScene : Control
         targetEnemy.Hp = resolution.RemainingHp;
 
         var effectTarget = EnemyEffectTarget(enemyIndex);
-        Log($"Play {card.Name}: damage {resolution.FinalDamage} ({resolution.Taken} HP)", "#f87171");
+        Log(LocalizationService.Format("log.battle.play_damage", "Play {0}: damage {1} ({2} HP)", card.GetLocalizedName(), resolution.FinalDamage, resolution.Taken), "#f87171");
         if (resolution.Taken > 0)
         {
             TriggerHitStop(0.045f);
@@ -1443,7 +1467,7 @@ public partial class BattleScene : Control
         enemy.Vulnerable += amount;
         var effectTarget = EnemyEffectTarget(enemyIndex);
 
-        Log($"Play {cardName}: apply {amount} Vulnerable", "#c084fc");
+        Log(LocalizationService.Format("log.battle.play_vulnerable", "Play {0}: apply {1} Vulnerable", cardName, amount), "#c084fc");
         SpawnFloatingText(effectTarget, $"VUL+{amount}", new Color("d8b4fe"));
         SpawnRuneEffect(effectTarget, new Color("d8b4fe"));
     }
@@ -1755,7 +1779,7 @@ public partial class BattleScene : Control
         _battleEnded = true;
         PushInputLock();
         await TriggerEnemyDeath();
-        Log("Victory", "#22c55e");
+        Log(LocalizationService.Get("log.battle.victory", "Victory"), "#22c55e");
 
         _state.PlayerHp = _playerHp;
         var hpBeforeResolve = _state.PlayerHp;
@@ -1768,13 +1792,13 @@ public partial class BattleScene : Control
 
         if (charmHeal > 0)
         {
-            Log($"Lucky Charm heals {charmHeal} HP", "#86efac");
+            Log(LocalizationService.Format("log.battle.lucky_charm", "Lucky Charm heals {0} HP", charmHeal), "#86efac");
             FlashRelic("charm");
         }
 
         if (bloodVialHeal > 0)
         {
-            Log($"Blood Vial heals {bloodVialHeal} HP", "#fca5a5");
+            Log(LocalizationService.Format("log.battle.blood_vial", "Blood Vial heals {0} HP", bloodVialHeal), "#fca5a5");
             FlashRelic("blood_vial");
         }
 
@@ -2086,7 +2110,7 @@ public partial class BattleScene : Control
             return;
         }
 
-        Log("[TEST] Trigger instant victory", "#facc15");
+        Log(LocalizationService.Get("log.battle.test_victory", "[TEST] Trigger instant victory"), "#facc15");
         await OnVictoryAsync();
     }
 
@@ -2119,27 +2143,38 @@ public partial class BattleScene : Control
         _player.Vulnerable = _playerVulnerable;
         _playerCardView.Configure(_player, IsInputLocked());
 
-        _enemyNameLabel.Text = $"{enemy.Name} ({_selectedEnemyIndex + 1}/{_enemies.Count})";
-        _enemyHpLabel.Text = $"Enemy HP: {enemy.Hp}";
-        _enemyBlockLabel.Text = $"Enemy Block: {enemy.Block}";
-        _enemyStatusLabel.Text = $"Enemy Status: STR {enemy.Strength}, VUL {enemy.Vulnerable}";
-        _enemyIntentLabel.Text = _battleEnded || !enemy.IsAlive ? "Intent: -" : $"Intent: {IntentText(enemy)}";
+        var localizedEnemyName = CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name);
+        _enemyNameLabel.Text = $"{localizedEnemyName} ({_selectedEnemyIndex + 1}/{_enemies.Count})";
+        _enemyHpLabel.Text = LocalizationService.Format("ui.battle.enemy_hp", "Enemy HP: {0}", enemy.Hp);
+        _enemyBlockLabel.Text = LocalizationService.Format("ui.battle.enemy_block", "Enemy Block: {0}", enemy.Block);
+        _enemyStatusLabel.Text = LocalizationService.Format("ui.battle.enemy_status", "Enemy Status: STR {0}, VUL {1}", enemy.Strength, enemy.Vulnerable);
+        var intentLabel = LocalizationService.Get("ui.battle.intent_label", "Intent");
+        _enemyIntentLabel.Text = _battleEnded || !enemy.IsAlive
+            ? $"{intentLabel}: -"
+            : $"{intentLabel}: {IntentText(enemy)}";
         if (IsInstanceValid(_enemyIntentListLabel))
         {
             var intentParts = new List<string>();
             for (var i = 0; i < _enemies.Count; i++)
             {
                 var e = _enemies[i];
-                var status = e.IsAlive ? IntentText(e) : "Defeated";
-                intentParts.Add($"{i + 1}.{e.Name}: {status}");
+                var status = e.IsAlive ? IntentText(e) : LocalizationService.Get("ui.status.defeated", "Defeated");
+                var enemyName = CombatVisualCatalog.GetLocalizedEnemyName(e.ArchetypeId, e.Name);
+                intentParts.Add($"{i + 1}.{enemyName}: {status}");
             }
 
-            _enemyIntentListLabel.Text = $"Intents: {string.Join(" | ", intentParts)}";
+            _enemyIntentListLabel.Text = $"{LocalizationService.Get("ui.battle.intents", "Intents")}: {string.Join(" | ", intentParts)}";
         }
-        _topHpLabel.Text = $"HP {_playerHp}/{_playerMaxHp}";
-        _turnLabel.Text = $"Turn {_turn}";
-        _energyLabel.Text = $"Energy {_energy}/{MaxEnergy}";
-        _handCountLabel.Text = $"Hand: {_hand.Count} | Draw: {_drawPile.Count} | Discard: {_discardPile.Count} | Enemies: {AliveEnemyCount()}";
+        _topHpLabel.Text = LocalizationService.Format("ui.player_status.hp", "HP {0}/{1}", _playerHp, _playerMaxHp);
+        _turnLabel.Text = LocalizationService.Format("ui.battle.turn", "Turn {0}", _turn);
+        _energyLabel.Text = LocalizationService.Format("ui.battle.energy", "Energy {0}/{1}", _energy, MaxEnergy);
+        _handCountLabel.Text = LocalizationService.Format(
+            "ui.battle.hand_status",
+            "Hand: {0} | Draw: {1} | Discard: {2} | Enemies: {3}",
+            _hand.Count,
+            _drawPile.Count,
+            _discardPile.Count,
+            AliveEnemyCount());
         _relicBarLabel.Text = BuildRelicBarText();
         RefreshRelicIcons();
         UpdateEnemySelectionUi();
@@ -2151,11 +2186,11 @@ public partial class BattleScene : Control
     {
         if (_state.RelicIds.Count == 0)
         {
-            return "Relics: None";
+            return LocalizationService.Get("ui.battle.no_relic", "Relics: None");
         }
 
-        var names = _state.RelicIds.Select(id => RelicData.CreateById(id).Name);
-        return $"Relics: {string.Join(" | ", names)}";
+        var names = _state.RelicIds.Select(id => RelicData.CreateById(id).LocalizedName);
+        return LocalizationService.Format("ui.battle.relics", "Relics: {0}", string.Join(" | ", names));
     }
 
     private void RefreshRelicIcons()

@@ -90,25 +90,25 @@ text = "FPS: 0"
 
 [node name="LeftMenu" type="MarginContainer" parent="."]
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.42
+anchors_preset = 7
+anchor_left = 0.5
 anchor_top = 1.0
-anchor_right = 0.42
+anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -713.39996
-offset_top = -1047.0
-offset_right = -228.39996
-offset_bottom = 166.0
-grow_horizontal = 0
-grow_vertical = 2
-scale = Vector2(0.86221564, 0.8260859)
+offset_left = -452.0
+offset_top = -1042.0
+offset_right = 44.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(0.8, 0.8)
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 24
 
 [node name="Panel" type="PanelContainer" parent="LeftMenu"]
-custom_minimum_size = Vector2(320, 0)
+custom_minimum_size = Vector2(420, 0)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
@@ -120,7 +120,7 @@ theme_override_constants/separation = 18
 
 [node name="GameName" type="Label" parent="LeftMenu/Panel/Content"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 56
 text = "SLAY THE HS"
 
 [node name="Tagline" type="Label" parent="LeftMenu/Panel/Content"]
@@ -137,7 +137,7 @@ layout_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 30
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
 text = "开始游戏"
 
@@ -159,14 +159,14 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "直接战斗测试"
 
 [node name="ContinueButton" type="Button" parent="LeftMenu/Panel/Content"]
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 disabled = true
 text = "继续游戏（即将开放）"
@@ -175,7 +175,7 @@ text = "继续游戏（即将开放）"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "设置"
 
@@ -183,39 +183,42 @@ text = "设置"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "Language: English"
 
-[node name="CardBrowserButton" type="Button" parent="LeftMenu/Panel/Content"]
+[node name="ToolsButton" type="MenuButton" parent="LeftMenu/Panel/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "卡牌图鉴"
 
 [node name="CardEditorButton" type="Button" parent="LeftMenu/Panel/Content"]
+visible = false
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "卡牌编辑器"
 
 [node name="RelicCompendiumButton" type="Button" parent="LeftMenu/Panel/Content"]
+visible = false
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "遗物图鉴"
 
 [node name="DeckEditorButton" type="Button" parent="LeftMenu/Panel/Content"]
+visible = false
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "流派卡组编辑器"
 
@@ -223,7 +226,7 @@ text = "流派卡组编辑器"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 30
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
 text = "退出游戏"
 

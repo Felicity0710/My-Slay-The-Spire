@@ -36,6 +36,8 @@ public static class CardBrowserFilter
         {
             var keyword = safeState.SearchText.Trim();
             query = query.Where(card =>
+                card.GetLocalizedName().Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                card.GetLocalizedDescription().Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
                 card.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
                 card.Description.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
                 card.DescriptionZh.Contains(keyword, StringComparison.OrdinalIgnoreCase));
@@ -43,7 +45,7 @@ public static class CardBrowserFilter
 
         return query
             .OrderBy(card => card.Cost)
-            .ThenBy(card => card.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(card => card.GetLocalizedName(), StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 }
