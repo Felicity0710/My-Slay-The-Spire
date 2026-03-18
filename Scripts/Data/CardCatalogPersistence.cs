@@ -15,8 +15,11 @@ public sealed class CardEntryData
 {
     public string Id { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+    public string? NameKey { get; set; }
     public string Description { get; set; } = string.Empty;
     public string? DescriptionZh { get; set; }
+    public string? DescriptionKey { get; set; }
+    public string? ArtPath { get; set; }
     public string Kind { get; set; } = string.Empty;
     public int Cost { get; set; }
     public List<CardEffectEntryData> Effects { get; set; } = new();

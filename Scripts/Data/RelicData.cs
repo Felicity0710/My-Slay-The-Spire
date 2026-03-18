@@ -23,8 +23,16 @@ public sealed class RelicData
 
     public string ToRelicText()
     {
-        return $"{Name}\n{Description}";
+        return $"{LocalizedName}\n{LocalizedDescription}";
     }
+
+    public string LocalizedName => LocalizationService.Get($"relic.{Id}.name", Name);
+
+    public string LocalizedDescription => LocalizationService.Get($"relic.{Id}.description", Description);
+
+    public string LocalizedArchetype => LocalizationService.Get(
+        $"relic.archetype.{Archetype.ToLowerInvariant().Replace(' ', '_').Replace('-', '_')}",
+        Archetype);
 
     public static IReadOnlyList<string> AllRelicIds()
     {

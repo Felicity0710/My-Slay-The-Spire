@@ -5,42 +5,69 @@ using System.Text;
 
 public partial class MapScene : Control
 {
+    private Label _titleLabel = null!;
     private Label _runInfoLabel = null!;
     private Label _statusLabel = null!;
     private Label _relicLabel = null!;
+    private Label _legendLabel = null!;
     private ScrollContainer _mapScroll = null!;
     private MapCanvas _mapCanvas = null!;
+    private Button _menuButton = null!;
 
     public override void _Ready()
     {
+        _titleLabel = GetNode<Label>("Margin/VBox/Title");
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
+        _legendLabel = GetNode<Label>("Margin/VBox/Legend");
         _mapScroll = GetNode<ScrollContainer>("%MapScroll");
         _mapCanvas = GetNode<MapCanvas>("%MapCanvas");
+        _menuButton = GetNode<Button>("%MenuButton");
 
-        GetNode<Button>("%MenuButton").Pressed += OnMenuPressed;
+        _menuButton.Pressed += OnMenuPressed;
+        LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
         RefreshUi();
     }
 
-    private void RefreshUi(string status = "选择一条路线向上爬塔。当前可选节点会高亮。")
+    public override void _ExitTree()
     {
+        LocalizationSettings.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void RefreshUi(string status = "")
+    {
+        RefreshStaticText();
+
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            status = LocalizationService.Get(
+                "ui.map.status_select_path",
+                "Choose a route upward. Available nodes are highlighted.");
+        }
+
         var state = GetNode<GameState>("/root/GameState");
 
         var potionSummary = state.PotionIds.Count == 0
-            ? "None"
+            ? LocalizationService.Get("ui.map.potion_none", "None")
             : string.Join(", ", state.PotionIds.ConvertAll(id => PotionData.CreateById(id).Name));
 
-        _runInfoLabel.Text =
-            $"Floor: {state.Floor}    HP: {state.PlayerHp}/{state.MaxHp}    Deck: {state.DeckCardIds.Count}    Potions: {state.PotionCharges} ({potionSummary})    Wins: {state.BattlesWon}";
+        _runInfoLabel.Text = string.Join("    ", new[]
+        {
+            LocalizationService.Format("ui.map.floor", "Floor {0}", state.Floor),
+            LocalizationService.Format("ui.map.hp", "HP {0}/{1}", state.PlayerHp, state.MaxHp),
+            LocalizationService.Format("ui.map.deck", "Deck {0}", state.DeckCardIds.Count),
+            LocalizationService.Format("ui.map.potions", "Potions {0} ({1})", state.PotionCharges, potionSummary),
+            LocalizationService.Format("ui.map.wins", "Wins {0}", state.BattlesWon)
+        });
 
         _statusLabel.Text = status;
 
-        var relicText = new StringBuilder("Relics: ");
+        var relicText = new StringBuilder(LocalizationService.Get("ui.map.relics_prefix", "Relics: "));
         if (state.RelicIds.Count == 0)
         {
-            relicText.Append("None");
+            relicText.Append(LocalizationService.Get("ui.map.relics_none", "None"));
         }
         else
         {
@@ -51,13 +78,20 @@ public partial class MapScene : Control
                     relicText.Append(", ");
                 }
 
-                relicText.Append(RelicData.CreateById(state.RelicIds[i]).Name);
+                relicText.Append(RelicData.CreateById(state.RelicIds[i]).LocalizedName);
             }
         }
 
         _relicLabel.Text = relicText.ToString();
 
         BuildTreasureMap(state);
+    }
+
+    private void RefreshStaticText()
+    {
+        _titleLabel.Text = LocalizationService.Get("ui.map.title", "Ancient Route Map");
+        _legendLabel.Text = LocalizationService.Get("ui.map.legend", "⚔ Normal  ☠ Elite  ◆ Event  ♥ Rest  $ Shop");
+        _menuButton.Text = LocalizationService.Get("ui.map.back_to_menu", "Back To Menu");
     }
 
     private void BuildTreasureMap(GameState state)
@@ -257,13 +291,18 @@ public partial class MapScene : Control
                 break;
             case MapNodeType.Rest:
                 state.ResolveRestNode();
-                RefreshUi("你在篝火休息，恢复了 18 点生命。继续向上探索。");
+                RefreshUi(LocalizationService.Get("ui.map.rest_status", "You rest at the campfire and recover 18 HP. The climb continues."));
                 break;
             case MapNodeType.Shop:
                 state.ResolveShopNode();
-                RefreshUi("你在商店完成补给，继续下一层路线。");
+                RefreshUi(LocalizationService.Get("ui.map.shop_status", "You resupply at the shop and continue to the next route."));
                 break;
         }
+    }
+
+    private void OnLanguageChanged()
+    {
+        RefreshUi();
     }
 
     private void OnMenuPressed()

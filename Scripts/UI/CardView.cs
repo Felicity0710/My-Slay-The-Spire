@@ -6,6 +6,7 @@ public partial class CardView : PanelContainer
 {
     private Label _nameLabel = null!;
     private Label _costLabel = null!;
+    private TextureRect _artTexture = null!;
     private RichTextLabel _descLabel = null!;
 
     private bool _dragging;
@@ -24,6 +25,7 @@ public partial class CardView : PanelContainer
     private bool _lockPositionWhileDragging;
     private bool _useTopLevel = true;
     private bool _dragEnabled = true;
+    private static readonly System.Collections.Generic.Dictionary<string, Texture2D> ArtCache = new();
 
     public bool IsDragging => _dragging;
     public bool LockPositionWhileDragging
@@ -46,6 +48,7 @@ public partial class CardView : PanelContainer
         BuildUi();
         MouseFilter = MouseFilterEnum.Stop;
         TopLevel = _useTopLevel;
+        LocalizationSettings.LanguageChanged += RefreshText;
         Size = CustomMinimumSize;
         SetProcessInput(true);
         SetProcess(true);
@@ -91,6 +94,11 @@ public partial class CardView : PanelContainer
         {
             RefreshText();
         }
+    }
+
+    public override void _ExitTree()
+    {
+        LocalizationSettings.LanguageChanged -= RefreshText;
     }
 
     public void SetPose(Vector2 globalPosition, float rotationDegrees, Vector2 poseScale, bool animate)
@@ -367,7 +375,7 @@ public partial class CardView : PanelContainer
 
     private void BuildUi()
     {
-        CustomMinimumSize = new Vector2(180, 210);
+        CustomMinimumSize = new Vector2(190, 250);
 
         var style = new StyleBoxFlat
         {
@@ -407,6 +415,14 @@ public partial class CardView : PanelContainer
         _nameLabel.MouseFilter = MouseFilterEnum.Ignore;
         _nameLabel.AddThemeColorOverride("font_color", new Color("e2e8f0"));
 
+        _artTexture = new TextureRect
+        {
+            ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+            StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+            CustomMinimumSize = new Vector2(0, 102)
+        };
+        _artTexture.MouseFilter = MouseFilterEnum.Ignore;
+
         var costBadge = new PanelContainer();
         costBadge.MouseFilter = MouseFilterEnum.Ignore;
         var costStyle = new StyleBoxFlat
@@ -441,6 +457,7 @@ public partial class CardView : PanelContainer
         _descLabel.AddThemeColorOverride("default_color", new Color("cbd5e1"));
 
         vbox.AddChild(_nameLabel);
+        vbox.AddChild(_artTexture);
         vbox.AddChild(costBadge);
         vbox.AddChild(_descLabel);
 
@@ -449,9 +466,33 @@ public partial class CardView : PanelContainer
 
     private void RefreshText()
     {
-        _nameLabel.Text = Card.Name;
+        _nameLabel.Text = Card.GetLocalizedName();
         _costLabel.Text = $"{LocalizationSettings.CostLabel()}: {Card.Cost}";
         var text = LocalizationSettings.HighlightCardDescription(Card.GetLocalizedDescription());
         _descLabel.Text = text;
+        _artTexture.Texture = LoadCardArt(Card.ArtPath);
+    }
+
+    private static Texture2D LoadCardArt(string path)
+    {
+        if (path.StartsWith("res://", StringComparison.OrdinalIgnoreCase) == false
+            && path.StartsWith("user://", StringComparison.OrdinalIgnoreCase) == false)
+        {
+            path = $"res://{path.TrimStart('/', '\\')}";
+        }
+
+        if (ArtCache.TryGetValue(path, out var cached))
+        {
+            return cached;
+        }
+
+        var texture = GD.Load<Texture2D>(path);
+        if (texture == null)
+        {
+            texture = GD.Load<Texture2D>("res://icon.svg");
+        }
+
+        ArtCache[path] = texture;
+        return texture;
     }
 }

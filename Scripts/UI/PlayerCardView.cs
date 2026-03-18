@@ -18,11 +18,11 @@ public partial class PlayerCardView : Control
     {
         CacheNodes();
 
-        _nameLabel.Text = player.Name;
-        _hpLabel.Text = $"HP {player.Hp}/{player.MaxHp}";
+        _nameLabel.Text = LocalizationService.Get("ui.player_status.name", "Player");
+        _hpLabel.Text = LocalizationService.Format("ui.player_status.hp", "HP {0}/{1}", player.Hp, player.MaxHp);
         _hpBar.MaxValue = Mathf.Max(player.MaxHp, 1);
         _hpBar.Value = Mathf.Max(player.Hp, 0);
-        _summaryLabel.Text = $"Block {player.Block} · STR {player.Strength} · VUL {player.Vulnerable}";
+        _summaryLabel.Visible = false;
         _portraitGlow.Color = inputLocked
             ? new Color(0.4f, 0.55f, 0.75f, 0.2f)
             : new Color(0.54f, 0.8f, 1f, 0.3f);
@@ -40,20 +40,20 @@ public partial class PlayerCardView : Control
         }
 
         _statusRow.AddChild(CreateStatusChip(
-            $"BLK {player.Block}",
-            "Block: absorbs incoming damage.",
+            LocalizationService.Format("ui.status_chip.block", "Block {0}", player.Block),
+            LocalizationService.Get("ui.battle.status_tooltip.block", "Block absorbs incoming damage."),
             new Color("93c5fd"),
             player.Block <= 0));
 
         _statusRow.AddChild(CreateStatusChip(
-            $"STR {player.Strength}",
-            "Strength: increases attack damage.",
+            LocalizationService.Format("ui.status_chip.strength", "Strength {0}", player.Strength),
+            LocalizationService.Get("ui.battle.status_tooltip.strength", "Strength increases attack damage."),
             new Color("fca5a5"),
             player.Strength <= 0));
 
         _statusRow.AddChild(CreateStatusChip(
-            $"VUL {player.Vulnerable}",
-            "Vulnerable: takes 50% more damage.",
+            LocalizationService.Format("ui.status_chip.vulnerable", "Vulnerable {0}", player.Vulnerable),
+            LocalizationService.Get("ui.battle.status_tooltip.vulnerable", "Vulnerable increases damage taken by 50%."),
             new Color("d8b4fe"),
             player.Vulnerable <= 0));
     }

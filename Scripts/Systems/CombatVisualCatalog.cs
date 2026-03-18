@@ -1,4 +1,5 @@
-using Godot;
+﻿using Godot;
+using System;
 using System.Collections.Generic;
 
 public sealed class EnemyVisualProfile
@@ -53,14 +54,14 @@ public static class CombatVisualCatalog
             new Color("3b1f46"))
     };
 
-    private static readonly Dictionary<string, string> EnemyTraitSummary = new()
+    private static readonly Dictionary<string, string> EnemyTraitSummaryKey = new()
     {
-        ["cultist"] = "标准型：攻击/防御/增益均衡。",
-        ["cultist_scout"] = "游击型：伤害偏低但出手频繁。",
-        ["cultist_shaman"] = "辅助型：优先给队友加力量，能抬高全队输出。",
-        ["cultist_guard"] = "前排型：开局优先叠格挡，拖长战斗节奏。",
-        ["cultist_brute"] = "爆发型：高伤攻击，且每3回合会强化自己。",
-        ["elite_sentinel"] = "精英循环：攻击→防御→增益三段式轮转。"
+        ["cultist"] = "combat.enemy_trait.cultist",
+        ["cultist_scout"] = "combat.enemy_trait.cultist_scout",
+        ["cultist_shaman"] = "combat.enemy_trait.cultist_shaman",
+        ["cultist_guard"] = "combat.enemy_trait.cultist_guard",
+        ["cultist_brute"] = "combat.enemy_trait.cultist_brute",
+        ["elite_sentinel"] = "combat.enemy_trait.elite_sentinel"
     };
 
     private static readonly Dictionary<string, Color> EnemyTraitAccent = new()
@@ -85,12 +86,57 @@ public static class CombatVisualCatalog
 
     public static string GetEnemyTraitSummary(string archetypeId)
     {
-        if (EnemyTraitSummary.TryGetValue(archetypeId, out var text))
+        if (EnemyTraitSummaryKey.TryGetValue(archetypeId, out var key))
         {
-            return text;
+            var localized = LocalizationService.Get(key, string.Empty);
+            if (!string.IsNullOrWhiteSpace(localized))
+            {
+                return localized;
+            }
+
+            return key switch
+            {
+                "combat.enemy_trait.cultist" => "Attack/defense/buff balance.",
+                "combat.enemy_trait.cultist_scout" => "Fast damage dealer that strikes often.",
+                "combat.enemy_trait.cultist_shaman" => "Support-oriented and buffs allies when possible.",
+                "combat.enemy_trait.cultist_guard" => "Defensive first, dragging the duel out.",
+                "combat.enemy_trait.cultist_brute" => "Burst damage, gains more power every few turns.",
+                "combat.enemy_trait.elite_sentinel" => "Elite cycle: attack, defend and buff in rotation.",
+                _ => string.Empty
+            };
         }
 
-        return EnemyTraitSummary["cultist"];
+        return GetEnemyTraitSummary("cultist");
+    }
+
+    public static string GetLocalizedEnemyDisplayName(string archetypeId)
+    {
+        var key = $"combat.enemy_name.{archetypeId}";
+        var fallback = GetEnemyVisual(archetypeId).DisplayName;
+        return LocalizationService.Get(key, fallback);
+    }
+
+    public static string GetLocalizedEnemyName(string archetypeId, string rawName)
+    {
+        var displayName = GetLocalizedEnemyDisplayName(archetypeId);
+        if (string.IsNullOrWhiteSpace(rawName))
+        {
+            return displayName;
+        }
+
+        var parts = rawName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+        {
+            return displayName;
+        }
+
+        var suffix = parts[^1];
+        if (suffix.Length == 1 && char.IsLetterOrDigit(suffix[0]))
+        {
+            return $"{displayName} {suffix}";
+        }
+
+        return displayName;
     }
 
     public static Color GetEnemyTraitAccent(string archetypeId)
