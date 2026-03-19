@@ -4,25 +4,11 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GodotProjectDir>..\..\</GodotProjectDir>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\Scripts\CardCatalogPersistence.cs" Link="CardCatalogPersistence.cs" />
-    <Compile Include="..\..\Scripts\CardData.cs" Link="CardData.cs" />
-    <Compile Include="..\..\Scripts\CardBrowserFilter.cs" Link="CardBrowserFilter.cs" />
-    <Compile Include="..\..\Scripts\CardEffectPipeline.cs" Link="CardEffectPipeline.cs" />
-    <Compile Include="..\..\Scripts\CombatResolver.cs" Link="CombatResolver.cs" />
-    <Compile Include="..\..\Scripts\DeckFlowResolver.cs" Link="DeckFlowResolver.cs" />
-    <Compile Include="..\..\Scripts\DeckPresetCatalog.cs" Link="DeckPresetCatalog.cs" />
-    <Compile Include="..\..\Scripts\EnemyEncounterCatalog.cs" Link="EnemyEncounterCatalog.cs" />
-    <Compile Include="..\..\Scripts\EnemyEncounterBuilder.cs" Link="EnemyEncounterBuilder.cs" />
-    <Compile Include="..\..\Scripts\EnemyIntentType.cs" Link="EnemyIntentType.cs" />
-    <Compile Include="..\..\Scripts\EnemyUnit.cs" Link="EnemyUnit.cs" />
-    <Compile Include="..\..\Scripts\IntentResolver.cs" Link="IntentResolver.cs" />
-    <Compile Include="..\..\Scripts\MapNodeType.cs" Link="MapNodeType.cs" />
-    <Compile Include="..\..\Scripts\PotionData.cs" Link="PotionData.cs" />
-    <Compile Include="..\..\Scripts\RelicData.cs" Link="RelicData.cs" />
-    <Compile Include="..\..\Scripts\TurnFlowResolver.cs" Link="TurnFlowResolver.cs" />
+    <ProjectReference Include="..\..\slay the hs.csproj" />
   </ItemGroup>
 
   <ItemGroup>

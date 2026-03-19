@@ -1,9 +1,11 @@
 using Godot;
+using System;
 
 public partial class RewardCardOptionView : PanelContainer
 {
     private Label? _nameLabel;
     private Label? _costLabel;
+    private TextureRect? _artTexture;
     private RichTextLabel? _descLabel;
 
     public string CardId { get; private set; } = string.Empty;
@@ -47,6 +49,7 @@ public partial class RewardCardOptionView : PanelContainer
         MouseFilter = MouseFilterEnum.Stop;
         _nameLabel!.MouseFilter = MouseFilterEnum.Ignore;
         _costLabel!.MouseFilter = MouseFilterEnum.Ignore;
+        _artTexture!.MouseFilter = MouseFilterEnum.Ignore;
         _descLabel!.MouseFilter = MouseFilterEnum.Ignore;
 
         AddThemeStyleboxOverride("panel", normalStyle);
@@ -66,13 +69,14 @@ public partial class RewardCardOptionView : PanelContainer
 
     private void EnsureNodes()
     {
-        if (_nameLabel != null && _costLabel != null && _descLabel != null)
+        if (_nameLabel != null && _costLabel != null && _artTexture != null && _descLabel != null)
         {
             return;
         }
 
         _nameLabel = GetNode<Label>("Margin/VBox/NameLabel");
         _costLabel = GetNode<Label>("Margin/VBox/CostLabel");
+        _artTexture = GetNode<TextureRect>("Margin/VBox/ArtTexture");
         _descLabel = GetNode<RichTextLabel>("Margin/VBox/DescLabel");
     }
 
@@ -81,11 +85,34 @@ public partial class RewardCardOptionView : PanelContainer
         EnsureNodes();
 
         CardId = card.Id;
-        _nameLabel!.Text = card.Name;
+        _nameLabel!.Text = card.GetLocalizedName();
         _costLabel!.Text = $"{LocalizationSettings.CostLabel()}: {card.Cost}";
 
         var text = LocalizationSettings.HighlightCardDescription(card.GetLocalizedDescription());
-
+        _artTexture!.Texture = LoadCardArt(card.ArtPath);
         _descLabel!.Text = text;
+    }
+
+    private static Texture2D LoadCardArt(string path)
+    {
+        var fallback = ResourceLoader.Load<Texture2D>("res://icon.svg") ?? throw new Exception("Missing icon.svg fallback");
+        var normalized = path?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return fallback;
+        }
+
+        if (!normalized.StartsWith("res://", StringComparison.OrdinalIgnoreCase)
+            && !normalized.StartsWith("user://", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = $"res://{normalized.TrimStart('/')}";
+        }
+
+        if (!ResourceLoader.Exists(normalized))
+        {
+            return fallback;
+        }
+
+        return ResourceLoader.Load<Texture2D>(normalized) ?? fallback;
     }
 }

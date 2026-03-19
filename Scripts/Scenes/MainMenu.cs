@@ -1,16 +1,20 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 public partial class MainMenu : Control
 {
+    private Label _gameNameLabel = null!;
+    private Label _taglineLabel = null!;
     private Button _startButton = null!;
     private Button _battleTestButton = null!;
+    private Button _continueButton = null!;
     private Button _quitButton = null!;
     private Button _languageButton = null!;
-    private Button _cardBrowserButton = null!;
-    private Button _cardEditorButton = null!;
+    private MenuButton _toolsButton = null!;
     private Button _optionsButton = null!;
+    private Label _hintLabel = null!;
 
     private Control _settingsModal = null!;
     private OptionButton _resolutionOption = null!;
@@ -30,25 +34,32 @@ public partial class MainMenu : Control
 
     private List<Vector2I> _windowSizes = new();
     private readonly int[] _fpsCaps = { 0, 30, 60, 120, 144, 165, 240 };
-    private Button _deckEditorButton = null!;
     private OptionButton _deckPresetOption = null!;
     private Label _deckPresetLabel = null!;
-    private Button _relicCompendiumButton = null!;
+
+    private enum ToolAction
+    {
+        CardBrowser,
+        CardEditor,
+        DeckEditor,
+        RelicCompendium
+    }
 
     public override void _Ready()
     {
+        _gameNameLabel = GetNode<Label>("LeftMenu/Panel/Content/GameName");
+        _taglineLabel = GetNode<Label>("LeftMenu/Panel/Content/Tagline");
         GetNode<GameState>("/root/GameState").SetUiPhase("main_menu");
         _startButton = GetNode<Button>("%StartButton");
         _battleTestButton = GetNode<Button>("%BattleTestButton");
+        _continueButton = GetNode<Button>("LeftMenu/Panel/Content/ContinueButton");
         _quitButton = GetNode<Button>("%QuitButton");
         _languageButton = GetNode<Button>("%LanguageButton");
-        _cardBrowserButton = GetNode<Button>("%CardBrowserButton");
-        _cardEditorButton = GetNode<Button>("%CardEditorButton");
-        _deckEditorButton = GetNode<Button>("%DeckEditorButton");
-        _relicCompendiumButton = GetNode<Button>("%RelicCompendiumButton");
+        _toolsButton = GetNode<MenuButton>("%ToolsButton");
         _deckPresetOption = GetNode<OptionButton>("%DeckPresetOption");
         _deckPresetLabel = GetNode<Label>("%DeckPresetLabel");
         _optionsButton = GetNode<Button>("%OptionsButton");
+        _hintLabel = GetNode<Label>("LeftMenu/Panel/Content/Hint");
 
         _settingsModal = GetNode<Control>("%SettingsModal");
         _resolutionOption = GetNode<OptionButton>("%ResolutionOption");
@@ -70,18 +81,22 @@ public partial class MainMenu : Control
         _battleTestButton.Pressed += OnBattleTestPressed;
         _quitButton.Pressed += OnQuitPressed;
         _languageButton.Pressed += OnLanguagePressed;
-        _cardBrowserButton.Pressed += OnCardBrowserPressed;
-        _cardEditorButton.Pressed += OnCardEditorPressed;
-        _deckEditorButton.Pressed += OnDeckEditorPressed;
-        _relicCompendiumButton.Pressed += OnRelicCompendiumPressed;
         _deckPresetOption.ItemSelected += OnDeckPresetSelected;
         _optionsButton.Pressed += OnOptionsPressed;
         _settingsCloseButton.Pressed += OnSettingsClosePressed;
 
         SetupSettingsUi();
+        SetupToolsMenu();
+        LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
         RefreshUiText();
+        RefreshSettingsText();
         PopulateDeckPresets();
+    }
+
+    public override void _ExitTree()
+    {
+        LocalizationSettings.LanguageChanged -= OnLanguageChanged;
     }
 
     private void OnStartPressed()
@@ -102,6 +117,7 @@ public partial class MainMenu : Control
         state.StartBattleTestRun();
         GetTree().ChangeSceneToFile("res://Scenes/BattleScene.tscn");
     }
+
     private void OnQuitPressed()
     {
         GetTree().Quit();
@@ -122,11 +138,52 @@ public partial class MainMenu : Control
         GetTree().ChangeSceneToFile("res://Scenes/DeckEditorScene.tscn");
     }
 
+    private void SetupToolsMenu()
+    {
+        var popup = _toolsButton.GetPopup();
+        popup.IdPressed += OnToolsMenuItemPressed;
+        RebuildToolsMenu();
+    }
+
+    private void RebuildToolsMenu()
+    {
+        var popup = _toolsButton.GetPopup();
+        popup.Clear();
+        popup.AddItem(LocalizationService.Get("ui.main_menu.card_browser", "Card Compendium"), (int)ToolAction.CardBrowser);
+        popup.AddItem(LocalizationService.Get("ui.main_menu.card_editor", "Card Editor"), (int)ToolAction.CardEditor);
+        popup.AddItem(LocalizationService.Get("ui.main_menu.deck_editor", "Deck Archetype Editor"), (int)ToolAction.DeckEditor);
+        popup.AddItem(LocalizationService.Get("ui.main_menu.relic_compendium", "Relic Compendium"), (int)ToolAction.RelicCompendium);
+    }
+
+    private void OnToolsMenuItemPressed(long id)
+    {
+        switch ((ToolAction)id)
+        {
+            case ToolAction.CardBrowser:
+                OnCardBrowserPressed();
+                break;
+            case ToolAction.CardEditor:
+                OnCardEditorPressed();
+                break;
+            case ToolAction.DeckEditor:
+                OnDeckEditorPressed();
+                break;
+            case ToolAction.RelicCompendium:
+                OnRelicCompendiumPressed();
+                break;
+        }
+    }
+
     private void OnLanguagePressed()
     {
         LocalizationSettings.ToggleLanguage();
+    }
+
+    private void OnLanguageChanged()
+    {
         RefreshUiText();
         PopulateDeckPresets();
+        RefreshSettingsText();
     }
 
     private void OnDeckPresetSelected(long index)
@@ -154,25 +211,20 @@ public partial class MainMenu : Control
 
     private void RefreshUiText()
     {
+        _gameNameLabel.Text = LocalizationService.Get("ui.main_menu.game_name", "SLAY THE HS");
+        _taglineLabel.Text = LocalizationService.Get("ui.main_menu.tagline", "Pixel deckbuilder roguelike adventure");
         _languageButton.Text = LocalizationSettings.LanguageButtonText();
-        _deckPresetLabel.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
-            ? "测试卡组预设"
-            : "Deck Preset";
-        _startButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
-            ? "开始爬塔（地图）"
-            : "Start Run (Map)";
-        _battleTestButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
-            ? "直接战斗测试"
-            : "Battle Test";
-        _cardBrowserButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
-            ? "卡牌图鉴"
-            : "Card Compendium";
-        _cardEditorButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
-            ? "卡牌编辑器"
-            : "Card Editor";
-        _deckEditorButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
-            ? "流派卡组编辑器"
-            : "Deck Archetype Editor";
+        _deckPresetLabel.Text = LocalizationService.Get("ui.main_menu.deck_preset", "Deck Preset");
+        _startButton.Text = LocalizationService.Get("ui.main_menu.start_run", "Start Run (Map)");
+        _battleTestButton.Text = LocalizationService.Get("ui.main_menu.battle_test", "Battle Test");
+        _continueButton.Text = LocalizationService.Get("ui.main_menu.continue", "Continue (Coming Soon)");
+        _toolsButton.Text = LocalizationService.Get("ui.main_menu.tools", "Tools");
+        _optionsButton.Text = LocalizationService.Get("ui.main_menu.settings", "Settings");
+        _quitButton.Text = LocalizationService.Get("ui.main_menu.quit", "Quit");
+        _hintLabel.Text = LocalizationService.Get(
+            "ui.main_menu.hint",
+            "Tip: replace BackgroundImage with your own full-screen background art.");
+        RebuildToolsMenu();
     }
 
     private void PopulateDeckPresets()
@@ -185,7 +237,8 @@ public partial class MainMenu : Control
         for (var i = 0; i < presets.Count; i++)
         {
             var preset = presets[i];
-            _deckPresetOption.AddItem($"{preset.LocalizedName} · {preset.LocalizedDescription}");
+            _deckPresetOption.AddItem(
+                LocalizationService.Format("ui.main_menu.deck_preset_item", "{0} - {1}", preset.LocalizedName, preset.LocalizedDescription));
             if (preset.Id == state.SelectedDeckPresetId)
             {
                 selectedIndex = i;
@@ -239,7 +292,9 @@ public partial class MainMenu : Control
         for (var i = 0; i < _fpsCaps.Length; i += 1)
         {
             var cap = _fpsCaps[i];
-            _maxFpsOption.AddItem(cap <= 0 ? "Unlimited" : cap.ToString(), i);
+            _maxFpsOption.AddItem(cap <= 0
+                ? LocalizationService.Get("ui.options.max_fps.unlimited", "Unlimited")
+                : cap.ToString(), i);
         }
 
         var currentCap = AppSettings.Instance.MaxFps;
@@ -277,8 +332,9 @@ public partial class MainMenu : Control
         };
 
         var unique = new HashSet<Vector2I>();
-        foreach (var preset in presets)
+        for (var i = 0; i < presets.Length; i += 1)
         {
+            var preset = presets[i];
             if (preset.X <= screenSize.X && preset.Y <= screenSize.Y)
             {
                 unique.Add(preset);
@@ -303,18 +359,17 @@ public partial class MainMenu : Control
 
     private void RefreshSettingsText()
     {
-        var isZh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
-        _optionsButton.Text = isZh ? "设置" : "Settings";
-        _settingsTitle.Text = isZh ? "设置" : "Settings";
-        _resolutionLabel.Text = isZh ? "分辨率" : "Resolution";
-        _masterVolumeLabel.Text = isZh ? "主音量" : "Master Volume";
-        _musicVolumeLabel.Text = isZh ? "音乐音量" : "Music Volume";
-        _maxFpsLabel.Text = isZh ? "最大帧率" : "Max FPS";
-        _vsyncLabel.Text = isZh ? "垂直同步" : "VSync";
-        _fpsCounterLabelText.Text = isZh ? "显示帧率" : "Show FPS";
-        _settingsCloseButton.Text = isZh ? "关闭" : "Close";
+        _optionsButton.Text = LocalizationService.Get("ui.main_menu.settings", "Settings");
+        _settingsTitle.Text = LocalizationService.Get("ui.main_menu.settings", "Settings");
+        _resolutionLabel.Text = LocalizationService.Get("ui.options.resolution_label", "Resolution");
+        _masterVolumeLabel.Text = LocalizationService.Get("ui.options.master_volume", "Master Volume");
+        _musicVolumeLabel.Text = LocalizationService.Get("ui.options.music_volume", "Music Volume");
+        _maxFpsLabel.Text = LocalizationService.Get("ui.options.max_fps", "Max FPS");
+        _vsyncLabel.Text = LocalizationService.Get("ui.options.vsync", "VSync");
+        _fpsCounterLabelText.Text = LocalizationService.Get("ui.options.fps_counter", "FPS Counter");
+        _settingsCloseButton.Text = LocalizationService.Get("ui.common.close", "Close");
 
-        var noLimitText = isZh ? "不限制" : "Unlimited";
+        var noLimitText = LocalizationService.Get("ui.options.max_fps.unlimited", "Unlimited");
         if (_maxFpsOption.ItemCount > 0)
         {
             _maxFpsOption.SetItemText(0, noLimitText);
@@ -360,5 +415,4 @@ public partial class MainMenu : Control
     {
         AppSettings.Instance.SetMusicVolumePercent((float)value);
     }
-
 }

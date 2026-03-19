@@ -56,6 +56,7 @@ public partial class EnemyCardView : Button
 
         Disabled = !enemy.IsAlive || inputLocked;
 
+        var localizedEnemyName = CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name);
         var traitSummary = CombatVisualCatalog.GetEnemyTraitSummary(enemy.ArchetypeId);
         var traitAccent = CombatVisualCatalog.GetEnemyTraitAccent(enemy.ArchetypeId);
 
@@ -95,11 +96,11 @@ public partial class EnemyCardView : Button
 
         _intentLabel.Text = enemy.IsAlive ? intentCompactText : "KO";
         _intentLabel.Modulate = enemy.IsAlive ? intentTint : new Color("6b7280");
-        _intentLabel.TooltipText = enemy.IsAlive ? intentTooltip : "Defeated";
+        _intentLabel.TooltipText = enemy.IsAlive ? intentTooltip : LocalizationService.Get("ui.status.defeated", "Defeated");
 
         TooltipText = enemy.IsAlive
-            ? $"{enemy.Name}\n{traitSummary}\n下一步意图：{intentTooltip}"
-            : $"{enemy.Name}\nDefeated";
+            ? $"{localizedEnemyName}\n{traitSummary}\n{LocalizationService.Get("ui.battle.next_intent_prefix", "Next intent: ")}{intentTooltip}"
+            : $"{localizedEnemyName}\n{LocalizationService.Get("ui.status.defeated", "Defeated")}";
 
         _portraitBg.Color = new Color(stageTint.R, stageTint.G, stageTint.B, enemy.IsAlive ? 1f : 0.45f);
         _portrait.Texture = portraitTexture;
@@ -119,7 +120,7 @@ public partial class EnemyCardView : Button
         _hpBar.MaxValue = Mathf.Max(enemy.MaxHp, 1);
         _hpBar.Value = Mathf.Max(enemy.Hp, 0);
 
-        _nameLabel.Text = enemy.Name;
+        _nameLabel.Text = localizedEnemyName;
         _nameLabel.Modulate = enemy.IsAlive ? Colors.White : new Color("6b7280");
 
         _traitLabel.Text = traitSummary;
@@ -132,18 +133,18 @@ public partial class EnemyCardView : Button
         }
 
         _statusRow.AddChild(CreateStatusChip(
-            $"BLK {enemy.Block}",
-            "Block: absorbs incoming damage.",
+            LocalizationService.Format("ui.status_chip.block", "Block {0}", enemy.Block),
+            LocalizationService.Get("ui.battle.status_tooltip.block", "Block absorbs incoming damage."),
             new Color("93c5fd"),
             !enemy.IsAlive || enemy.Block <= 0));
         _statusRow.AddChild(CreateStatusChip(
-            $"STR {enemy.Strength}",
-            "Strength: increases attack damage.",
+            LocalizationService.Format("ui.status_chip.strength", "Strength {0}", enemy.Strength),
+            LocalizationService.Get("ui.battle.status_tooltip.strength", "Strength increases attack damage."),
             new Color("fca5a5"),
             !enemy.IsAlive || enemy.Strength <= 0));
         _statusRow.AddChild(CreateStatusChip(
-            $"VUL {enemy.Vulnerable}",
-            "Vulnerable: takes 50% more damage.",
+            LocalizationService.Format("ui.status_chip.vulnerable", "Vulnerable {0}", enemy.Vulnerable),
+            LocalizationService.Get("ui.battle.status_tooltip.vulnerable", "Vulnerable increases damage taken by 50%."),
             new Color("d8b4fe"),
             !enemy.IsAlive || enemy.Vulnerable <= 0));
     }

@@ -32,6 +32,30 @@ public partial class CardEditorScene : Control
     private Label _statusLabel = null!;
     private RichTextLabel _validationLabel = null!;
 
+    private Button _backButton = null!;
+    private Button _reloadButton = null!;
+    private Button _validateButton = null!;
+    private Button _saveButton = null!;
+    private Button _newButton = null!;
+    private Button _duplicateButton = null!;
+    private Button _deleteButton = null!;
+    private Button _applyCardButton = null!;
+    private Button _addEffectButton = null!;
+    private Button _removeEffectButton = null!;
+    private Button _applyEffectButton = null!;
+
+    private Label _cardTitleLabel = null!;
+    private Label _effectTitleLabel = null!;
+    private Label _idLabel = null!;
+    private Label _nameLabel = null!;
+    private Label _kindLabel = null!;
+    private Label _costLabel = null!;
+    private Label _effectTypeLabel = null!;
+    private Label _effectTargetLabel = null!;
+    private Label _effectAmountLabel = null!;
+    private Label _effectRepeatLabel = null!;
+    private Label _effectFlatBonusLabel = null!;
+
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
 
     private CardCatalogData _catalog = new();
@@ -67,44 +91,119 @@ public partial class CardEditorScene : Control
         _statusLabel = GetNode<Label>("%StatusLabel");
         _validationLabel = GetNode<RichTextLabel>("%ValidationLabel");
 
+        _backButton = GetNode<Button>("%BackButton");
+        _reloadButton = GetNode<Button>("%ReloadButton");
+        _validateButton = GetNode<Button>("%ValidateButton");
+        _saveButton = GetNode<Button>("%SaveButton");
+        _newButton = GetNode<Button>("%NewButton");
+        _duplicateButton = GetNode<Button>("%DuplicateButton");
+        _deleteButton = GetNode<Button>("%DeleteButton");
+        _applyCardButton = GetNode<Button>("%ApplyCardButton");
+        _addEffectButton = GetNode<Button>("%AddEffectButton");
+        _removeEffectButton = GetNode<Button>("%RemoveEffectButton");
+        _applyEffectButton = GetNode<Button>("%ApplyEffectButton");
+
+        _cardTitleLabel = GetNode<Label>("Margin/Root/Split/RightPanel/CardTitle");
+        _effectTitleLabel = GetNode<Label>("Margin/Root/Split/RightPanel/EffectTitle");
+        _idLabel = GetNode<Label>("Margin/Root/Split/RightPanel/CardGrid/IdLabel");
+        _nameLabel = GetNode<Label>("Margin/Root/Split/RightPanel/CardGrid/NameLabel");
+        _kindLabel = GetNode<Label>("Margin/Root/Split/RightPanel/CardGrid/KindLabel");
+        _costLabel = GetNode<Label>("Margin/Root/Split/RightPanel/CardGrid/CostLabel");
+        _effectTypeLabel = GetNode<Label>("Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid/EffectTypeLabel");
+        _effectTargetLabel = GetNode<Label>("Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid/EffectTargetLabel");
+        _effectAmountLabel = GetNode<Label>("Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid/EffectAmountLabel");
+        _effectRepeatLabel = GetNode<Label>("Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid/EffectRepeatLabel");
+        _effectFlatBonusLabel = GetNode<Label>("Margin/Root/Split/RightPanel/EffectSplit/EffectRight/EffectGrid/EffectFlatBonusLabel");
+
         BuildEnumOptions();
 
-        GetNode<Button>("%BackButton").Pressed += OnBackPressed;
-        GetNode<Button>("%ReloadButton").Pressed += ReloadFromDisk;
-        GetNode<Button>("%SaveButton").Pressed += OnSavePressed;
-        GetNode<Button>("%ValidateButton").Pressed += OnValidatePressed;
-        GetNode<Button>("%NewButton").Pressed += OnNewCardPressed;
-        GetNode<Button>("%DuplicateButton").Pressed += OnDuplicateCardPressed;
-        GetNode<Button>("%DeleteButton").Pressed += OnDeleteCardPressed;
-        GetNode<Button>("%ApplyCardButton").Pressed += OnApplyCardPressed;
-
-        GetNode<Button>("%AddEffectButton").Pressed += OnAddEffectPressed;
-        GetNode<Button>("%RemoveEffectButton").Pressed += OnRemoveEffectPressed;
-        GetNode<Button>("%ApplyEffectButton").Pressed += OnApplyEffectPressed;
+        _backButton.Pressed += OnBackPressed;
+        _reloadButton.Pressed += ReloadFromDisk;
+        _saveButton.Pressed += OnSavePressed;
+        _validateButton.Pressed += OnValidatePressed;
+        _newButton.Pressed += OnNewCardPressed;
+        _duplicateButton.Pressed += OnDuplicateCardPressed;
+        _deleteButton.Pressed += OnDeleteCardPressed;
+        _applyCardButton.Pressed += OnApplyCardPressed;
+        _addEffectButton.Pressed += OnAddEffectPressed;
+        _removeEffectButton.Pressed += OnRemoveEffectPressed;
+        _applyEffectButton.Pressed += OnApplyEffectPressed;
 
         _cardList.ItemSelected += OnCardSelected;
         _effectList.ItemSelected += OnEffectSelected;
         _searchEdit.TextChanged += _ => RefreshCardList();
+        LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
+        RefreshUiText();
         ReloadFromDisk();
+    }
+
+    public override void _ExitTree()
+    {
+        LocalizationSettings.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void RefreshUiText()
+    {
+        _backButton.Text = LocalizationService.Get("ui.card_editor.back", "Back to Menu");
+        _reloadButton.Text = LocalizationService.Get("ui.card_editor.reload", "Reload");
+        _validateButton.Text = LocalizationService.Get("ui.card_editor.validate", "Validate");
+        _saveButton.Text = LocalizationService.Get("ui.card_editor.save", "Save");
+        _newButton.Text = LocalizationService.Get("ui.card_editor.new", "New");
+        _duplicateButton.Text = LocalizationService.Get("ui.card_editor.duplicate", "Duplicate");
+        _deleteButton.Text = LocalizationService.Get("ui.card_editor.delete", "Delete");
+        _applyCardButton.Text = LocalizationService.Get("ui.card_editor.apply_card", "Apply Card Changes");
+        _addEffectButton.Text = LocalizationService.Get("ui.card_editor.add_effect", "+ Effect");
+        _removeEffectButton.Text = LocalizationService.Get("ui.card_editor.remove_effect", "- Effect");
+        _applyEffectButton.Text = LocalizationService.Get("ui.card_editor.apply_effect", "Apply Effect Changes");
+
+        _cardTitleLabel.Text = LocalizationService.Get("ui.card_editor.card_info", "Card Info");
+        _effectTitleLabel.Text = LocalizationService.Get("ui.card_editor.effect_editor", "Card Effects");
+        _idLabel.Text = LocalizationService.Get("ui.card_editor.id_label", "ID");
+        _nameLabel.Text = LocalizationService.Get("ui.card_editor.name_label", "Name");
+        _kindLabel.Text = LocalizationService.Get("ui.card_editor.kind_label", "Kind");
+        _costLabel.Text = LocalizationService.Get("ui.card_editor.cost_label", "Cost");
+        _effectTypeLabel.Text = LocalizationService.Get("ui.card_editor.effect_type_label", "Type");
+        _effectTargetLabel.Text = LocalizationService.Get("ui.card_editor.effect_target_label", "Target");
+        _effectAmountLabel.Text = LocalizationService.Get("ui.card_editor.effect_amount_label", "Amount");
+        _effectRepeatLabel.Text = LocalizationService.Get("ui.card_editor.effect_repeat_label", "Repeat");
+        _effectFlatBonusLabel.Text = LocalizationService.Get("ui.card_editor.effect_flat_bonus_label", "Flat Bonus");
+
+        _searchEdit.PlaceholderText = LocalizationService.Get("ui.card_editor.search_placeholder", "Search id or name");
+        _idEdit.PlaceholderText = LocalizationService.Get("ui.card_editor.id_placeholder", "Unique id");
+        _nameEdit.PlaceholderText = LocalizationService.Get("ui.card_editor.name_placeholder", "Card name");
+        _descriptionEdit.PlaceholderText = LocalizationService.Get("ui.card_editor.description_placeholder", "Description (English)");
+        _descriptionZhEdit.PlaceholderText = LocalizationService.Get("ui.card_editor.description_zh_placeholder", "Description (Chinese)");
+
+        _inStarterDeckCheck.Text = LocalizationService.Get("ui.card_editor.in_starter_deck", "Include in starter deck");
+        _inRewardPoolCheck.Text = LocalizationService.Get("ui.card_editor.in_reward_pool", "Include in reward pool");
+        _effectUseAttackerStrengthCheck.Text = LocalizationService.Get("ui.card_editor.use_attacker_strength", "Use attacker Strength");
+        _effectUseTargetVulnerableCheck.Text = LocalizationService.Get("ui.card_editor.use_target_vulnerable", "Use target Vulnerable");
+
+        BuildEnumOptions();
+        if (_catalog.Cards.Count > 0)
+        {
+            RefreshCardList();
+            RefreshEffectList();
+        }
     }
 
     private void BuildEnumOptions()
     {
         _kindOption.Clear();
-        _kindOption.AddItem(nameof(CardKind.Attack));
-        _kindOption.AddItem(nameof(CardKind.Skill));
+        _kindOption.AddItem(LocalizationService.Get("ui.card_browser.filters.type_attack", "Attack"));
+        _kindOption.AddItem(LocalizationService.Get("ui.card_browser.filters.type_skill", "Skill"));
 
         _effectTypeOption.Clear();
         foreach (var value in Enum.GetValues<CardEffectType>())
         {
-            _effectTypeOption.AddItem(value.ToString());
+            _effectTypeOption.AddItem(LocalizationService.Get($"ui.card_effect_type.{value.ToString().ToLowerInvariant()}", value.ToString()));
         }
 
         _effectTargetOption.Clear();
         foreach (var value in Enum.GetValues<CardEffectTarget>())
         {
-            _effectTargetOption.AddItem(value.ToString());
+            _effectTargetOption.AddItem(LocalizationService.Get($"ui.card_effect_target.{value.ToString().ToLowerInvariant()}", value.ToString()));
         }
     }
 
@@ -119,7 +218,7 @@ public partial class CardEditorScene : Control
             RefreshCardList();
             ClearCardEditor();
             SetValidation(new List<string>());
-            SetStatus($"已加载：{path}", false);
+            SetStatus(LocalizationService.Format("ui.card_editor.reload_success", "Loaded cards from {0}", path), false);
         }
         catch (Exception ex)
         {
@@ -129,7 +228,7 @@ public partial class CardEditorScene : Control
             RefreshCardList();
             ClearCardEditor();
             SetValidation(new List<string> { ex.Message });
-            SetStatus($"加载失败：{ex.Message}", true);
+            SetStatus(LocalizationService.Format("ui.card_editor.reload_failed", "Failed to load cards: {0}", ex.Message), true);
         }
     }
 
@@ -145,11 +244,11 @@ public partial class CardEditorScene : Control
             var path = CardCatalogPersistence.ResolveCardsJsonPath();
             CardCatalogPersistence.SaveToFile(path, _catalog);
             SetValidation(new List<string>());
-            SetStatus("保存成功。", false);
+            SetStatus(LocalizationService.Get("ui.card_editor.save_success", "Cards saved."), false);
         }
         catch (Exception ex)
         {
-            SetStatus($"保存失败：{ex.Message}", true);
+            SetStatus(LocalizationService.Format("ui.card_editor.save_failed", "Failed to save cards: {0}", ex.Message), true);
         }
     }
 
@@ -164,12 +263,16 @@ public partial class CardEditorScene : Control
 
             var errors = CardCatalogPersistence.Validate(_catalog);
             SetValidation(errors);
-            SetStatus(errors.Count == 0 ? "校验通过。" : "校验发现问题，请查看下方列表。", errors.Count > 0);
+            SetStatus(
+                errors.Count == 0
+                    ? LocalizationService.Get("ui.card_editor.validate_success", "Validation passed.")
+                    : LocalizationService.Get("ui.card_editor.validate_failed", "Validation found issues. Check list below."),
+                errors.Count > 0);
         }
         catch (Exception ex)
         {
             SetValidation(new List<string> { ex.Message });
-            SetStatus($"校验失败：{ex.Message}", true);
+            SetStatus(LocalizationService.Format("ui.card_editor.validate_error", "Validation error: {0}", ex.Message), true);
         }
     }
 
@@ -179,11 +282,12 @@ public partial class CardEditorScene : Control
         _catalog.Cards.Add(new CardEntryData
         {
             Id = newId,
-            Name = "New Card",
+            Name = LocalizationService.Get("ui.card_editor.default_card_name", "New Card"),
             Kind = nameof(CardKind.Skill),
             Cost = 1,
             Description = "",
             DescriptionZh = "",
+            ArtPath = "res://Assets/Cards/",
             Effects = new List<CardEffectEntryData>
             {
                 new()
@@ -201,14 +305,14 @@ public partial class CardEditorScene : Control
 
         RefreshCardList();
         SelectCardById(newId);
-        SetStatus($"已新增卡牌：{newId}", false);
+        SetStatus(LocalizationService.Format("ui.card_editor.new_card_created", "Created new card: {0}", newId), false);
     }
 
     private void OnDuplicateCardPressed()
     {
         if (!TryGetSelectedCard(out var source))
         {
-            SetStatus("请先选择要复制的卡牌。", true);
+            SetStatus(LocalizationService.Get("ui.card_editor.duplicate_missing", "Please select a card to duplicate first."), true);
             return;
         }
 
@@ -226,14 +330,14 @@ public partial class CardEditorScene : Control
         _catalog.Cards.Add(copy);
         RefreshCardList();
         SelectCardById(copy.Id);
-        SetStatus($"已复制卡牌：{copy.Id}", false);
+        SetStatus(LocalizationService.Format("ui.card_editor.duplicate_success", "Duplicated card: {0}", copy.Id), false);
     }
 
     private void OnDeleteCardPressed()
     {
         if (!TryGetSelectedCard(out var card))
         {
-            SetStatus("请先选择要删除的卡牌。", true);
+            SetStatus(LocalizationService.Get("ui.card_editor.delete_missing", "Please select a card to delete first."), true);
             return;
         }
 
@@ -246,7 +350,7 @@ public partial class CardEditorScene : Control
         _selectedEffectIndex = -1;
         RefreshCardList();
         ClearCardEditor();
-        SetStatus($"已删除卡牌：{cardId}（并清理牌池引用）", false);
+        SetStatus(LocalizationService.Format("ui.card_editor.delete_success", "Deleted card: {0} and cleaned deck/pool references.", cardId), false);
     }
 
     private void OnApplyCardPressed()
@@ -256,11 +360,11 @@ public partial class CardEditorScene : Control
             ApplyCardEditorToCurrentCard();
             RefreshCardList();
             ReselectCurrentCard();
-            SetStatus("已应用卡牌信息。", false);
+            SetStatus(LocalizationService.Get("ui.card_editor.apply_success", "Applied card changes."), false);
         }
         catch (Exception ex)
         {
-            SetStatus($"应用失败：{ex.Message}", true);
+            SetStatus(LocalizationService.Format("ui.card_editor.apply_failed", "Apply failed: {0}", ex.Message), true);
         }
     }
 
@@ -281,14 +385,14 @@ public partial class CardEditorScene : Control
     {
         if (!TryGetSelectedCard(out var card))
         {
-            throw new InvalidOperationException("请先选择卡牌。 ");
+            throw new InvalidOperationException(LocalizationService.Get("ui.card_editor.no_card_selected", "Please select a card first."));
         }
 
         var oldId = card.Id;
 
         card.Id = _idEdit.Text.Trim();
         card.Name = _nameEdit.Text.Trim();
-        card.Kind = _kindOption.GetItemText(_kindOption.Selected);
+        card.Kind = _kindOption.Selected == 0 ? nameof(CardKind.Attack) : nameof(CardKind.Skill);
         card.Cost = (int)_costSpin.Value;
         card.Description = _descriptionEdit.Text.Trim();
         card.DescriptionZh = _descriptionZhEdit.Text.Trim();
@@ -324,7 +428,7 @@ public partial class CardEditorScene : Control
     {
         if (!TryGetSelectedCard(out var card))
         {
-            SetStatus("请先选择卡牌后再新增效果。", true);
+            SetStatus(LocalizationService.Get("ui.card_editor.effect_add_missing", "Please select a card first before adding effects."), true);
             return;
         }
 
@@ -348,7 +452,7 @@ public partial class CardEditorScene : Control
     {
         if (!TryGetSelectedCard(out var card) || _selectedEffectIndex < 0 || _selectedEffectIndex >= card.Effects.Count)
         {
-            SetStatus("请先选择要删除的效果。", true);
+            SetStatus(LocalizationService.Get("ui.card_editor.effect_remove_missing", "Please select a valid effect first."), true);
             return;
         }
 
@@ -356,7 +460,7 @@ public partial class CardEditorScene : Control
         _selectedEffectIndex = -1;
         RefreshEffectList();
         ClearEffectEditor();
-        SetStatus("已删除效果。", false);
+        SetStatus(LocalizationService.Get("ui.card_editor.effect_removed", "Effect removed."), false);
     }
 
     private void OnApplyEffectPressed()
@@ -365,12 +469,12 @@ public partial class CardEditorScene : Control
         {
             if (!TryGetSelectedCard(out var card) || _selectedEffectIndex < 0 || _selectedEffectIndex >= card.Effects.Count)
             {
-                throw new InvalidOperationException("请先选择要编辑的效果。 ");
+                throw new InvalidOperationException(LocalizationService.Get("ui.card_editor.no_card_selected", "Please select a card first."));
             }
 
             var effect = card.Effects[_selectedEffectIndex];
-            effect.Type = _effectTypeOption.GetItemText(_effectTypeOption.Selected);
-            effect.Target = _effectTargetOption.GetItemText(_effectTargetOption.Selected);
+            effect.Type = Enum.GetValues<CardEffectType>()[_effectTypeOption.Selected].ToString();
+            effect.Target = Enum.GetValues<CardEffectTarget>()[_effectTargetOption.Selected].ToString();
             effect.Amount = (int)_effectAmountSpin.Value;
             effect.Repeat = (int)_effectRepeatSpin.Value;
             effect.FlatBonus = (int)_effectFlatBonusSpin.Value;
@@ -379,11 +483,11 @@ public partial class CardEditorScene : Control
 
             CardCatalogPersistence.ValidateOrThrow(_catalog, "effect editor");
             RefreshEffectList();
-            SetStatus("已应用效果修改。", false);
+            SetStatus(LocalizationService.Get("ui.card_editor.effect_updated", "Effect update applied."), false);
         }
         catch (Exception ex)
         {
-            SetStatus($"效果更新失败：{ex.Message}", true);
+            SetStatus(LocalizationService.Format("ui.card_editor.effect_update_failed", "Effect update failed: {0}", ex.Message), true);
         }
     }
 
@@ -406,18 +510,32 @@ public partial class CardEditorScene : Control
         var keyword = _searchEdit.Text.Trim();
         foreach (var pair in _catalog.Cards.Select((c, i) => (Card: c, Index: i)))
         {
+            var localizedName = LocalizationService.Get($"card.{pair.Card.Id}.name", pair.Card.Name);
             if (!string.IsNullOrEmpty(keyword)
                 && !pair.Card.Id.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                && !pair.Card.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                && !pair.Card.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                && !localizedName.Contains(keyword, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
             _filteredCardIndexes.Add(pair.Index);
-            _cardList.AddItem($"{pair.Card.Id} · {pair.Card.Name} [{pair.Card.Kind}] Cost {pair.Card.Cost}");
+            _cardList.AddItem(LocalizationService.Format(
+                "ui.card_editor.card_entry",
+                "{0} - {1} [{2}] Cost {3}",
+                pair.Card.Id,
+                localizedName,
+                pair.Card.Kind,
+                pair.Card.Cost));
         }
 
-        _summaryLabel.Text = $"共 {_catalog.Cards.Count} 张卡，展示 {_filteredCardIndexes.Count} 张。starterDeck: {_catalog.StarterDeck.Count}，rewardPool: {_catalog.RewardPool.Count}";
+        _summaryLabel.Text = LocalizationService.Format(
+            "ui.card_editor.summary",
+            "Cards: {0} total, showing {1}. starterDeck: {2}, rewardPool: {3}",
+            _catalog.Cards.Count,
+            _filteredCardIndexes.Count,
+            _catalog.StarterDeck.Count,
+            _catalog.RewardPool.Count);
     }
 
     private void RefreshEffectList()
@@ -432,7 +550,17 @@ public partial class CardEditorScene : Control
         for (var i = 0; i < card.Effects.Count; i++)
         {
             var effect = card.Effects[i];
-            _effectList.AddItem($"#{i + 1} {effect.Type} -> {effect.Target} x{effect.Repeat} amount:{effect.Amount} bonus:{effect.FlatBonus}");
+            var effectType = LocalizationService.Get($"ui.card_effect_type.{effect.Type.ToLowerInvariant()}", effect.Type);
+            var effectTarget = LocalizationService.Get($"ui.card_effect_target.{effect.Target.ToLowerInvariant()}", effect.Target);
+            _effectList.AddItem(LocalizationService.Format(
+                "ui.card_editor.effect_item",
+                "#{0} {1} -> {2} x{3} amount:{4} bonus:{5}",
+                i + 1,
+                effectType,
+                effectTarget,
+                effect.Repeat,
+                effect.Amount,
+                effect.FlatBonus));
         }
 
         _effectsPreviewEdit.Text = JsonSerializer.Serialize(card.Effects, _jsonOptions);
@@ -452,8 +580,8 @@ public partial class CardEditorScene : Control
 
     private void PopulateEffectEditor(CardEffectEntryData effect)
     {
-        _effectTypeOption.Select(FindOptionIndex(_effectTypeOption, effect.Type));
-        _effectTargetOption.Select(FindOptionIndex(_effectTargetOption, effect.Target));
+        _effectTypeOption.Select(Array.IndexOf(Enum.GetNames<CardEffectType>(), effect.Type));
+        _effectTargetOption.Select(Array.IndexOf(Enum.GetNames<CardEffectTarget>(), effect.Target));
         _effectAmountSpin.Value = effect.Amount;
         _effectRepeatSpin.Value = effect.Repeat;
         _effectFlatBonusSpin.Value = effect.FlatBonus;
@@ -497,19 +625,6 @@ public partial class CardEditorScene : Control
 
         card = _catalog.Cards[_selectedCardIndex];
         return true;
-    }
-
-    private static int FindOptionIndex(OptionButton option, string text)
-    {
-        for (var i = 0; i < option.ItemCount; i++)
-        {
-            if (string.Equals(option.GetItemText(i), text, StringComparison.OrdinalIgnoreCase))
-            {
-                return i;
-            }
-        }
-
-        return 0;
     }
 
     private string BuildUniqueCardId(string baseId)
@@ -588,11 +703,16 @@ public partial class CardEditorScene : Control
         _validationLabel.Clear();
         if (errors.Count == 0)
         {
-            _validationLabel.Text = "✅ 当前无校验错误。";
+            _validationLabel.Text = LocalizationService.Get("ui.card_editor.validation_cleared", "Validation passed.");
             return;
         }
 
         _validationLabel.Text = string.Join("\n", errors.Select((error, i) => $"{i + 1}. {error}"));
+    }
+
+    private void OnLanguageChanged()
+    {
+        RefreshUiText();
     }
 
     private void OnBackPressed()

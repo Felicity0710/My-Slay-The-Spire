@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,32 +6,30 @@ public sealed class DeckPresetData
 {
     public string Id { get; }
     public string Name { get; }
-    public string NameZh { get; }
     public string Description { get; }
-    public string DescriptionZh { get; }
+    public string NameKey { get; }
+    public string DescriptionKey { get; }
     public IReadOnlyList<string> CardIds { get; }
 
     public DeckPresetData(
         string id,
         string name,
-        string nameZh,
         string description,
-        string descriptionZh,
+        string nameKey,
+        string descriptionKey,
         IReadOnlyList<string> cardIds)
     {
         Id = id;
         Name = name;
-        NameZh = nameZh;
         Description = description;
-        DescriptionZh = descriptionZh;
+        NameKey = nameKey;
+        DescriptionKey = descriptionKey;
         CardIds = cardIds;
     }
 
-    public string LocalizedName => LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans ? NameZh : Name;
+    public string LocalizedName => LocalizationService.Get(NameKey, Name);
 
-    public string LocalizedDescription => LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans
-        ? DescriptionZh
-        : Description;
+    public string LocalizedDescription => LocalizationService.Get(DescriptionKey, Description);
 }
 
 public static class DeckPresetCatalog
@@ -41,17 +39,17 @@ public static class DeckPresetCatalog
         new DeckPresetData(
             id: "starter",
             name: "Balanced Starter",
-            nameZh: "均衡起手",
             description: "Stable attack + block with simple scaling.",
-            descriptionZh: "攻防均衡，带基础成长。",
+            nameKey: "deck_preset.starter.name",
+            descriptionKey: "deck_preset.starter.description",
             cardIds: CardData.StarterDeckIds()),
 
         new DeckPresetData(
             id: "infinite_cycle",
             name: "Infinite Cycle",
-            nameZh: "无限循环",
             description: "Zero-cost draw/energy loop with explosive turn chains.",
-            descriptionZh: "0费抽牌回能循环，追求回合连锁爆发。",
+            nameKey: "deck_preset.infinite_cycle.name",
+            descriptionKey: "deck_preset.infinite_cycle.description",
             cardIds: new List<string>
             {
                 "spark_loop", "spark_loop", "spark_loop",
@@ -64,9 +62,9 @@ public static class DeckPresetCatalog
         new DeckPresetData(
             id: "infinite_fireball",
             name: "Infinite Fireball",
-            nameZh: "无限火球",
             description: "Multi-hit spell core, stacking energy then burst to finish.",
-            descriptionZh: "多段法术为核心，先攒能量再一回合爆发斩杀。",
+            nameKey: "deck_preset.infinite_fireball.name",
+            descriptionKey: "deck_preset.infinite_fireball.description",
             cardIds: new List<string>
             {
                 "infinite_fireball", "infinite_fireball",
@@ -79,9 +77,9 @@ public static class DeckPresetCatalog
         new DeckPresetData(
             id: "death_legion",
             name: "Death Legion",
-            nameZh: "亡灵军势",
             description: "Vulnerable spreading + sustain, overwhelms over long fights.",
-            descriptionZh: "群体易伤扩散 + 吸血续航，长线压制。",
+            nameKey: "deck_preset.death_legion.name",
+            descriptionKey: "deck_preset.death_legion.description",
             cardIds: new List<string>
             {
                 "grave_whisper", "grave_whisper",
@@ -94,9 +92,9 @@ public static class DeckPresetCatalog
         new DeckPresetData(
             id: "berserker_slam",
             name: "Berserker Slam",
-            nameZh: "狂战重击",
             description: "Strength stacking and heavy blows to end fights in a few turns.",
-            descriptionZh: "叠力量后连续重击，几回合内压垮敌人。",
+            nameKey: "deck_preset.berserker_slam.name",
+            descriptionKey: "deck_preset.berserker_slam.description",
             cardIds: new List<string>
             {
                 "war_cry", "war_cry",
@@ -109,9 +107,9 @@ public static class DeckPresetCatalog
         new DeckPresetData(
             id: "fortress_control",
             name: "Fortress Control",
-            nameZh: "壁垒控制",
             description: "High defense core with block conversion and delayed finishing damage.",
-            descriptionZh: "高格挡体系，控节奏后用盾击与AOE收尾。",
+            nameKey: "deck_preset.fortress_control.name",
+            descriptionKey: "deck_preset.fortress_control.description",
             cardIds: new List<string>
             {
                 "fortress_stance", "fortress_stance",
@@ -124,9 +122,9 @@ public static class DeckPresetCatalog
         new DeckPresetData(
             id: "storm_engine",
             name: "Storm Engine",
-            nameZh: "风暴引擎",
             description: "Draw + energy machine that loops Chain Lightning and Arcane Barrage.",
-            descriptionZh: "抽牌回能引擎，循环连锁闪电与奥术弹幕。",
+            nameKey: "deck_preset.storm_engine.name",
+            descriptionKey: "deck_preset.storm_engine.description",
             cardIds: new List<string>
             {
                 "chain_lightning", "chain_lightning",

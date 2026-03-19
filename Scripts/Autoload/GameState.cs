@@ -378,12 +378,12 @@ public partial class GameState : Node
     {
         return type switch
         {
-            MapNodeType.NormalBattle => "Battle",
-            MapNodeType.EliteBattle => "Elite",
-            MapNodeType.Event => "Event",
-            MapNodeType.Rest => "Rest",
-            MapNodeType.Shop => "Shop",
-            _ => "Unknown"
+            MapNodeType.NormalBattle => LocalizationService.Get("map.node.normal", "Normal") ,
+            MapNodeType.EliteBattle => LocalizationService.Get("map.node.elite", "Elite") ,
+            MapNodeType.Event => LocalizationService.Get("map.node.event", "Event") ,
+            MapNodeType.Rest => LocalizationService.Get("map.node.rest", "Rest") ,
+            MapNodeType.Shop => LocalizationService.Get("map.node.shop", "Shop") ,
+            _ => LocalizationService.Get("map.node.unknown", "Unknown")
         };
     }
 
@@ -391,12 +391,12 @@ public partial class GameState : Node
     {
         return type switch
         {
-            MapNodeType.NormalBattle => "⚔",
-            MapNodeType.EliteBattle => "☠",
-            MapNodeType.Event => "?",
-            MapNodeType.Rest => "✚",
-            MapNodeType.Shop => "$",
-            _ => "·"
+            MapNodeType.NormalBattle => LocalizationService.Get("map.node_symbol.normal", "\u2694") ,
+            MapNodeType.EliteBattle => LocalizationService.Get("map.node_symbol.elite", "\u2620") ,
+            MapNodeType.Event => LocalizationService.Get("map.node_symbol.event", "\u25c6") ,
+            MapNodeType.Rest => LocalizationService.Get("map.node_symbol.rest", "\u2665") ,
+            MapNodeType.Shop => LocalizationService.Get("map.node_symbol.shop", "$") ,
+            _ => LocalizationService.Get("map.node_symbol.unknown", "\uff1f")
         };
     }
 
