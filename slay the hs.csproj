@@ -6,13 +6,7 @@
     <RootNamespace>slaythehs</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="Data\cards.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Data\enemies.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Data\relics.json">
+    <Content Include="Data\**\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Scenes\BattleScene.tscn" />
