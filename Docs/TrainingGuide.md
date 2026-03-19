@@ -17,6 +17,8 @@ $env:SLAY_THE_HS_PYTHON = 'C:\Path\To\python.exe'
 $env:SLAY_THE_HS_GODOT_EXE = 'C:\Path\To\Godot_v4.5.1-stable_mono_win64.exe'
 ```
 
+If you use VS Code with the Godot Tools extension, configure the Godot executable path in your local user/workspace settings instead of committing a machine-specific path into the repo.
+
 The Python wrappers use this priority:
 
 1. `SLAY_THE_HS_PYTHON`

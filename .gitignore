@@ -42,6 +42,7 @@ bld/
 # Rider
 .idea/
 *.sln.iml
+.codex/
 
 # User-specific files
 *.rsuser
