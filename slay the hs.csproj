@@ -30,5 +30,6 @@
   <ItemGroup>
     <Compile Remove="Tests\**\*.cs" />
     <Compile Remove=".godot\**\*.cs" />
+    <Compile Remove="Tools\SlayHs.Agent\**\*.cs" />
   </ItemGroup>
 </Project>

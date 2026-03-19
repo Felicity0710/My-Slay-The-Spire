@@ -42,6 +42,7 @@ bld/
 # Rider
 .idea/
 *.sln.iml
+.codex/
 
 # User-specific files
 *.rsuser
@@ -82,6 +83,17 @@ Desktop.ini
 
 # Logs
 *.log
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Training artifacts
+Tools/python/checkpoints/
+Tools/python/replays/
+
+# Local temp build config
+tempappdata/
 
 
 

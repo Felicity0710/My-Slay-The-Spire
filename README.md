@@ -7,6 +7,37 @@ https://github.com/user-attachments/assets/62f93228-8809-45c3-a432-a451aba46220
 之前自学游戏引擎unity ue什么的，真的，想要实现类似的逻辑，真的要花好久好久好久，  
 理解底层机制，逻辑编写，ui布局才能上手，起码几个月出去了，这个直接一天搞定，唯有震撼。
 
+## 快速开始
+
+如果你是刚 clone 下来，先看训练和运行说明：
+
+- 训练流程文档: [Docs/TrainingGuide.md](Docs/TrainingGuide.md)
+- Python 控制层说明: [Tools/python/README.md](Tools/python/README.md)
+- MCP / Agent 说明: [Tools/AGENT_CONTROL.md](Tools/AGENT_CONTROL.md)
+
+最短跑通路径：
+
+1. 安装 Python 3、.NET SDK、Godot Mono
+2. 在项目根目录执行 `powershell -ExecutionPolicy Bypass -File .\build.ps1`
+3. 用 Godot 运行游戏
+4. 采样: `powershell -ExecutionPolicy Bypass -File .\Tools\run-rollout.ps1`
+5. 训练: `powershell -ExecutionPolicy Bypass -File .\Tools\run-training-stage1.ps1 -Replay`
+6. 评估: `powershell -ExecutionPolicy Bypass -File .\Tools\run-eval.ps1 -Policy tabular`
+
+注意：
+
+- 训练、评估、bot 控制前，必须先把游戏运行起来；Python 脚本会连接本地 bridge `127.0.0.1:47077`
+- 如果新开的 PowerShell 里 `python --version` 失败，可以先设置 `SLAY_THE_HS_PYTHON`
+
+```powershell
+$env:SLAY_THE_HS_PYTHON = 'C:\Path\To\python.exe'
+```
+
+常见报错：
+
+- `ConnectionRefusedError` / 无法连接 `127.0.0.1:47077`：通常是游戏没开，或者 bridge 端口不是默认值
+- `python` 找不到：重开 PowerShell 后再试，或者按上面设置 `SLAY_THE_HS_PYTHON`
+
 
 ## godot 4.5.1
 因为godot场景等都是可以文本diff，ai友好，我愿称之为ai native game engine  

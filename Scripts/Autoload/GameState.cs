@@ -5,7 +5,7 @@ using System.Linq;
 
 public partial class GameState : Node
 {
-    private readonly Random _rng = new();
+    private Random _rng = new();
 
     private const int MapWidth = 5;
     private const int MapRows = 8;
@@ -15,6 +15,8 @@ public partial class GameState : Node
     public int Floor { get; private set; } = 1;
     public int BattlesWon { get; private set; }
     public int PotionCharges { get; private set; }
+    public string CurrentUiPhase { get; private set; } = "main_menu";
+    public bool ExternalFastMode { get; private set; }
 
     public List<string> DeckCardIds { get; } = new();
     public List<string> RelicIds { get; } = new();
@@ -41,6 +43,7 @@ public partial class GameState : Node
 
     public void StartNewRun()
     {
+        SetUiPhase("map");
         MaxHp = 80;
         PlayerHp = 80;
         Floor = 1;
@@ -98,13 +101,85 @@ public partial class GameState : Node
 
     public void StartBattleTestRun(string? presetId = null)
     {
-        if (!string.IsNullOrWhiteSpace(presetId))
+        StartBattleTestRun(presetId, null, null, null, null);
+    }
+
+    public void StartBattleTestRun(string? presetId, string? encounterType, int? floorOverride, int? seed, bool? randomized)
+    {
+        ResetRandom(seed);
+        var useRandomizedScenario = randomized ?? (string.IsNullOrWhiteSpace(presetId) && string.IsNullOrWhiteSpace(encounterType) && !floorOverride.HasValue);
+        var resolvedPresetId = !string.IsNullOrWhiteSpace(presetId)
+            ? DeckPresetCatalog.Resolve(presetId).Id
+            : useRandomizedScenario ? ChooseRandomBattleTestPresetId() : SelectedDeckPresetId;
+
+        if (!string.IsNullOrWhiteSpace(resolvedPresetId))
         {
-            SetDeckPreset(presetId);
+            SetDeckPreset(resolvedPresetId);
         }
 
         StartNewRun();
-        BeginEncounter(MapNodeType.NormalBattle);
+        Floor = floorOverride.HasValue && floorOverride.Value > 0
+            ? floorOverride.Value
+            : useRandomizedScenario ? _rng.Next(1, MapRows + 1) : 1;
+
+        var resolvedEncounterType = ResolveBattleTestEncounterType(encounterType, useRandomizedScenario);
+        SetUiPhase("battle");
+        BeginEncounter(resolvedEncounterType);
+    }
+
+    public void SetUiPhase(string phase)
+    {
+        CurrentUiPhase = string.IsNullOrWhiteSpace(phase) ? "unknown" : phase.Trim().ToLowerInvariant();
+    }
+
+    public void SetExternalFastMode(bool enabled)
+    {
+        ExternalFastMode = enabled;
+    }
+
+    private void ResetRandom(int? seed)
+    {
+        _rng = seed.HasValue ? new Random(seed.Value) : new Random();
+    }
+
+    private string ChooseRandomBattleTestPresetId()
+    {
+        var presets = DeckPresets();
+        if (presets.Count == 0)
+        {
+            return "starter";
+        }
+
+        return presets[_rng.Next(presets.Count)].Id;
+    }
+
+    private MapNodeType ResolveBattleTestEncounterType(string? encounterType, bool randomized)
+    {
+        if (!string.IsNullOrWhiteSpace(encounterType))
+        {
+            var normalized = encounterType.Trim();
+            if (string.Equals(normalized, "normal", StringComparison.OrdinalIgnoreCase))
+            {
+                return MapNodeType.NormalBattle;
+            }
+
+            if (string.Equals(normalized, "elite", StringComparison.OrdinalIgnoreCase))
+            {
+                return MapNodeType.EliteBattle;
+            }
+
+            if (Enum.TryParse<MapNodeType>(normalized, true, out var parsed))
+            {
+                return parsed;
+            }
+        }
+
+        if (!randomized)
+        {
+            return MapNodeType.NormalBattle;
+        }
+
+        return _rng.NextDouble() < 0.28 ? MapNodeType.EliteBattle : MapNodeType.NormalBattle;
     }
 
     private void ApplySelectedDeckPreset()

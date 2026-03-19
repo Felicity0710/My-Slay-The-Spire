@@ -49,6 +49,7 @@ public partial class MainMenu : Control
     {
         _gameNameLabel = GetNode<Label>("LeftMenu/Panel/Content/GameName");
         _taglineLabel = GetNode<Label>("LeftMenu/Panel/Content/Tagline");
+        GetNode<GameState>("/root/GameState").SetUiPhase("main_menu");
         _startButton = GetNode<Button>("%StartButton");
         _battleTestButton = GetNode<Button>("%BattleTestButton");
         _continueButton = GetNode<Button>("LeftMenu/Panel/Content/ContinueButton");

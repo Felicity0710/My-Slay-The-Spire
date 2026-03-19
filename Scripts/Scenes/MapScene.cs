@@ -17,6 +17,7 @@ public partial class MapScene : Control
     public override void _Ready()
     {
         _titleLabel = GetNode<Label>("Margin/VBox/Title");
+        GetNode<GameState>("/root/GameState").SetUiPhase("map");
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
@@ -303,6 +304,18 @@ public partial class MapScene : Control
     private void OnLanguageChanged()
     {
         RefreshUi();
+    }
+
+    public string? TryChooseNodeExternally(int column)
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        if (!state.CanChooseMapNode(state.CurrentMapRow, column))
+        {
+            return $"Map column {column} is not selectable right now.";
+        }
+
+        OnNodePressed(column);
+        return null;
     }
 
     private void OnMenuPressed()
