@@ -1,92 +1,92 @@
-# Training Guide
+# 训练指南
 
-This guide is for a fresh clone of the repository. It covers the shortest path from setup to rollout collection, training, replay, and evaluation.
+这份指南面向刚 clone 仓库的新用户，覆盖从环境准备、采样、训练、回放到评估的最短可执行路径。
 
-## Prerequisites
+## 前置要求
 
 - Windows PowerShell
-- .NET 8 SDK for the main Godot project and training flow
-- .NET 9 SDK if you also want to run `Tools\SlayHs.Agent` as MCP or bot
-- Python 3.11+ available as `python` in `PATH`
+- 主游戏和训练流程需要 .NET 8 SDK
+- 如果还要运行 `Tools\SlayHs.Agent` 作为 MCP 或 bot，还需要 .NET 9 SDK
+- Python 3.11+，并且可以通过 `python` 在 `PATH` 中访问
 - Godot 4.5.1 Mono
 
-Optional overrides:
+可选的环境变量覆盖：
 
 ```powershell
 $env:SLAY_THE_HS_PYTHON = 'C:\Path\To\python.exe'
 $env:SLAY_THE_HS_GODOT_EXE = 'C:\Path\To\Godot_v4.5.1-stable_mono_win64.exe'
 ```
 
-If you use VS Code with the Godot Tools extension, configure the Godot executable path in your local user/workspace settings instead of committing a machine-specific path into the repo.
+如果你使用 VS Code 配合 Godot Tools 插件，请在你自己的本地 user/workspace settings 中配置 Godot 可执行文件路径，不要把机器相关的绝对路径提交进仓库。
 
-The Python wrappers use this priority:
+Python wrapper 的解释器查找优先级如下：
 
 1. `SLAY_THE_HS_PYTHON`
 2. `python`
 3. `py -3`
 
-## Quick Start
+## 快速开始
 
-Open a PowerShell window in the repo root:
+先在仓库根目录打开一个 PowerShell：
 
 ```powershell
 cd C:\path\to\slay-the-hs
 ```
 
-Build the C# project once:
+先构建一次主 C# 项目：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-This builds the main Godot C# project. It does not require the separate .NET 9 SDK unless you also plan to run the MCP sidecar in `Tools\SlayHs.Agent`.
+这一步构建的是主 Godot C# 项目。除非你还要运行 `Tools\SlayHs.Agent`，否则不需要额外的 .NET 9 SDK。
 
-Run the game from Godot. The game starts a local TCP bridge on `127.0.0.1:47077`.
+然后用 Godot 运行游戏。游戏启动后会在本地打开 TCP bridge：`127.0.0.1:47077`。
 
-## Verify The Bridge
+## 验证 Bridge 是否可用
 
-After the game is running, test the control loop with a simple bot:
+游戏运行后，可以先用一个简单 bot 测试控制链路：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\run-python-bot.ps1
 ```
 
-If the bot can act in the game, the bridge is working and training scripts can connect.
+如果 bot 能在游戏里正常行动，说明 bridge 是通的，训练脚本也可以连上。
 
-## Stage 1: Collect Rule-Bot Rollouts
+## 第 1 阶段：采集 Rule Bot Rollout
 
-Collect a first dataset:
+先采一份基础数据集：
 
 ```powershell
 python .\Tools\python\training\rollout.py --episodes 50 --steps 200 --output .\Tools\python\replays\battle_rule_rollouts.jsonl
 ```
 
-Expected output:
+预期输出：
 
-- per-episode progress logs
-- a dataset file at `Tools\python\replays\battle_rule_rollouts.jsonl`
+- 每局的进度日志
+- 在 `Tools\python\replays\battle_rule_rollouts.jsonl` 生成一份采样数据
 
-You can also use the stage-1 wrapper:
+你也可以直接使用封装好的 stage-1 wrapper：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\run-training-stage1.ps1 -Episodes 50
 ```
 
-## Stage 1: Train Tabular BC
+## 第 1 阶段：训练 Tabular BC
 
-Train the baseline behavior-cloning policy:
+训练基线版行为克隆策略：
 
 ```powershell
 python .\Tools\python\training\train_bc.py --dataset .\Tools\python\replays\battle_rule_rollouts.jsonl --output .\Tools\python\checkpoints\battle_bc_policy.json
 ```
 
-Replay it:
+回放它：
 
 ```powershell
 python .\Tools\python\training\run_bc_policy.py --policy .\Tools\python\checkpoints\battle_bc_policy.json --steps 200
 ```
 
-Or run collection + tabular training + replay in one command:
+如果你想一步跑完“采样 + tabular 训练 + 回放”，可以直接用：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\run-training-stage1.ps1 -Episodes 50 -Replay
@@ -94,35 +94,35 @@ powershell -ExecutionPolicy Bypass -File .\Tools\run-training-stage1.ps1 -Episod
 
 ## Neural BC
 
-Train a small neural policy from the same rollout file:
+基于同一份 rollout 数据训练一个小型神经网络策略：
 
 ```powershell
 python .\Tools\python\training\train_nn_bc.py --dataset .\Tools\python\replays\battle_rule_rollouts.jsonl --epochs 12 --hidden 64
 ```
 
-Replay it:
+回放它：
 
 ```powershell
 python .\Tools\python\training\run_nn_bc_policy.py --policy .\Tools\python\checkpoints\battle_nn_bc_policy.json --steps 200
 ```
 
-## PPO-lite Fine-Tuning
+## PPO-lite 微调
 
-Fine-tune from the neural BC checkpoint:
+以 neural BC checkpoint 为初始策略继续做 PPO-lite 微调：
 
 ```powershell
 python .\Tools\python\training\train_ppo_lite.py --init-policy .\Tools\python\checkpoints\battle_nn_bc_policy.json --epochs 6 --episodes-per-epoch 10
 ```
 
-Replay it:
+回放它：
 
 ```powershell
 python .\Tools\python\training\run_ppo_lite_policy.py --policy .\Tools\python\checkpoints\battle_ppo_lite_policy.json --steps 200
 ```
 
-## Evaluate Policies
+## 策略评估
 
-Use the same seed range when comparing policies:
+比较不同策略时，尽量使用同一批 seeds：
 
 ```powershell
 python .\Tools\python\training\evaluate_battle_policies.py --policy rule --episodes 20 --seed-base 1000
@@ -131,19 +131,19 @@ python .\Tools\python\training\evaluate_battle_policies.py --policy nn --episode
 python .\Tools\python\training\evaluate_battle_policies.py --policy ppo --episodes 20 --seed-base 1000
 ```
 
-You can also write a JSON report:
+也可以把评估结果写成 JSON 报告：
 
 ```powershell
 python .\Tools\python\training\evaluate_battle_policies.py --policy nn --episodes 50 --seed-base 1000 --output .\Tools\python\reports\nn_eval.json
 ```
 
-## Multi-Instance Sampling
+## 多实例采样
 
-The Python client already supports `SLAY_THE_HS_BRIDGE_PORT`. To collect in parallel:
+Python client 已经支持 `SLAY_THE_HS_BRIDGE_PORT`。如果你想并行采样：
 
-1. Start one game instance on the default bridge port `47077`.
-2. Start another instance configured to use `47078`.
-3. Run:
+1. 启动第一个游戏实例，使用默认端口 `47077`
+2. 启动第二个游戏实例，配置成 `47078`
+3. 运行：
 
 ```powershell
 python .\Tools\python\training\parallel_rollout.py --ports 47077,47078 --episodes 60
@@ -151,36 +151,36 @@ python .\Tools\python\training\parallel_rollout.py --ports 47077,47078 --episode
 
 ## MCP Server
 
-If you want the MCP sidecar instead of Python training, run:
+如果你要跑的是 MCP sidecar，而不是 Python 训练流程，可以用：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Tools\run-agent.ps1 -Mode mcp
 ```
 
-`Tools\SlayHs.Agent` targets `.NET 9`, so install the .NET 9 SDK before using this command.
+`Tools\SlayHs.Agent` 的 target 是 `.NET 9`，所以使用这个命令前请先安装 .NET 9 SDK。
 
-## Export
+## 导出
 
-If `godot.exe` is not on `PATH`, point the export script at it:
+如果 `godot.exe` 不在 `PATH` 里，可以先给导出脚本指定 Godot 路径：
 
 ```powershell
 $env:SLAY_THE_HS_GODOT_EXE = 'C:\Path\To\Godot_v4.5.1-stable_mono_win64.exe'
 .\Tools\export_windows_clean.bat
 ```
 
-You can also pass the executable directly:
+也可以直接把 Godot 可执行文件路径作为参数传进去：
 
 ```powershell
 .\Tools\export_windows_clean.bat "C:\Path\To\Godot_v4.5.1-stable_mono_win64.exe"
 ```
 
-## Common Failures
+## 常见错误
 
-- `python` not found:
-  Install Python, reopen PowerShell, and re-run `python --version`.
-- bridge connection refused:
-  Start the game first and confirm it is running locally.
-- model checkpoint not found:
-  Train the matching stage first, or pass `--policy` / `--init-policy` explicitly.
-- Godot export failed:
-  Set `SLAY_THE_HS_GODOT_EXE` or pass the Godot executable path to the export script.
+- `python` 找不到：
+  安装 Python 后，重新打开 PowerShell，再运行 `python --version`
+- bridge 连接被拒绝：
+  先确认游戏已经启动，并且本地 bridge 正在运行
+- model checkpoint 不存在：
+  先训练对应阶段的模型，或者显式传 `--policy` / `--init-policy`
+- Godot 导出失败：
+  设置 `SLAY_THE_HS_GODOT_EXE`，或者直接给导出脚本传 Godot 路径
