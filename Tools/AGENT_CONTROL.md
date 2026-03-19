@@ -7,6 +7,13 @@ This repo now exposes two layers for external control:
    - an MCP server over stdio
    - a simple rule-based bot
 
+## Requirements
+
+- Run the Godot game first so the in-game bridge is available
+- Install the .NET 9 SDK for `Tools/SlayHs.Agent`
+
+The main game project itself targets .NET 8 on desktop, but the standalone agent project targets `.NET 9`.
+
 ## Start The Game
 
 Run the Godot project first so the in-game bridge is available.

@@ -14,17 +14,23 @@ Files:
 
 ## Run With Your Python
 
-If `python` is not visible in the current terminal session, use the absolute interpreter path:
+If `python` is available in your terminal, use it directly:
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\simple_bot.py
+python Tools\python\simple_bot.py
 ```
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\example_loop.py
+python Tools\python\example_loop.py
 ```
 
-Or use the wrapper script:
+If your interpreter is not on `PATH`, point the wrappers at it once:
+
+```powershell
+$env:SLAY_THE_HS_PYTHON = 'C:\Path\To\python.exe'
+```
+
+Or use the wrapper script, which now auto-resolves `python`, falls back to `py -3`, and supports `SLAY_THE_HS_PYTHON`:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File Tools\run-python-bot.ps1
@@ -57,17 +63,23 @@ The first stage is `battle_only`:
 
 1. Collect rule-bot rollouts
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\rollout.py --episodes 50
+python Tools\python\training\rollout.py --episodes 50
 ```
 
 2. Train a lightweight tabular behavior-cloning policy
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\train_bc.py
+python Tools\python\training\train_bc.py
 ```
 
 3. Replay the cloned policy
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\run_bc_policy.py
+python Tools\python\training\run_bc_policy.py
+```
+
+Or run the whole stage with one wrapper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File Tools\run-training-stage1.ps1 -Episodes 50 -Replay
 ```
 
 ## Neural BC Upgrade
@@ -76,24 +88,18 @@ After you have rollout data, you can train a small neural policy without install
 
 1. Train the tiny MLP BC model
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\train_nn_bc.py --epochs 12 --hidden 64
+python Tools\python\training\train_nn_bc.py --epochs 12 --hidden 64
 ```
 
 You can also try a larger or deeper model:
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\train_nn_bc.py --epochs 12 --hidden 128 --hidden2 128
+python Tools\python\training\train_nn_bc.py --epochs 12 --hidden 128 --hidden2 128
 ```
 
 2. Replay the neural policy
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\run_nn_bc_policy.py
-```
-
-Or run the whole stage with one wrapper:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File Tools\run-training-stage1.ps1 -Episodes 50 -Replay
+python Tools\python\training\run_nn_bc_policy.py
 ```
 
 This first-stage BC policy is intentionally simple. It proves out:
@@ -136,25 +142,25 @@ The next logical upgrade is replacing the tabular BC policy with a neural policy
 You can now compare policies on repeated `battle_test` runs:
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\evaluate_battle_policies.py --policy rule --episodes 10
+python Tools\python\training\evaluate_battle_policies.py --policy rule --episodes 10
 ```
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\evaluate_battle_policies.py --policy tabular --episodes 10
+python Tools\python\training\evaluate_battle_policies.py --policy tabular --episodes 10
 ```
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\evaluate_battle_policies.py --policy nn --episodes 10
+python Tools\python\training\evaluate_battle_policies.py --policy nn --episodes 10
 ```
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\evaluate_battle_policies.py --policy ppo --episodes 10
+python Tools\python\training\evaluate_battle_policies.py --policy ppo --episodes 10
 ```
 
 For apples-to-apples comparisons across policies, run the evaluator with a fixed seed range:
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\evaluate_battle_policies.py --policy nn --episodes 50 --seed-base 1000
+python Tools\python\training\evaluate_battle_policies.py --policy nn --episodes 50 --seed-base 1000
 ```
 
 ## PPO-lite Fine-Tuning
@@ -162,13 +168,13 @@ For apples-to-apples comparisons across policies, run the evaluator with a fixed
 After training `battle_nn_bc_policy.json`, you can fine-tune it with PPO-lite:
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\train_ppo_lite.py --epochs 6 --episodes-per-epoch 10
+python Tools\python\training\train_ppo_lite.py --epochs 6 --episodes-per-epoch 10
 ```
 
 Replay it with:
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\run_ppo_lite_policy.py
+python Tools\python\training\run_ppo_lite_policy.py
 ```
 
 This prints per-episode results and a final summary including:
@@ -197,7 +203,7 @@ $env:SLAY_THE_HS_BRIDGE_PORT=47078
 Launch the second instance. After that, you can collect rollouts in parallel:
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\parallel_rollout.py --ports 47077,47078 --episodes 60
+python Tools\python\training\parallel_rollout.py --ports 47077,47078 --episodes 60
 ```
 
 All major training and evaluation scripts also support `--host`, `--port`, and `--fast-mode` / `--no-fast-mode`.
@@ -205,5 +211,5 @@ All major training and evaluation scripts also support `--host`, `--port`, and `
 If you want an externally controlled run to play at normal speed instead of fast mode, pass `--no-fast-mode`:
 
 ```powershell
-& 'C:\Users\Administrator\AppData\Local\Python\pythoncore-3.14-64\python.exe' Tools\python\training\evaluate_battle_policies.py --policy nn --episodes 1 --no-fast-mode
+python Tools\python\training\evaluate_battle_policies.py --policy nn --episodes 1 --no-fast-mode
 ```
