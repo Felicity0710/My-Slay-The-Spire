@@ -237,24 +237,45 @@ public sealed class CardData
             normalized = $"res://{normalized.TrimStart('/', '\\')}";
         }
 
-        if (ResourceLoader.Exists(normalized))
+        if (TryResourceExists(normalized))
         {
             return normalized;
         }
 
         var fallbackById = $"{DefaultArtFolder}/{id}.png";
-        if (ResourceLoader.Exists(fallbackById))
+        if (TryResourceExists(fallbackById))
         {
             return fallbackById;
         }
 
         var placeholder = "res://Assets/Cards/placeholder.svg";
-        if (ResourceLoader.Exists(placeholder))
+        if (TryResourceExists(placeholder))
         {
             return placeholder;
         }
 
         return DefaultArtPath;
+    }
+
+    private static bool TryResourceExists(string path)
+    {
+        if (string.Equals(
+            System.Environment.GetEnvironmentVariable("SLAY_HS_SKIP_GODOT_RESOURCE_CHECKS"),
+            "1",
+            StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        try
+        {
+            return ResourceLoader.Exists(path);
+        }
+        catch
+        {
+            // Console tests can construct CardData before Godot is initialized.
+            return false;
+        }
     }
 
     private sealed class CardCatalog
@@ -385,4 +406,3 @@ public static class LocalizationSettings
             .Replace("damage", "[color=#fda4af]damage[/color]");
     }
 }
-

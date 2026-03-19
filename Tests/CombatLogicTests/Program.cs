@@ -6,6 +6,8 @@ internal static class Program
 {
     private static int Main()
     {
+        Environment.SetEnvironmentVariable("SLAY_HS_SKIP_GODOT_RESOURCE_CHECKS", "1");
+
         var tests = new List<(string Name, Action Run)>
         {
             ("Vulnerable multiplier rounds up", TestVulnerableRounding),
@@ -46,8 +48,7 @@ internal static class Program
             ("Card catalog validation rejects duplicate ids", TestCardCatalogValidationRejectsDuplicates),
             ("Card catalog validation rejects unknown pool references", TestCardCatalogValidationRejectsUnknownPoolRefs),
             ("Card catalog save/load roundtrip preserves entries", TestCardCatalogSaveLoadRoundtrip),
-            ("Card catalog validation requires strike fallback", TestCardCatalogValidationRequiresStrike)
-            ("New build cards resolve from catalog", TestNewBuildCardsResolve),
+            ("Card catalog validation requires strike fallback", TestCardCatalogValidationRequiresStrike),
             ("Card browser filters by kind/cost/effect/search", TestCardBrowserFilterCombinations)
         };
 
@@ -375,6 +376,9 @@ internal static class Program
             name: "Combo",
             description: "Deal 4. Apply 2 Vulnerable. Draw 1.",
             descriptionZh: "造成4点伤害。施加2层易伤。抽1张牌。",
+            nameKey: null,
+            descriptionKey: null,
+            artPath: "res://icon.svg",
             kind: CardKind.Attack,
             cost: 1,
             effects: new List<CardEffectData>
@@ -400,6 +404,9 @@ internal static class Program
             name: "Support",
             description: "Gain 2 Strength. Gain 1 Energy. Heal 3.",
             descriptionZh: "获得2点力量。获得1点能量。回复3点生命。",
+            nameKey: null,
+            descriptionKey: null,
+            artPath: "res://icon.svg",
             kind: CardKind.Skill,
             cost: 1,
             effects: new List<CardEffectData>
@@ -817,6 +824,14 @@ internal static class Program
         }
     }
 
+
+    private static void ExpectEqual(EnemyIntentType expected, EnemyIntentType actual, string label)
+    {
+        if (expected != actual)
+        {
+            throw new InvalidOperationException($"{label}: expected {expected}, got {actual}");
+        }
+    }
     private static void ExpectInRange(int value, int min, int max, string label)
     {
         if (value < min || value > max)

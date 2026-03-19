@@ -100,6 +100,23 @@ public static class LocalizationService
 
     private static string GetAbsoluteResourcePath(string relativeToRes)
     {
+        if (string.Equals(
+            System.Environment.GetEnvironmentVariable("SLAY_HS_SKIP_GODOT_RESOURCE_CHECKS"),
+            "1",
+            StringComparison.Ordinal))
+        {
+            var normalized = relativeToRes.Replace('\\', Path.DirectorySeparatorChar);
+            var baseDir = AppContext.BaseDirectory;
+            var direct = Path.Combine(baseDir, normalized);
+            if (File.Exists(direct))
+            {
+                return direct;
+            }
+
+            var projectRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", ".."));
+            return Path.Combine(projectRoot, normalized);
+        }
+
         return ProjectSettings.GlobalizePath($"res://{relativeToRes.Replace('\\', '/')}");
     }
 
