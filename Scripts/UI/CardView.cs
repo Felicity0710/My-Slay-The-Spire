@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Threading.Tasks;
 
+[Tool]
 public partial class CardView : PanelContainer
 {
     private Label _nameLabel = null!;
@@ -25,6 +26,7 @@ public partial class CardView : PanelContainer
     private bool _lockPositionWhileDragging;
     private bool _useTopLevel = true;
     private bool _dragEnabled = true;
+    private float _pivotYOffsetFactor = 0.88f;
     private static readonly System.Collections.Generic.Dictionary<string, Texture2D> ArtCache = new();
 
     public bool IsDragging => _dragging;
@@ -48,6 +50,17 @@ public partial class CardView : PanelContainer
         BuildUi();
         MouseFilter = MouseFilterEnum.Stop;
         TopLevel = _useTopLevel;
+        if (!_useTopLevel)
+        {
+            LayoutMode = 0;
+            SetAnchorsPreset(LayoutPreset.TopLeft);
+            AnchorRight = 0f;
+            AnchorBottom = 0f;
+            OffsetLeft = 0f;
+            OffsetTop = 0f;
+            OffsetRight = CustomMinimumSize.X;
+            OffsetBottom = CustomMinimumSize.Y;
+        }
         LocalizationSettings.LanguageChanged += RefreshText;
         Size = CustomMinimumSize;
         SetProcessInput(true);
@@ -79,12 +92,29 @@ public partial class CardView : PanelContainer
         if (IsInsideTree())
         {
             TopLevel = _useTopLevel;
+            if (!_useTopLevel)
+            {
+                LayoutMode = 0;
+                SetAnchorsPreset(LayoutPreset.TopLeft);
+                AnchorRight = 0f;
+                AnchorBottom = 0f;
+                OffsetLeft = 0f;
+                OffsetTop = 0f;
+                OffsetRight = CustomMinimumSize.X;
+                OffsetBottom = CustomMinimumSize.Y;
+            }
         }
     }
 
     public void SetDragEnabled(bool enabled)
     {
         _dragEnabled = enabled;
+    }
+
+    public void SetPivotYOffsetFactor(float factor)
+    {
+        _pivotYOffsetFactor = factor;
+        ApplyPivotOffset();
     }
 
     public void Setup(CardData card)
@@ -127,6 +157,16 @@ public partial class CardView : PanelContainer
     {
         _playable = playable;
         UpdateModulate();
+    }
+
+    public void ApplyGlobalPositionDelta(Vector2 delta)
+    {
+        _homeGlobalPosition += delta;
+        _targetGlobalPosition += delta;
+        if (!_dragging)
+        {
+            GlobalPosition += delta;
+        }
     }
 
     public void SetFocusState(bool focused, bool dimmed)
@@ -228,6 +268,11 @@ public partial class CardView : PanelContainer
         if (Size != CustomMinimumSize)
         {
             Size = CustomMinimumSize;
+        }
+
+        if (!_useTopLevel)
+        {
+            return;
         }
 
         if (_dragging || _manualAnimating)
@@ -376,6 +421,7 @@ public partial class CardView : PanelContainer
     private void BuildUi()
     {
         CustomMinimumSize = new Vector2(190, 250);
+        ApplyPivotOffset();
 
         var style = new StyleBoxFlat
         {
@@ -462,6 +508,12 @@ public partial class CardView : PanelContainer
         vbox.AddChild(_descLabel);
 
         RefreshText();
+    }
+
+    private void ApplyPivotOffset()
+    {
+        // Rotate around the lower middle of the card so the hand fans out naturally.
+        PivotOffset = new Vector2(CustomMinimumSize.X * 0.5f, CustomMinimumSize.Y * _pivotYOffsetFactor);
     }
 
     private void RefreshText()

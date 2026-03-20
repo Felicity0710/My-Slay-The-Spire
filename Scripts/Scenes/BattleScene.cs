@@ -4,8 +4,70 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+[Tool]
 public partial class BattleScene : Control
 {
+    private readonly record struct HandCardPose(Vector2 LocalPosition, float RotationDegrees, Vector2 Scale, int ZIndex);
+    private readonly record struct HandDebugMarker(Vector2 CardCenter, Vector2 PivotCenter, int Index);
+
+    private sealed class HandDebugSnapshot
+    {
+        public Rect2 HandRect { get; init; }
+        public Vector2 CenterTop { get; init; }
+        public Vector2 CenterBottom { get; init; }
+        public Vector2 PivotCenter { get; init; }
+        public Vector2[] ArcPoints { get; init; } = Array.Empty<Vector2>();
+        public List<HandDebugMarker> Markers { get; init; } = new();
+        public string Info { get; init; } = string.Empty;
+    }
+
+    [Tool]
+    private sealed partial class HandDebugOverlay : Control
+    {
+        private HandDebugSnapshot _snapshot = null;
+
+        public void SetSnapshot(HandDebugSnapshot snapshot)
+        {
+            _snapshot = snapshot;
+            Visible = snapshot != null;
+            QueueRedraw();
+        }
+
+        public override void _Draw()
+        {
+            if (_snapshot == null)
+            {
+                return;
+            }
+
+            DrawRect(_snapshot.HandRect, new Color(0.35f, 0.9f, 1f, 0.12f), false, 2f);
+            DrawLine(_snapshot.CenterTop, _snapshot.CenterBottom, new Color(0.2f, 1f, 0.45f, 0.9f), 2f);
+            DrawCircle(_snapshot.PivotCenter, 5f, new Color(0.2f, 1f, 0.45f, 1f));
+            if (_snapshot.ArcPoints.Length >= 2)
+            {
+                DrawPolyline(_snapshot.ArcPoints, new Color(0.2f, 0.95f, 1f, 0.95f), 2f);
+            }
+
+            var font = ThemeDB.FallbackFont;
+            var fontSize = 12;
+            foreach (var marker in _snapshot.Markers)
+            {
+                DrawCircle(marker.CardCenter, 4f, new Color(1f, 0.28f, 0.28f, 1f));
+                DrawCircle(marker.PivotCenter, 4f, new Color(1f, 0.85f, 0.2f, 1f));
+                DrawLine(marker.CardCenter, marker.PivotCenter, new Color(1f, 0.75f, 0.2f, 0.55f), 1.5f);
+                if (font != null)
+                {
+                    DrawString(font, marker.PivotCenter + new Vector2(8f, -8f), marker.Index.ToString(), HorizontalAlignment.Left, -1f, fontSize, new Color(1f, 1f, 1f, 0.95f));
+                }
+            }
+
+            if (font != null && !string.IsNullOrEmpty(_snapshot.Info))
+            {
+                DrawString(font, _snapshot.HandRect.Position + new Vector2(10f, 18f), _snapshot.Info, HorizontalAlignment.Left, -1f, fontSize, new Color(0.92f, 0.98f, 1f, 0.95f));
+            }
+        }
+    }
+
     private enum EnemyAnimState
     {
         Idle,
@@ -15,6 +77,43 @@ public partial class BattleScene : Control
 
     private const int MaxEnergy = 3;
     private const int HandLimit = 10;
+    private const int HoveredHandZIndex = 100;
+
+    [ExportGroup("Hand Layout")]
+    [Export(PropertyHint.Range, "0,60,0.5")]
+    private float _handArcAngleMinDegrees = 9f;
+    [Export(PropertyHint.Range, "0,60,0.5")]
+    private float _handArcAngleMaxDegrees = 17f;
+    [Export(PropertyHint.Range, "200,3000,1")]
+    private float _handArcRadiusMin = 720f;
+    [Export(PropertyHint.Range, "200,3000,1")]
+    private float _handArcRadiusMax = 1080f;
+    [Export(PropertyHint.Range, "-20,20,0.1")]
+    private float _handArcPhaseOffsetDegrees = 0f;
+    [Export(PropertyHint.Range, "-400,400,1")]
+    private float _handArcCenterOffsetX = 0f;
+    [Export(PropertyHint.Range, "-80,120,1")]
+    private float _handBottomPadding = 6f;
+    [Export(PropertyHint.Range, "0.5,1.2,0.01")]
+    private float _handPivotYOffsetFactor = 0.92f;
+    [Export(PropertyHint.Range, "0,80,1")]
+    private float _handHoverLift = 34f;
+    [Export(PropertyHint.Range, "0,80,1")]
+    private float _handHoverNeighborPush = 24f;
+    [Export(PropertyHint.Range, "0,40,1")]
+    private float _handHoverSecondaryPush = 10f;
+
+    [ExportGroup("Editor Preview")]
+    [Export]
+    private bool _editorPreviewHand = true;
+    [Export(PropertyHint.Range, "1,10,1")]
+    private int _editorPreviewCardCount = 5;
+    [Export]
+    private string _editorPreviewCardIds = "meteor_shower,reaper_touch,bone_shrapnel,soul_siphon,phoenix_cycle";
+
+    [ExportGroup("Hand Debug")]
+    [Export]
+    private bool _showHandDebugOverlay = false;
 
     private readonly Random _rng = new();
     private readonly List<CardData> _drawPile = new();
@@ -126,15 +225,27 @@ public partial class BattleScene : Control
     private CardView _draggingCard = null!;
     private float _dragGuidePulseTime;
     private CanvasLayer _overlayCanvas = null!;
+    private HandDebugOverlay _handDebugOverlay = null!;
 
     private CardView _hoveredCard = null!;
     private GameState _state = null!;
     public Action<string> UiSfxRequested = _ => { };
     private bool IsFastMode => _state != null && _state.ExternalFastMode;
     private const float HoverSwitchDeadzone = 18f;
+    private string _editorPreviewSignature = string.Empty;
+    private bool _editorPreviewLayoutPending;
+    private bool _editorPreviewRefreshPending;
 
     public override void _Ready()
     {
+        EnsureOverlayCanvas();
+        EnsureHandDebugOverlay();
+        if (Engine.IsEditorHint())
+        {
+            SetupEditorPreview();
+            return;
+        }
+
         GetNode<GameState>("/root/GameState").SetUiPhase("battle");
         _enemyNameLabel = GetNode<Label>("%EnemyNameLabel");
         _enemyHpLabel = GetNode<Label>("%EnemyHpLabel");
@@ -167,8 +278,6 @@ public partial class BattleScene : Control
         _keywordTooltipText = GetNode<RichTextLabel>("%KeywordTooltipText");
         _enemyShadow = GetNode<ColorRect>("MainMargin/MainVBox/Arena/EnemyShadow");
         _playerShadow = GetNode<ColorRect>("MainMargin/MainVBox/Arena/PlayerShadow");
-        _overlayCanvas = new CanvasLayer { Layer = 20 };
-        AddChild(_overlayCanvas);
         _keywordTooltip.Reparent(_overlayCanvas);
         _keywordTooltip.TopLevel = false;
         _keywordTooltip.ZIndex = 100;
@@ -230,6 +339,14 @@ public partial class BattleScene : Control
 
     public override void _Process(double delta)
     {
+        if (Engine.IsEditorHint())
+        {
+            UpdateEditorPreview();
+            RequestEditorPreviewLayout();
+            RefreshHandDebugOverlay();
+            return;
+        }
+
         if (_hitStopTimer > 0f)
         {
             _hitStopTimer -= (float)delta;
@@ -294,6 +411,8 @@ public partial class BattleScene : Control
         var shadowScale = 1f + Mathf.Sin(_animTime * 1.1f + 1.3f) * 0.03f;
         _enemyShadow.Size = _enemyShadowBaseSize * shadowScale;
         _playerShadow.Size = _playerShadowBaseSize * (1f + Mathf.Sin(_animTime * 1.2f) * 0.02f);
+
+        RefreshHandDebugOverlay();
     }
 
     private EnemyUnit CurrentEnemy
@@ -507,6 +626,12 @@ public partial class BattleScene : Control
 
     public override void _ExitTree()
     {
+        if (Engine.IsEditorHint())
+        {
+            ClearEditorPreviewHand();
+            return;
+        }
+
         LocalizationSettings.LanguageChanged -= OnLanguageChanged;
         foreach (var view in _cardViewPool)
         {
@@ -2171,14 +2296,7 @@ public partial class BattleScene : Control
 
     private void LayoutHandCards(bool animate)
     {
-        var cards = new List<CardView>();
-        foreach (Node node in _handContainer.GetChildren())
-        {
-            if (node is CardView card)
-            {
-                cards.Add(card);
-            }
-        }
+        var cards = CollectHandCards();
 
         var count = cards.Count;
         if (count == 0)
@@ -2192,9 +2310,38 @@ public partial class BattleScene : Control
         {
             hovered = _hoveredCard;
         }
+        var localPoses = CalculateHandCardPoses(cards, hovered, out var hoveredIndex, out var anyDragging);
+        var handGlobal = _handContainer.GlobalPosition;
+        var isEditorPreview = Engine.IsEditorHint();
+        for (var i = 0; i < count; i++)
+        {
+            var pose = localPoses[i];
+            cards[i].SetPivotYOffsetFactor(_handPivotYOffsetFactor);
+            cards[i].ZIndex = pose.ZIndex;
+            if (isEditorPreview)
+            {
+                cards[i].Position = pose.LocalPosition;
+                cards[i].RotationDegrees = pose.RotationDegrees;
+                cards[i].Scale = pose.Scale;
+            }
+            else
+            {
+                cards[i].SetPose(handGlobal + pose.LocalPosition, pose.RotationDegrees, pose.Scale, animate);
+            }
+            cards[i].SetFocusState(hoveredIndex == i, hoveredIndex >= 0 && hoveredIndex != i && !anyDragging);
+        }
 
-        var hoveredIndex = -1;
-        var anyDragging = false;
+        RefreshHandDebugOverlay();
+    }
+
+    private List<HandCardPose> CalculateHandCardPoses(List<CardView> cards, CardView hovered, out int hoveredIndex, out bool anyDragging)
+    {
+        hoveredIndex = -1;
+        anyDragging = false;
+
+        var count = cards.Count;
+        var cardSize = cards[0].CustomMinimumSize;
+        var cardHalfWidth = cardSize.X * 0.5f;
         for (var i = 0; i < count; i++)
         {
             if (cards[i].IsDragging)
@@ -2207,19 +2354,16 @@ public partial class BattleScene : Control
             }
         }
 
-        var width = _handContainer.Size.X;
-        var baseY = _handContainer.GlobalPosition.Y + _handContainer.Size.Y - 230f;
-        var spread = Mathf.Min(1000f, 170f * Math.Max(count - 1, 1));
-        var startX = _handContainer.GlobalPosition.X + width * 0.5f - spread * 0.5f - 90f;
+        GetHandArcMetrics(count, cardSize, out var centerX, out var pivotOffset, out var pivotBaseY, out var maxAngle, out var radius, out var startAngle, out var angleStep);
+        var poses = new List<HandCardPose>(count);
 
         for (var i = 0; i < count; i++)
         {
-            var t = count == 1 ? 0.5f : i / (float)(count - 1);
-            var x = startX + spread * t;
-            var normalized = t * 2f - 1f;
-            var centerDepth = 1f - Mathf.Abs(normalized);
-            var curveY = -(1f - Mathf.Pow(Mathf.Abs(normalized), 1.35f)) * 22f;
-            var rot = normalized * 13f;
+            var angle = count <= 1 ? 0f : startAngle + angleStep * i;
+            angle += Mathf.DegToRad(_handArcPhaseOffsetDegrees);
+            var pivotX = centerX + Mathf.Sin(angle) * radius;
+            var pivotY = pivotBaseY + (1f - Mathf.Cos(angle)) * radius;
+            var rot = Mathf.RadToDeg(angle);
 
             if (!anyDragging && hoveredIndex >= 0)
             {
@@ -2227,36 +2371,184 @@ public partial class BattleScene : Control
                 var direction = i < hoveredIndex ? -1f : 1f;
                 if (i == hoveredIndex)
                 {
-                    curveY += 2f;
                     rot *= 0.22f;
                 }
                 else if (distance == 1)
                 {
-                    x += direction * 20f;
+                    pivotX += direction * _handHoverNeighborPush;
                     rot *= 0.65f;
-                    curveY -= 2f;
                 }
                 else if (distance == 2)
                 {
-                    x += direction * 8f;
+                    pivotX += direction * _handHoverSecondaryPush;
                 }
             }
 
-            var pos = new Vector2(x, baseY + curveY);
+            var pivotPosition = new Vector2(pivotX, pivotY);
             var scale = Vector2.One;
             var finalRot = rot;
-
             if (!anyDragging && hoveredIndex == i)
             {
-                pos.Y -= 30f;
+                pivotPosition.Y -= _handHoverLift;
                 scale = new Vector2(1.08f, 1.08f);
                 finalRot = 0f;
             }
 
-            cards[i].ZIndex = hoveredIndex == i ? 2000 : i;
-            cards[i].SetPose(pos, finalRot, scale, animate);
-            cards[i].SetFocusState(hoveredIndex == i, hoveredIndex >= 0 && hoveredIndex != i && !anyDragging);
+            var pos = ConvertPivotToTopLeft(pivotPosition, pivotOffset, finalRot, scale);
+            poses.Add(new HandCardPose(pos, finalRot, scale, hoveredIndex == i ? HoveredHandZIndex : i));
         }
+
+        return poses;
+    }
+
+    private List<CardView> CollectHandCards()
+    {
+        var cards = new List<CardView>();
+        if (!IsInstanceValid(_handContainer))
+        {
+            return cards;
+        }
+
+        foreach (Node node in _handContainer.GetChildren())
+        {
+            if (node is CardView card)
+            {
+                cards.Add(card);
+            }
+        }
+
+        return cards;
+    }
+
+    private void GetHandArcMetrics(int count, Vector2 cardSize, out float centerX, out Vector2 pivotOffset, out float pivotBaseY, out float maxAngle, out float radius, out float startAngle, out float angleStep)
+    {
+        centerX = _handContainer.Size.X * 0.5f + _handArcCenterOffsetX;
+        pivotOffset = new Vector2(cardSize.X * 0.5f, cardSize.Y * _handPivotYOffsetFactor);
+        pivotBaseY = _handContainer.Size.Y - (cardSize.Y - pivotOffset.Y) - _handBottomPadding;
+        var spreadFactor = Mathf.Clamp((count - 1) / 7f, 0f, 1f);
+        maxAngle = Mathf.DegToRad(Mathf.Lerp(_handArcAngleMinDegrees, _handArcAngleMaxDegrees, spreadFactor));
+        radius = Mathf.Lerp(_handArcRadiusMax, _handArcRadiusMin, spreadFactor);
+        startAngle = -maxAngle;
+        angleStep = count <= 1 ? 0f : (maxAngle * 2f) / (count - 1);
+    }
+
+    private static Vector2 ConvertPivotToTopLeft(Vector2 pivotPosition, Vector2 pivotOffset, float rotationDegrees, Vector2 scale)
+    {
+        var uniformScale = (scale.X + scale.Y) * 0.5f;
+        var scaledPivot = pivotOffset * uniformScale;
+        var rotatedPivot = scaledPivot.Rotated(Mathf.DegToRad(rotationDegrees));
+        return pivotPosition - rotatedPivot;
+    }
+
+    private void DrawHandDebugArc(Vector2 handOrigin, float centerX, float pivotBaseY, float radius, float startAngle, float maxAngle)
+    {
+        const int segments = 48;
+        var points = new Vector2[segments + 1];
+        for (var i = 0; i <= segments; i++)
+        {
+            var t = i / (float)segments;
+            var angle = Mathf.Lerp(startAngle, maxAngle, t);
+            var x = centerX + Mathf.Sin(angle) * radius;
+            var y = pivotBaseY + (1f - Mathf.Cos(angle)) * radius;
+            points[i] = handOrigin + new Vector2(x, y);
+        }
+
+        DrawPolyline(points, new Color(0.2f, 0.95f, 1f, 0.95f), 2f);
+    }
+
+    private void EnsureHandDebugOverlay()
+    {
+        if (IsInstanceValid(_handDebugOverlay))
+        {
+            return;
+        }
+
+        _handDebugOverlay = new HandDebugOverlay
+        {
+            Name = "HandDebugOverlay",
+            MouseFilter = MouseFilterEnum.Ignore,
+            TopLevel = false,
+            ZIndex = 1
+        };
+        _overlayCanvas.AddChild(_handDebugOverlay);
+    }
+
+    private void EnsureOverlayCanvas()
+    {
+        if (IsInstanceValid(_overlayCanvas))
+        {
+            return;
+        }
+
+        _overlayCanvas = new CanvasLayer { Layer = 50 };
+        AddChild(_overlayCanvas);
+    }
+
+    private void RefreshHandDebugOverlay()
+    {
+        if (!IsInstanceValid(_handDebugOverlay))
+        {
+            return;
+        }
+
+        _handDebugOverlay.Position = Vector2.Zero;
+        _handDebugOverlay.Size = GetViewportRect().Size;
+
+        if (!_showHandDebugOverlay || !IsInstanceValid(_handContainer))
+        {
+            _handDebugOverlay.SetSnapshot(null);
+            return;
+        }
+
+        var cards = CollectHandCards();
+        if (cards.Count == 0)
+        {
+            _handDebugOverlay.SetSnapshot(null);
+            return;
+        }
+
+        var hovered = IsInstanceValid(_hoveredCard) ? _hoveredCard : null;
+        var cardSize = cards[0].CustomMinimumSize;
+        GetHandArcMetrics(cards.Count, cardSize, out var centerX, out var pivotOffset, out var pivotBaseY, out var maxAngle, out var radius, out var startAngle, out _);
+
+        var handOrigin = _handContainer.GetGlobalTransformWithCanvas().Origin;
+        var arcPoints = BuildHandDebugArcPoints(handOrigin, centerX, pivotBaseY, radius, startAngle, maxAngle);
+        var markers = new List<HandDebugMarker>(cards.Count);
+        for (var i = 0; i < cards.Count; i++)
+        {
+            var cardTransform = cards[i].GetGlobalTransformWithCanvas();
+            var cardCenter = cardTransform * (cardSize * 0.5f);
+            var cardPivot = cardTransform * pivotOffset;
+            markers.Add(new HandDebugMarker(cardCenter, cardPivot, i));
+        }
+
+        var snapshot = new HandDebugSnapshot
+        {
+            HandRect = new Rect2(handOrigin, _handContainer.Size),
+            CenterTop = handOrigin + new Vector2(centerX, 0f),
+            CenterBottom = handOrigin + new Vector2(centerX, _handContainer.Size.Y),
+            PivotCenter = handOrigin + new Vector2(centerX, pivotBaseY),
+            ArcPoints = arcPoints,
+            Markers = markers,
+            Info = $"radius {radius:0}  angle {Mathf.RadToDeg(maxAngle):0.0}  centerX {centerX:0}"
+        };
+        _handDebugOverlay.SetSnapshot(snapshot);
+    }
+
+    private Vector2[] BuildHandDebugArcPoints(Vector2 handOrigin, float centerX, float pivotBaseY, float radius, float startAngle, float maxAngle)
+    {
+        const int segments = 48;
+        var points = new Vector2[segments + 1];
+        for (var i = 0; i <= segments; i++)
+        {
+            var t = i / (float)segments;
+            var angle = Mathf.Lerp(startAngle, maxAngle, t);
+            var x = centerX + Mathf.Sin(angle) * radius;
+            var y = pivotBaseY + (1f - Mathf.Cos(angle)) * radius;
+            points[i] = handOrigin + new Vector2(x, y);
+        }
+
+        return points;
     }
 
     private void UpdateHandHoverFromMouse(Vector2 mouseGlobal)
@@ -2810,6 +3102,174 @@ public partial class BattleScene : Control
     {
         _deferredHandLayoutPending = false;
         LayoutHandCards(false);
+    }
+
+    private void SetupEditorPreview()
+    {
+        _handContainer = GetNodeOrNull<Control>("%HandContainer");
+        if (!IsInstanceValid(_handContainer))
+        {
+            return;
+        }
+
+        _handContainer.Resized += RequestEditorPreviewLayout;
+        RequestEditorPreviewRefresh();
+    }
+
+    private void UpdateEditorPreview(bool forceRefresh = false)
+    {
+        if (!Engine.IsEditorHint() || !IsInstanceValid(_handContainer))
+        {
+            return;
+        }
+
+        if (_handContainer.Size.X <= 1f || _handContainer.Size.Y <= 1f)
+        {
+            RequestEditorPreviewRefresh();
+            return;
+        }
+
+        var signature = string.Join("|",
+            _editorPreviewHand,
+            _editorPreviewCardCount,
+            _editorPreviewCardIds,
+            _handArcAngleMinDegrees,
+            _handArcAngleMaxDegrees,
+            _handArcRadiusMin,
+            _handArcRadiusMax,
+            _handBottomPadding,
+            _handPivotYOffsetFactor,
+            _handHoverLift,
+            _handHoverNeighborPush,
+            _handHoverSecondaryPush,
+            _showHandDebugOverlay,
+            _handContainer.Size.X,
+            _handContainer.Size.Y);
+
+        if (!forceRefresh && signature == _editorPreviewSignature)
+        {
+            return;
+        }
+
+        _editorPreviewSignature = signature;
+
+        if (!_editorPreviewHand)
+        {
+            ClearEditorPreviewHand();
+            return;
+        }
+
+        RebuildEditorPreviewHand();
+    }
+
+    private void RebuildEditorPreviewHand()
+    {
+        ClearEditorPreviewHand();
+
+        var ids = _editorPreviewCardIds
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+        if (ids.Count == 0)
+        {
+            ids.AddRange(new[] { "meteor_shower", "reaper_touch", "bone_shrapnel", "soul_siphon", "phoenix_cycle" });
+        }
+
+        var count = Mathf.Clamp(_editorPreviewCardCount, 1, HandLimit);
+        for (var i = 0; i < count; i++)
+        {
+            var cardView = new CardView();
+            cardView.SetDragEnabled(false);
+            cardView.SetUseTopLevel(true);
+            cardView.Setup(CardData.CreateById(ids[i % ids.Count]));
+            _handContainer.AddChild(cardView);
+        }
+
+        RequestEditorPreviewLayout();
+    }
+
+    private void ClearEditorPreviewHand()
+    {
+        if (!IsInstanceValid(_handContainer))
+        {
+            return;
+        }
+
+        foreach (Node child in _handContainer.GetChildren())
+        {
+            if (child is CardView cardView)
+            {
+                cardView.QueueFree();
+            }
+        }
+    }
+
+    private void RequestEditorPreviewLayout()
+    {
+        if (!Engine.IsEditorHint() || _editorPreviewLayoutPending)
+        {
+            return;
+        }
+
+        _editorPreviewLayoutPending = true;
+        CallDeferred(nameof(DeferredEditorPreviewLayout));
+    }
+
+    private void RequestEditorPreviewRefresh()
+    {
+        if (!Engine.IsEditorHint() || _editorPreviewRefreshPending)
+        {
+            return;
+        }
+
+        _editorPreviewRefreshPending = true;
+        CallDeferred(nameof(DeferredEditorPreviewRefresh));
+    }
+
+    private void DeferredEditorPreviewRefresh()
+    {
+        _editorPreviewRefreshPending = false;
+        if (!Engine.IsEditorHint() || !IsInstanceValid(_handContainer))
+        {
+            return;
+        }
+
+        UpdateEditorPreview(forceRefresh: true);
+        RequestEditorPreviewLayout();
+    }
+
+    private void DeferredEditorPreviewLayout()
+    {
+        _editorPreviewLayoutPending = false;
+        if (!Engine.IsEditorHint() || !IsInstanceValid(_handContainer))
+        {
+            return;
+        }
+
+        var cards = new List<CardView>();
+        foreach (Node node in _handContainer.GetChildren())
+        {
+            if (node is CardView card)
+            {
+                cards.Add(card);
+            }
+        }
+
+        if (cards.Count == 0)
+        {
+            return;
+        }
+
+        var localPoses = CalculateHandCardPoses(cards, null, out _, out _);
+        var handGlobal = _handContainer.GlobalPosition;
+        for (var i = 0; i < cards.Count; i++)
+        {
+            var pose = localPoses[i];
+            cards[i].SetPivotYOffsetFactor(_handPivotYOffsetFactor);
+            cards[i].SetPose(handGlobal + pose.LocalPosition, pose.RotationDegrees, pose.Scale, animate: false);
+            cards[i].ZIndex = pose.ZIndex;
+        }
+
+        RefreshHandDebugOverlay();
     }
 
 }
