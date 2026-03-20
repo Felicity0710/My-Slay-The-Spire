@@ -2560,12 +2560,6 @@ public partial class BattleScene : Control
         }
 
         var handRect = _handContainer.GetGlobalRect().Grow(20f);
-        if (!handRect.HasPoint(mouseGlobal))
-        {
-            SetHoveredCard(null);
-            return;
-        }
-
         var cards = new List<CardView>();
         foreach (Node node in _handContainer.GetChildren())
         {
@@ -2580,47 +2574,95 @@ public partial class BattleScene : Control
             return;
         }
 
-        CardView best = null;
-        var bestScore = float.MaxValue;
-        foreach (var card in cards)
-        {
-            var rect = card.GetGlobalRect().Grow(8f);
-            if (!rect.HasPoint(mouseGlobal))
-            {
-                continue;
-            }
-
-            var center = card.GlobalPosition + card.Size * 0.5f;
-            var score = center.DistanceTo(mouseGlobal);
-            if (score < bestScore)
-            {
-                bestScore = score;
-                best = card;
-            }
-        }
-
-        if (best == null)
+        var basePoses = CalculateHandCardPoses(cards, hovered: null, out _, out _);
+        var slotCenters = BuildHandHoverSlotCenters(cards, basePoses);
+        var hoverIndex = ResolveHandHoverIndex(mouseGlobal, slotCenters, cards[0].CustomMinimumSize, handRect);
+        if (hoverIndex < 0)
         {
             SetHoveredCard(null);
             return;
         }
 
-        if (IsInstanceValid(_hoveredCard) && _hoveredCard == best)
+        var next = cards[hoverIndex];
+        if (IsInstanceValid(_hoveredCard) && _hoveredCard == next)
         {
             return;
         }
 
-        if (IsInstanceValid(_hoveredCard))
+        SetHoveredCard(next);
+    }
+
+    private List<Vector2> BuildHandHoverSlotCenters(List<CardView> cards, List<HandCardPose> poses)
+    {
+        var centers = new List<Vector2>(cards.Count);
+        var handGlobal = _handContainer.GlobalPosition;
+        for (var i = 0; i < cards.Count; i++)
         {
-            var currentCenter = _hoveredCard.GlobalPosition + _hoveredCard.Size * 0.5f;
-            var currentScore = currentCenter.DistanceTo(mouseGlobal);
-            if (currentScore <= bestScore + HoverSwitchDeadzone)
+            centers.Add(GetHandPoseGlobalCenter(handGlobal, cards[i].CustomMinimumSize, poses[i]));
+        }
+
+        return centers;
+    }
+
+    private Vector2 GetHandPoseGlobalCenter(Vector2 handGlobal, Vector2 cardSize, HandCardPose pose)
+    {
+        var scale = (pose.Scale.X + pose.Scale.Y) * 0.5f;
+        var pivotOffset = new Vector2(cardSize.X * 0.5f, cardSize.Y * _handPivotYOffsetFactor);
+        var rotation = Mathf.DegToRad(pose.RotationDegrees);
+        var topLeft = handGlobal + pose.LocalPosition;
+        var pivotPosition = topLeft + (pivotOffset * scale).Rotated(rotation);
+        var centerOffset = ((cardSize * 0.5f) - pivotOffset) * scale;
+        return pivotPosition + centerOffset.Rotated(rotation);
+    }
+
+    private static int ResolveHandHoverIndex(Vector2 mouseGlobal, List<Vector2> slotCenters, Vector2 cardSize, Rect2 handRect)
+    {
+        if (slotCenters.Count == 0)
+        {
+            return -1;
+        }
+
+        var minTop = float.MaxValue;
+        var maxBottom = float.MinValue;
+        foreach (var center in slotCenters)
+        {
+            minTop = Math.Min(minTop, center.Y - cardSize.Y * 0.72f);
+            maxBottom = Math.Max(maxBottom, center.Y + cardSize.Y * 0.48f);
+        }
+
+        if (mouseGlobal.Y < minTop || mouseGlobal.Y > maxBottom)
+        {
+            return -1;
+        }
+
+        if (slotCenters.Count == 1)
+        {
+            var halfWidth = cardSize.X * 0.58f;
+            return Math.Abs(mouseGlobal.X - slotCenters[0].X) <= halfWidth ? 0 : -1;
+        }
+
+        var leftGap = slotCenters[1].X - slotCenters[0].X;
+        var rightGap = slotCenters[^1].X - slotCenters[^2].X;
+        var leftBoundary = slotCenters[0].X - Math.Max(leftGap * 0.6f, cardSize.X * 0.22f);
+        var rightBoundary = slotCenters[^1].X + Math.Max(rightGap * 0.6f, cardSize.X * 0.22f);
+
+        leftBoundary = Math.Max(leftBoundary, handRect.Position.X - 4f);
+        rightBoundary = Math.Min(rightBoundary, handRect.End.X + 4f);
+        if (mouseGlobal.X < leftBoundary || mouseGlobal.X > rightBoundary)
+        {
+            return -1;
+        }
+
+        for (var i = 0; i < slotCenters.Count - 1; i++)
+        {
+            var boundary = (slotCenters[i].X + slotCenters[i + 1].X) * 0.5f;
+            if (mouseGlobal.X < boundary)
             {
-                return;
+                return i;
             }
         }
 
-        SetHoveredCard(best);
+        return slotCenters.Count - 1;
     }
 
     private void SetHoveredCard(CardView next)
