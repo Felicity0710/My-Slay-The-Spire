@@ -102,10 +102,6 @@ public partial class BattleScene : Control
     private float _handHoverNeighborPush = 24f;
     [Export(PropertyHint.Range, "0,40,1")]
     private float _handHoverSecondaryPush = 10f;
-    [Export(PropertyHint.Range, "0,0.25,0.005")]
-    private float _handHoverAcquireLockSeconds = 0.09f;
-    [Export(PropertyHint.Range, "0,0.25,0.005")]
-    private float _handHoverReleaseGraceSeconds = 0.035f;
 
     [ExportGroup("Editor Preview")]
     [Export]
@@ -228,9 +224,6 @@ public partial class BattleScene : Control
     private Line2D _dragArrowHead = null!;
     private CardView _draggingCard = null!;
     private float _dragGuidePulseTime;
-    private float _handHoverLockTimer;
-    private float _handHoverReleaseGraceTimer;
-    private CardView _handHoverReleaseGraceCard = null!;
     private CanvasLayer _overlayCanvas = null!;
     private HandDebugOverlay _handDebugOverlay = null!;
 
@@ -361,8 +354,6 @@ public partial class BattleScene : Control
         }
 
         _animTime += (float)delta;
-        _handHoverLockTimer = Mathf.Max(0f, _handHoverLockTimer - (float)delta);
-        _handHoverReleaseGraceTimer = Mathf.Max(0f, _handHoverReleaseGraceTimer - (float)delta);
 
         var viewport = GetViewportRect().Size;
         if (viewport.X <= 1 || viewport.Y <= 1)
@@ -2583,144 +2574,95 @@ public partial class BattleScene : Control
             return;
         }
 
-        var mouseNearHand = handRect.HasPoint(mouseGlobal);
-        if (_handHoverLockTimer > 0f && IsInstanceValid(_hoveredCard) && cards.Contains(_hoveredCard))
+        var basePoses = CalculateHandCardPoses(cards, hovered: null, out _, out _);
+        var slotCenters = BuildHandHoverSlotCenters(cards, basePoses);
+        var hoverIndex = ResolveHandHoverIndex(mouseGlobal, slotCenters, cards[0].CustomMinimumSize, handRect);
+        if (hoverIndex < 0)
         {
-            if (mouseNearHand || IsPointOverCard(_hoveredCard, mouseGlobal, 16f))
-            {
-                return;
-            }
-        }
-
-        if (!mouseNearHand)
-        {
-            var overAnyCard = false;
-            foreach (var card in cards)
-            {
-                if (IsPointOverCard(card, mouseGlobal, 10f))
-                {
-                    overAnyCard = true;
-                    break;
-                }
-            }
-
-            if (!overAnyCard)
-            {
-                SetHoveredCard(null);
-                return;
-            }
-        }
-
-        if (IsInstanceValid(_hoveredCard) && cards.Contains(_hoveredCard))
-        {
-            if (IsPointOverCard(_hoveredCard, mouseGlobal, 16f))
-            {
-                _handHoverReleaseGraceTimer = 0f;
-                _handHoverReleaseGraceCard = null;
-                return;
-            }
-
-            if (_handHoverReleaseGraceTimer <= 0f || _handHoverReleaseGraceCard != _hoveredCard)
-            {
-                _handHoverReleaseGraceTimer = _handHoverReleaseGraceSeconds;
-                _handHoverReleaseGraceCard = _hoveredCard;
-            }
-        }
-
-        CardView best = null;
-        var bestScore = float.MaxValue;
-        foreach (var card in cards)
-        {
-            if (!IsPointOverCard(card, mouseGlobal, 8f))
-            {
-                continue;
-            }
-
-            var center = GetCardGlobalCenter(card);
-            var score = center.DistanceTo(mouseGlobal);
-            if (score < bestScore)
-            {
-                bestScore = score;
-                best = card;
-            }
-        }
-
-        if (best == null)
-        {
-            if (_handHoverReleaseGraceTimer > 0f
-                && IsInstanceValid(_hoveredCard)
-                && cards.Contains(_hoveredCard)
-                && _handHoverReleaseGraceCard == _hoveredCard
-                && IsPointOverCard(_hoveredCard, mouseGlobal, 10f))
-            {
-                return;
-            }
-
             SetHoveredCard(null);
             return;
         }
 
-        if (IsInstanceValid(_hoveredCard) && _hoveredCard == best)
+        var next = cards[hoverIndex];
+        if (IsInstanceValid(_hoveredCard) && _hoveredCard == next)
         {
             return;
         }
 
-        if (IsInstanceValid(_hoveredCard))
+        SetHoveredCard(next);
+    }
+
+    private List<Vector2> BuildHandHoverSlotCenters(List<CardView> cards, List<HandCardPose> poses)
+    {
+        var centers = new List<Vector2>(cards.Count);
+        var handGlobal = _handContainer.GlobalPosition;
+        for (var i = 0; i < cards.Count; i++)
         {
-            var currentCenter = GetCardGlobalCenter(_hoveredCard);
-            var currentScore = currentCenter.DistanceTo(mouseGlobal);
-            if (currentScore <= bestScore + HoverSwitchDeadzone)
+            centers.Add(GetHandPoseGlobalCenter(handGlobal, cards[i].CustomMinimumSize, poses[i]));
+        }
+
+        return centers;
+    }
+
+    private Vector2 GetHandPoseGlobalCenter(Vector2 handGlobal, Vector2 cardSize, HandCardPose pose)
+    {
+        var scale = (pose.Scale.X + pose.Scale.Y) * 0.5f;
+        var pivotOffset = new Vector2(cardSize.X * 0.5f, cardSize.Y * _handPivotYOffsetFactor);
+        var rotation = Mathf.DegToRad(pose.RotationDegrees);
+        var topLeft = handGlobal + pose.LocalPosition;
+        var pivotPosition = topLeft + (pivotOffset * scale).Rotated(rotation);
+        var centerOffset = ((cardSize * 0.5f) - pivotOffset) * scale;
+        return pivotPosition + centerOffset.Rotated(rotation);
+    }
+
+    private static int ResolveHandHoverIndex(Vector2 mouseGlobal, List<Vector2> slotCenters, Vector2 cardSize, Rect2 handRect)
+    {
+        if (slotCenters.Count == 0)
+        {
+            return -1;
+        }
+
+        var minTop = float.MaxValue;
+        var maxBottom = float.MinValue;
+        foreach (var center in slotCenters)
+        {
+            minTop = Math.Min(minTop, center.Y - cardSize.Y * 0.72f);
+            maxBottom = Math.Max(maxBottom, center.Y + cardSize.Y * 0.48f);
+        }
+
+        if (mouseGlobal.Y < minTop || mouseGlobal.Y > maxBottom)
+        {
+            return -1;
+        }
+
+        if (slotCenters.Count == 1)
+        {
+            var halfWidth = cardSize.X * 0.58f;
+            return Math.Abs(mouseGlobal.X - slotCenters[0].X) <= halfWidth ? 0 : -1;
+        }
+
+        var leftGap = slotCenters[1].X - slotCenters[0].X;
+        var rightGap = slotCenters[^1].X - slotCenters[^2].X;
+        var leftBoundary = slotCenters[0].X - Math.Max(leftGap * 0.6f, cardSize.X * 0.22f);
+        var rightBoundary = slotCenters[^1].X + Math.Max(rightGap * 0.6f, cardSize.X * 0.22f);
+
+        leftBoundary = Math.Max(leftBoundary, handRect.Position.X - 4f);
+        rightBoundary = Math.Min(rightBoundary, handRect.End.X + 4f);
+        if (mouseGlobal.X < leftBoundary || mouseGlobal.X > rightBoundary)
+        {
+            return -1;
+        }
+
+        for (var i = 0; i < slotCenters.Count - 1; i++)
+        {
+            var boundary = (slotCenters[i].X + slotCenters[i + 1].X) * 0.5f;
+            if (mouseGlobal.X < boundary)
             {
-                return;
+                return i;
             }
         }
 
-        SetHoveredCard(best);
-    }
-
-    private static Vector2 GetCardGlobalCenter(CardView card)
-    {
-        return card.GetGlobalTransformWithCanvas() * (card.Size * 0.5f);
-    }
-
-    private static bool IsPointOverCard(CardView card, Vector2 point, float grow)
-    {
-        var corners = GetCardGlobalCorners(card);
-        if (grow > 0f)
-        {
-            var center = Vector2.Zero;
-            for (var i = 0; i < corners.Length; i++)
-            {
-                center += corners[i];
-            }
-
-            center /= corners.Length;
-            for (var i = 0; i < corners.Length; i++)
-            {
-                var direction = corners[i] - center;
-                if (direction.LengthSquared() <= Mathf.Epsilon)
-                {
-                    continue;
-                }
-
-                corners[i] += direction.Normalized() * grow;
-            }
-        }
-
-        return Geometry2D.IsPointInPolygon(point, corners);
-    }
-
-    private static Vector2[] GetCardGlobalCorners(CardView card)
-    {
-        var transform = card.GetGlobalTransformWithCanvas();
-        var size = card.Size;
-        return
-        [
-            transform * Vector2.Zero,
-            transform * new Vector2(size.X, 0f),
-            transform * size,
-            transform * new Vector2(0f, size.Y)
-        ];
+        return slotCenters.Count - 1;
     }
 
     private void SetHoveredCard(CardView next)
@@ -2733,17 +2675,11 @@ public partial class BattleScene : Control
         _hoveredCard = next;
         if (IsInstanceValid(_hoveredCard))
         {
-            _handHoverLockTimer = _handHoverAcquireLockSeconds;
-            _handHoverReleaseGraceTimer = 0f;
-            _handHoverReleaseGraceCard = null;
             EmitUiSfx("card_hover");
             ShowKeywordTooltip(_hoveredCard);
         }
         else
         {
-            _handHoverLockTimer = 0f;
-            _handHoverReleaseGraceTimer = 0f;
-            _handHoverReleaseGraceCard = null;
             HideKeywordTooltip();
         }
 
