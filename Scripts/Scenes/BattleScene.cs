@@ -102,6 +102,10 @@ public partial class BattleScene : Control
     private float _handHoverNeighborPush = 24f;
     [Export(PropertyHint.Range, "0,40,1")]
     private float _handHoverSecondaryPush = 10f;
+    [Export(PropertyHint.Range, "0,0.25,0.005")]
+    private float _handHoverAcquireLockSeconds = 0.09f;
+    [Export(PropertyHint.Range, "0,0.25,0.005")]
+    private float _handHoverReleaseGraceSeconds = 0.035f;
 
     [ExportGroup("Editor Preview")]
     [Export]
@@ -224,6 +228,9 @@ public partial class BattleScene : Control
     private Line2D _dragArrowHead = null!;
     private CardView _draggingCard = null!;
     private float _dragGuidePulseTime;
+    private float _handHoverLockTimer;
+    private float _handHoverReleaseGraceTimer;
+    private CardView _handHoverReleaseGraceCard = null!;
     private CanvasLayer _overlayCanvas = null!;
     private HandDebugOverlay _handDebugOverlay = null!;
 
@@ -354,6 +361,8 @@ public partial class BattleScene : Control
         }
 
         _animTime += (float)delta;
+        _handHoverLockTimer = Mathf.Max(0f, _handHoverLockTimer - (float)delta);
+        _handHoverReleaseGraceTimer = Mathf.Max(0f, _handHoverReleaseGraceTimer - (float)delta);
 
         var viewport = GetViewportRect().Size;
         if (viewport.X <= 1 || viewport.Y <= 1)
@@ -2560,12 +2569,6 @@ public partial class BattleScene : Control
         }
 
         var handRect = _handContainer.GetGlobalRect().Grow(20f);
-        if (!handRect.HasPoint(mouseGlobal))
-        {
-            SetHoveredCard(null);
-            return;
-        }
-
         var cards = new List<CardView>();
         foreach (Node node in _handContainer.GetChildren())
         {
@@ -2580,17 +2583,60 @@ public partial class BattleScene : Control
             return;
         }
 
+        var mouseNearHand = handRect.HasPoint(mouseGlobal);
+        if (_handHoverLockTimer > 0f && IsInstanceValid(_hoveredCard) && cards.Contains(_hoveredCard))
+        {
+            if (mouseNearHand || IsPointOverCard(_hoveredCard, mouseGlobal, 16f))
+            {
+                return;
+            }
+        }
+
+        if (!mouseNearHand)
+        {
+            var overAnyCard = false;
+            foreach (var card in cards)
+            {
+                if (IsPointOverCard(card, mouseGlobal, 10f))
+                {
+                    overAnyCard = true;
+                    break;
+                }
+            }
+
+            if (!overAnyCard)
+            {
+                SetHoveredCard(null);
+                return;
+            }
+        }
+
+        if (IsInstanceValid(_hoveredCard) && cards.Contains(_hoveredCard))
+        {
+            if (IsPointOverCard(_hoveredCard, mouseGlobal, 16f))
+            {
+                _handHoverReleaseGraceTimer = 0f;
+                _handHoverReleaseGraceCard = null;
+                return;
+            }
+
+            if (_handHoverReleaseGraceTimer <= 0f || _handHoverReleaseGraceCard != _hoveredCard)
+            {
+                _handHoverReleaseGraceTimer = _handHoverReleaseGraceSeconds;
+                _handHoverReleaseGraceCard = _hoveredCard;
+            }
+        }
+
         CardView best = null;
         var bestScore = float.MaxValue;
         foreach (var card in cards)
         {
-            var rect = card.GetGlobalRect().Grow(8f);
-            if (!rect.HasPoint(mouseGlobal))
+            if (!IsPointOverCard(card, mouseGlobal, 8f))
             {
                 continue;
             }
 
-            var center = card.GlobalPosition + card.Size * 0.5f;
+            var center = GetCardGlobalCenter(card);
             var score = center.DistanceTo(mouseGlobal);
             if (score < bestScore)
             {
@@ -2601,6 +2647,15 @@ public partial class BattleScene : Control
 
         if (best == null)
         {
+            if (_handHoverReleaseGraceTimer > 0f
+                && IsInstanceValid(_hoveredCard)
+                && cards.Contains(_hoveredCard)
+                && _handHoverReleaseGraceCard == _hoveredCard
+                && IsPointOverCard(_hoveredCard, mouseGlobal, 10f))
+            {
+                return;
+            }
+
             SetHoveredCard(null);
             return;
         }
@@ -2612,7 +2667,7 @@ public partial class BattleScene : Control
 
         if (IsInstanceValid(_hoveredCard))
         {
-            var currentCenter = _hoveredCard.GlobalPosition + _hoveredCard.Size * 0.5f;
+            var currentCenter = GetCardGlobalCenter(_hoveredCard);
             var currentScore = currentCenter.DistanceTo(mouseGlobal);
             if (currentScore <= bestScore + HoverSwitchDeadzone)
             {
@@ -2621,6 +2676,51 @@ public partial class BattleScene : Control
         }
 
         SetHoveredCard(best);
+    }
+
+    private static Vector2 GetCardGlobalCenter(CardView card)
+    {
+        return card.GetGlobalTransformWithCanvas() * (card.Size * 0.5f);
+    }
+
+    private static bool IsPointOverCard(CardView card, Vector2 point, float grow)
+    {
+        var corners = GetCardGlobalCorners(card);
+        if (grow > 0f)
+        {
+            var center = Vector2.Zero;
+            for (var i = 0; i < corners.Length; i++)
+            {
+                center += corners[i];
+            }
+
+            center /= corners.Length;
+            for (var i = 0; i < corners.Length; i++)
+            {
+                var direction = corners[i] - center;
+                if (direction.LengthSquared() <= Mathf.Epsilon)
+                {
+                    continue;
+                }
+
+                corners[i] += direction.Normalized() * grow;
+            }
+        }
+
+        return Geometry2D.IsPointInPolygon(point, corners);
+    }
+
+    private static Vector2[] GetCardGlobalCorners(CardView card)
+    {
+        var transform = card.GetGlobalTransformWithCanvas();
+        var size = card.Size;
+        return
+        [
+            transform * Vector2.Zero,
+            transform * new Vector2(size.X, 0f),
+            transform * size,
+            transform * new Vector2(0f, size.Y)
+        ];
     }
 
     private void SetHoveredCard(CardView next)
@@ -2633,11 +2733,17 @@ public partial class BattleScene : Control
         _hoveredCard = next;
         if (IsInstanceValid(_hoveredCard))
         {
+            _handHoverLockTimer = _handHoverAcquireLockSeconds;
+            _handHoverReleaseGraceTimer = 0f;
+            _handHoverReleaseGraceCard = null;
             EmitUiSfx("card_hover");
             ShowKeywordTooltip(_hoveredCard);
         }
         else
         {
+            _handHoverLockTimer = 0f;
+            _handHoverReleaseGraceTimer = 0f;
+            _handHoverReleaseGraceCard = null;
             HideKeywordTooltip();
         }
 
