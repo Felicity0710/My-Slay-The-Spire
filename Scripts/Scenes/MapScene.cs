@@ -30,6 +30,7 @@ public partial class MapScene : Control
         _mapCanvas = GetNode<MapCanvas>("%MapCanvas");
         _menuButton = GetNode<Button>("%MenuButton");
 
+        SetupDeckViewerUi();
         _menuButton.Pressed += OnMenuPressed;
         _mapScroll.Resized += OnMapViewportResized;
         LocalizationSettings.LanguageChanged += OnLanguageChanged;
@@ -45,6 +46,7 @@ public partial class MapScene : Control
             _mapScroll.Resized -= OnMapViewportResized;
         }
 
+        TearDownDeckViewerUi();
         LocalizationSettings.LanguageChanged -= OnLanguageChanged;
     }
 
@@ -148,6 +150,7 @@ public partial class MapScene : Control
         _relicLabel.Text = relicText.ToString();
 
         UpdateMapCanvasWidth();
+        RefreshDeckViewerUi(state);
         BuildTreasureMap(state);
     }
 
