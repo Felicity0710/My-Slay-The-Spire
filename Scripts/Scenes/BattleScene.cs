@@ -1020,6 +1020,7 @@ public partial class BattleScene : Control
 
     private async Task OnCardDropAttemptAsync(CardView view, Vector2 mouseGlobal)
     {
+        ClearDraggingCardPreview(view);
         _draggingCard = null;
         _hoverEnemyIndex = -1;
         view.LockPositionWhileDragging = false;
@@ -1043,6 +1044,16 @@ public partial class BattleScene : Control
         var requiresEnemyTarget = CardRequiresEnemyTarget(view.Card);
         if (!requiresEnemyTarget)
         {
+            var droppedBackToHand = IsInstanceValid(_handContainer)
+                && _handContainer.GetGlobalRect().Grow(12f).HasPoint(mouseGlobal);
+            if (droppedBackToHand)
+            {
+                EmitUiSfx("card_cancel");
+                await view.AnimateBackToHand();
+                LayoutHandCards(true);
+                return;
+            }
+
             PushInputLock();
             var playedSelf = await TrySpendAndApplyCard(view.Card);
             if (!playedSelf && IsInstanceValid(view))
@@ -1184,6 +1195,7 @@ public partial class BattleScene : Control
         {
             SetDropZoneHighlight(false);
             SetDragGuideVisible(false);
+            RefreshDraggingCardPreview(card, mouseGlobal);
             return;
         }
 
@@ -1203,6 +1215,7 @@ public partial class BattleScene : Control
 
         SetDropZoneHighlight(hot);
         UpdateDragGuide(card, mouseGlobal);
+        RefreshDraggingCardPreview(card, mouseGlobal);
     }
 
     private void OnCardDragStarted(CardView card)
@@ -1221,6 +1234,7 @@ public partial class BattleScene : Control
             card.Scale = new Vector2(1.1f, 1.1f);
             UpdateEnemySelectionUi();
         }
+        RefreshDraggingCardPreview(card, card.GlobalPosition + card.Size * 0.5f);
         EmitUiSfx("card_grab");
     }
 
@@ -1229,6 +1243,7 @@ public partial class BattleScene : Control
         _draggingCard = null;
         _hoverEnemyIndex = -1;
         card.LockPositionWhileDragging = false;
+        ClearDraggingCardPreview(card);
         SetDragGuideVisible(false);
         SetDropZoneHighlight(false);
         UpdateEnemySelectionUi();
@@ -1885,6 +1900,10 @@ public partial class BattleScene : Control
         UpdateEnemySelectionUi();
         UpdateInputControls();
         RefreshCardPlayableStates();
+        if (IsInstanceValid(_draggingCard))
+        {
+            RefreshDraggingCardPreview(_draggingCard, GetGlobalMousePosition());
+        }
     }
 
     private string BuildRelicBarText()

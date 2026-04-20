@@ -27,6 +27,7 @@ public partial class CardView : PanelContainer
     private bool _useTopLevel = true;
     private bool _dragEnabled = true;
     private float _pivotYOffsetFactor = 0.88f;
+    private string _previewDescription = string.Empty;
     private static readonly System.Collections.Generic.Dictionary<string, Texture2D> ArtCache = new();
 
     public bool IsDragging => _dragging;
@@ -120,10 +121,31 @@ public partial class CardView : PanelContainer
     public void Setup(CardData card)
     {
         Card = card;
+        _previewDescription = string.Empty;
         if (_nameLabel != null)
         {
             RefreshText();
         }
+    }
+
+    public void SetPreviewDescription(string previewDescription)
+    {
+        var normalized = previewDescription ?? string.Empty;
+        if (string.Equals(_previewDescription, normalized, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _previewDescription = normalized;
+        if (_nameLabel != null)
+        {
+            RefreshText();
+        }
+    }
+
+    public void ClearPreviewDescription()
+    {
+        SetPreviewDescription(string.Empty);
     }
 
     public override void _ExitTree()
@@ -186,6 +208,7 @@ public partial class CardView : PanelContainer
         _hoverDimmed = false;
         _lockPositionWhileDragging = false;
         _playable = true;
+        _previewDescription = string.Empty;
         ZIndex = 0;
         RotationDegrees = 0f;
         Scale = Vector2.One;
@@ -520,7 +543,8 @@ public partial class CardView : PanelContainer
     {
         _nameLabel.Text = Card.GetLocalizedName();
         _costLabel.Text = $"{LocalizationSettings.CostLabel()}: {Card.Cost}";
-        var text = LocalizationSettings.HighlightCardDescription(Card.GetLocalizedDescription());
+        var description = string.IsNullOrEmpty(_previewDescription) ? Card.GetLocalizedDescription() : _previewDescription;
+        var text = LocalizationSettings.HighlightCardDescription(description);
         _descLabel.Text = text;
         _artTexture.Texture = LoadCardArt(Card.ArtPath);
     }
