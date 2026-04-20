@@ -320,6 +320,7 @@ public partial class BattleScene : Control
         _settingsButton.Pressed += OnOpenSettingsPressed;
         _settingsCloseButton.Pressed += OnCloseSettingsPressed;
         SetupSettingsUi();
+        SetupPileViewerUi();
         _backButton.Pressed += BackToMap;
         _testVictoryButton.Pressed += OnTestVictoryPressed;
         _handContainer.Resized += () => LayoutHandCards(false);
@@ -1878,6 +1879,7 @@ public partial class BattleScene : Control
             _drawPile.Count,
             _discardPile.Count,
             AliveEnemyCount());
+        RefreshPileViewerUi();
         _relicBarLabel.Text = BuildRelicBarText();
         RefreshRelicIcons();
         UpdateEnemySelectionUi();
@@ -2101,6 +2103,7 @@ public partial class BattleScene : Control
     private void UpdateInputControls()
     {
         _endTurnButton.Disabled = IsInputLocked();
+        RefreshPileViewerUi();
         RefreshCardPlayableStates();
     }
 
