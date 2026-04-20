@@ -50,6 +50,13 @@ public partial class BattleScene
         _pileViewerList.ItemSelected += OnPileCardSelected;
         _pileViewerCloseButton.Pressed += OnClosePileViewerPressed;
 
+        // Keep pile viewer above top-level hand cards and VFX.
+        _pileViewerModal.Reparent(_overlayCanvas);
+        _pileViewerModal.TopLevel = false;
+        _pileViewerModal.ZIndex = 1200;
+        _pileViewerModal.MouseFilter = Control.MouseFilterEnum.Stop;
+        SetProcessUnhandledInput(true);
+
         _pileViewerList.AllowReselect = true;
         _pileViewerDetailText.BbcodeEnabled = false;
         _pileViewerModal.Visible = false;
@@ -138,6 +145,8 @@ public partial class BattleScene
         _pileViewerShowsDrawPile = showDrawPile;
         if (!_pileViewerModal.Visible)
         {
+            // Ensure this modal stays on top if multiple overlay elements exist.
+            _overlayCanvas.MoveChild(_pileViewerModal, _overlayCanvas.GetChildCount() - 1);
             _pileViewerModal.Visible = true;
             if (!_pileViewerInputLockHeld)
             {
@@ -162,6 +171,27 @@ public partial class BattleScene
             _pileViewerInputLockHeld = false;
             PopInputLock();
         }
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (Engine.IsEditorHint() || @event == null)
+        {
+            return;
+        }
+
+        if (!_pileViewerInputLockHeld || !IsInstanceValid(_pileViewerModal) || !_pileViewerModal.Visible)
+        {
+            return;
+        }
+
+        if (!@event.IsActionPressed("ui_cancel"))
+        {
+            return;
+        }
+
+        ClosePileViewer();
+        GetViewport().SetInputAsHandled();
     }
 
     private void RefreshPileViewerModalContent()
