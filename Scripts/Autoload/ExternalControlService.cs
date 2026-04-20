@@ -666,8 +666,17 @@ public partial class ExternalControlService : Node
             return actions;
         }
 
-        foreach (var rewardType in new[] { "relic", "card_pack", "potion", "random" })
+        var rewardTypes = reward.RewardTypes.Count > 0
+            ? reward.RewardTypes
+            : new List<string> { "relic", "card_pack", "potion", "random", "skip" };
+
+        foreach (var rewardType in rewardTypes)
         {
+            if (string.Equals(rewardType, "skip", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             actions.Add(new LegalActionSnapshot
             {
                 Kind = "choose_reward_type",
@@ -682,7 +691,9 @@ public partial class ExternalControlService : Node
         actions.Add(new LegalActionSnapshot
         {
             Kind = "skip_reward",
-            Label = "Skip this reward scene"
+            Label = string.Equals(reward.Mode, "potion_replace", StringComparison.OrdinalIgnoreCase)
+                ? "Skip replacing potion"
+                : "Skip this reward scene"
         });
         return actions;
     }
@@ -743,7 +754,7 @@ public partial class ExternalControlService : Node
                 state.RollRelicOptions(3);
                 if (state.PendingRelicOptions.Count == 0)
                 {
-                    state.AddRandomPotion();
+                    state.TryAddRandomPotion(out _);
                     state.PendingRelicOptions.Clear();
                     return ExitRewardToMap(state, tree, clearCardPack: true);
                 }
@@ -761,7 +772,7 @@ public partial class ExternalControlService : Node
 
                 return null;
             case "potion":
-                state.AddRandomPotion();
+                state.TryAddRandomPotion(out _);
                 return ExitRewardToMap(state, tree, clearCardPack: true);
             case "random":
             {

@@ -9,6 +9,7 @@ public partial class GameState : Node
 
     private const int MapWidth = 5;
     private const int MapRows = 8;
+    public const int PotionInventoryCapacity = 3;
 
     public int MaxHp { get; private set; } = 80;
     public int PlayerHp { get; set; } = 80;
@@ -229,28 +230,54 @@ public partial class GameState : Node
 
     public void AddPotion(string potionId)
     {
-        if (PotionIds.Count >= 9)
-        {
-            return;
-        }
-
-        PotionIds.Add(potionId);
-        PotionCharges = PotionIds.Count;
+        TryAddPotion(potionId);
     }
 
     public PotionData AddRandomPotion()
     {
+        TryAddRandomPotion(out var potion);
+        return potion;
+    }
+
+    public bool TryAddPotion(string potionId)
+    {
+        if (string.IsNullOrWhiteSpace(potionId) || PotionIds.Count >= PotionInventoryCapacity)
+        {
+            return false;
+        }
+
+        PotionIds.Add(potionId);
+        PotionCharges = PotionIds.Count;
+        return true;
+    }
+
+    public bool TryAddRandomPotion(out PotionData potion)
+    {
         var pool = PotionData.AllPotionIds();
         if (pool.Count == 0)
         {
-            var fallback = PotionData.CreateById("healing_potion");
-            AddPotion(fallback.Id);
-            return fallback;
+            potion = PotionData.CreateById("healing_potion");
+            return TryAddPotion(potion.Id);
         }
 
         var potionId = pool[_rng.Next(pool.Count)];
-        AddPotion(potionId);
-        return PotionData.CreateById(potionId);
+        potion = PotionData.CreateById(potionId);
+        return TryAddPotion(potionId);
+    }
+
+    public bool TryConsumePotionAt(int index, out PotionData potion)
+    {
+        potion = PotionData.CreateById("healing_potion");
+        if (index < 0 || index >= PotionIds.Count)
+        {
+            return false;
+        }
+
+        var potionId = PotionIds[index];
+        PotionIds.RemoveAt(index);
+        PotionCharges = PotionIds.Count;
+        potion = PotionData.CreateById(potionId);
+        return true;
     }
 
     public void AddPotionCharge(int amount)
@@ -260,7 +287,7 @@ public partial class GameState : Node
             return;
         }
 
-        var cap = Math.Min(PotionCharges + amount, 9);
+        var cap = Math.Min(PotionCharges + amount, PotionInventoryCapacity);
         while (PotionIds.Count < cap)
         {
             PotionIds.Add("healing_potion");

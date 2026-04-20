@@ -427,6 +427,40 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Hand: 0 | Draw: 0 | Discard: 0"
 
+[node name="PotionBarLabel" type="Label" parent="MainMargin/MainVBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Potions"
+
+[node name="PotionBar" type="HBoxContainer" parent="MainMargin/MainVBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PotionButton1" type="Button" parent="MainMargin/MainVBox/StatsRow/PotionBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "1. Empty"
+
+[node name="PotionButton2" type="Button" parent="MainMargin/MainVBox/StatsRow/PotionBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "2. Empty"
+
+[node name="PotionButton3" type="Button" parent="MainMargin/MainVBox/StatsRow/PotionBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "3. Empty"
+
 [node name="StatsSpacer" type="Control" parent="MainMargin/MainVBox/StatsRow"]
 layout_mode = 2
 size_flags_horizontal = 3

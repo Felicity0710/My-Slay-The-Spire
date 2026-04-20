@@ -316,6 +316,8 @@ public partial class BattleScene : Control
             _state.BeginEncounter(MapNodeType.NormalBattle);
         }
 
+        SetupPotionUi();
+
         _endTurnButton.Pressed += EndTurn;
         _settingsButton.Pressed += OnOpenSettingsPressed;
         _settingsCloseButton.Pressed += OnCloseSettingsPressed;
@@ -475,6 +477,7 @@ public partial class BattleScene : Control
         }
 
         LocalizationSettings.LanguageChanged -= OnLanguageChanged;
+        TearDownPotionUi();
         foreach (var view in _cardViewPool)
         {
             if (IsInstanceValid(view))
@@ -1894,6 +1897,7 @@ public partial class BattleScene : Control
             _drawPile.Count,
             _discardPile.Count,
             AliveEnemyCount());
+        RefreshPotionUi();
         RefreshPileViewerUi();
         _relicBarLabel.Text = BuildRelicBarText();
         RefreshRelicIcons();
@@ -2122,6 +2126,7 @@ public partial class BattleScene : Control
     private void UpdateInputControls()
     {
         _endTurnButton.Disabled = IsInputLocked();
+        RefreshPotionUi();
         RefreshPileViewerUi();
         RefreshCardPlayableStates();
     }
