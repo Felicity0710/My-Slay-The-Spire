@@ -608,7 +608,7 @@ public partial class ExternalControlService : Node
         var snapshot = new RewardSnapshot
         {
             Mode = state.PendingRewardOptions.Count > 0 ? "card_pack" : "reward_type",
-            RewardTypes = new List<string> { "relic", "card_pack", "potion", "random", "skip" }
+            RewardTypes = new List<string> { "relic", "card_pack", "potion", "skip" }
         };
 
         for (var i = 0; i < state.PendingRewardOptions.Count; i++)
@@ -668,7 +668,7 @@ public partial class ExternalControlService : Node
 
         var rewardTypes = reward.RewardTypes.Count > 0
             ? reward.RewardTypes
-            : new List<string> { "relic", "card_pack", "potion", "random", "skip" };
+            : new List<string> { "relic", "card_pack", "potion", "skip" };
 
         foreach (var rewardType in rewardTypes)
         {
@@ -775,21 +775,7 @@ public partial class ExternalControlService : Node
                 state.TryAddRandomPotion(out _);
                 return ExitRewardToMap(state, tree, clearCardPack: true);
             case "random":
-            {
-                var choices = new List<string> { "relic", "card_pack", "potion" };
-                if (state.RelicIds.Count >= RelicData.AllRelicIds().Count)
-                {
-                    choices.Remove("relic");
-                }
-
-                if (choices.Count == 0)
-                {
-                    choices.Add("potion");
-                }
-
-                var pick = choices[new Random().Next(choices.Count)];
-                return TryExecuteRewardTypeDirectly(state, tree, pick);
-            }
+                return "Random reward is disabled.";
             case "skip":
                 return ExitRewardToMap(state, tree, clearCardPack: true);
             default:

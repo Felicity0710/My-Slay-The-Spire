@@ -22,6 +22,11 @@ public partial class RewardScene : Control
     private bool _isChoosingFromCardPack;
     private bool _isChoosingPotionReplacement;
     private string _pendingPotionReplacementId = string.Empty;
+    private bool _isPreviewingRelicReward;
+    private bool _isPreviewingPotionReward;
+    private string _pendingRelicRewardId = string.Empty;
+    private string _pendingPotionRewardId = string.Empty;
+    private bool _pendingPotionFromRelicFallback;
 
     public override void _Ready()
     {
@@ -43,7 +48,6 @@ public partial class RewardScene : Control
         _relicRewardButton.Pressed += OnPickRelicReward;
         _cardPackRewardButton.Pressed += OnPickCardPackReward;
         _potionRewardButton.Pressed += OnPickPotionReward;
-        _randomRewardButton.Pressed += OnPickRandomReward;
         _skipButton.Pressed += OnSkipPressed;
         LocalizationSettings.LanguageChanged += RefreshUiText;
 
@@ -57,9 +61,7 @@ public partial class RewardScene : Control
 
     private void ShowRewardTypeSelection()
     {
-        _isChoosingFromCardPack = false;
-        _isChoosingPotionReplacement = false;
-        _pendingPotionReplacementId = string.Empty;
+        ClearRewardSubState();
         RefreshUiText();
         SetRewardTypeState();
     }
@@ -72,11 +74,24 @@ public partial class RewardScene : Control
             return;
         }
 
+        if (_isPreviewingRelicReward)
+        {
+            RefreshRelicPreviewText();
+            return;
+        }
+
+        if (_isPreviewingPotionReward)
+        {
+            RefreshPotionPreviewText();
+            return;
+        }
+
         _relicRewardButton.Text = LocalizationService.Get("ui.reward.relic_reward", "遗物");
         _cardPackRewardButton.Text = LocalizationService.Get("ui.reward.card_pack_reward", "卡牌包");
         _potionRewardButton.Text = LocalizationService.Get("ui.reward.potion_reward", "药水");
-        _randomRewardButton.Text = LocalizationService.Get("ui.reward.random_reward", "随机奖励");
-        _skipButton.Text = LocalizationService.Get("ui.common.skip", "跳过");
+        _skipButton.Text = _isChoosingFromCardPack
+            ? LocalizationService.Get("ui.reward.back_to_reward_list", "返回奖励列表")
+            : LocalizationService.Get("ui.common.skip", "跳过");
         _titleLabel.Text = _isChoosingFromCardPack
             ? LocalizationService.Get("ui.reward.choose_one_card", "选择一张牌")
             : LocalizationService.Get("ui.reward.post_battle", "战后奖励");
@@ -84,29 +99,69 @@ public partial class RewardScene : Control
         {
             _statusLabel.Text = LocalizationService.Get(
                 "ui.reward.reward_type_status",
-                "选择一种奖励：遗物 / 卡牌包 / 药水 / 随机奖励");
+                "选择一种奖励：遗物 / 卡牌包 / 药水");
         }
     }
 
     private void SetRewardTypeState()
     {
-        _isChoosingPotionReplacement = false;
-        _pendingPotionReplacementId = string.Empty;
+        ClearRewardSubState();
 
         _titleLabel.Text = LocalizationService.Get("ui.reward.post_battle", "战后奖励");
         _statusLabel.Text = LocalizationService.Get(
             "ui.reward.reward_type_status",
-            "选择一种奖励：遗物 / 卡牌包 / 药水 / 随机奖励");
+            "选择一种奖励：遗物 / 卡牌包 / 药水");
         _rewardTypeWrap.Visible = true;
         _cardPackWrap.Visible = false;
         _relicRewardButton.Visible = true;
         _cardPackRewardButton.Visible = true;
         _potionRewardButton.Visible = true;
-        _randomRewardButton.Visible = true;
+        _randomRewardButton.Visible = false;
+        _randomRewardButton.Disabled = true;
 
         ClearCardPreviews();
 
         _skipButton.Text = LocalizationService.Get("ui.common.skip", "跳过");
+    }
+
+    private void ClearRewardSubState()
+    {
+        _isChoosingFromCardPack = false;
+        _isChoosingPotionReplacement = false;
+        _isPreviewingRelicReward = false;
+        _isPreviewingPotionReward = false;
+        _pendingPotionReplacementId = string.Empty;
+        _pendingRelicRewardId = string.Empty;
+        _pendingPotionRewardId = string.Empty;
+        _pendingPotionFromRelicFallback = false;
+    }
+
+    private void ReturnToRewardTypeSelection(string status)
+    {
+        SetRewardTypeState();
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            _statusLabel.Text = status;
+        }
+    }
+
+    private static PotionData RollRandomPotionData(Random rng)
+    {
+        var pool = PotionData.AllPotionIds();
+        if (pool.Count == 0)
+        {
+            return PotionData.CreateById("healing_potion");
+        }
+
+        var potionId = pool[rng.Next(pool.Count)];
+        return PotionData.CreateById(potionId);
+    }
+
+    private PotionData GetPendingPreviewPotion()
+    {
+        return string.IsNullOrWhiteSpace(_pendingPotionRewardId)
+            ? PotionData.CreateById("healing_potion")
+            : PotionData.CreateById(_pendingPotionRewardId);
     }
 
     private void ClearCardPreviews()
@@ -130,28 +185,31 @@ public partial class RewardScene : Control
             return;
         }
 
+        if (_isPreviewingRelicReward)
+        {
+            ConfirmRelicReward();
+            return;
+        }
+
+        if (_isPreviewingPotionReward)
+        {
+            return;
+        }
+
         var state = GetNode<GameState>("/root/GameState");
         state.RollRelicOptions(3);
 
         if (state.PendingRelicOptions.Count == 0)
         {
             state.PendingRelicOptions.Clear();
-            if (!state.TryAddRandomPotion(out var fallbackPotion))
-            {
-                StartPotionReplacementSelection(fallbackPotion);
-                return;
-            }
-
-            ExitToMap(
-                LocalizationService.Format("ui.reward.pending_relic_full", "遗物已拿满，改为获得药水：{0}", fallbackPotion.Name));
+            var fallbackPotion = RollRandomPotionData(_rng);
+            StartPotionRewardPreview(fallbackPotion, fromRelicFallback: true);
             return;
         }
 
         var relicId = state.PendingRelicOptions[_rng.Next(state.PendingRelicOptions.Count)];
-        var relic = RelicData.CreateById(relicId);
-        state.AddRelic(relicId);
         state.PendingRelicOptions.Clear();
-        ExitToMap(LocalizationService.Format("ui.reward.got_relic", "获得遗物：{0}", relic.LocalizedName));
+        StartRelicRewardPreview(relicId);
     }
 
     private void OnPickCardPackReward()
@@ -162,16 +220,20 @@ public partial class RewardScene : Control
             return;
         }
 
+        if (_isPreviewingRelicReward || _isPreviewingPotionReward)
+        {
+            return;
+        }
+
         var state = GetNode<GameState>("/root/GameState");
         state.RollRewardOptions(3);
 
         if (state.PendingRewardOptions.Count == 0)
         {
-            ExitToMap("当前没有可用卡牌奖励。");
+            ReturnToRewardTypeSelection(LocalizationService.Get("ui.reward.card_pack_empty", "当前没有可用卡牌奖励。"));
             return;
         }
 
-        _isChoosingFromCardPack = true;
         _isChoosingFromCardPack = true;
         _titleLabel.Text = LocalizationService.Get("ui.reward.choose_one_card", "选择一张牌");
         _statusLabel.Text = LocalizationService.Get("ui.reward.select_one_of_three_cards", "从 3 张卡牌中选择 1 张加入牌库。");
@@ -182,7 +244,7 @@ public partial class RewardScene : Control
         _cardPackRewardButton.Visible = false;
         _potionRewardButton.Visible = false;
         _randomRewardButton.Visible = false;
-        _skipButton.Text = LocalizationService.Get("ui.common.skip", "跳过");
+        _skipButton.Text = LocalizationService.Get("ui.reward.back_to_reward_list", "返回奖励列表");
 
         BuildCardPreviews(state.PendingRewardOptions);
     }
@@ -237,50 +299,24 @@ public partial class RewardScene : Control
             return;
         }
 
-        var state = GetNode<GameState>("/root/GameState");
-        if (!state.TryAddRandomPotion(out var potion))
+        if (_isPreviewingPotionReward)
         {
-            StartPotionReplacementSelection(potion);
+            ConfirmPotionReward();
             return;
         }
 
-        ExitToMap(LocalizationService.Format("ui.reward.got_potion", "获得药水：{0}\n{1}", potion.Name, potion.Description));
+        if (_isPreviewingRelicReward)
+        {
+            return;
+        }
+
+        var potion = RollRandomPotionData(_rng);
+        StartPotionRewardPreview(potion, fromRelicFallback: false);
     }
 
     private void OnPickRandomReward()
     {
-        if (_isChoosingPotionReplacement)
-        {
-            return;
-        }
-
-        var state = GetNode<GameState>("/root/GameState");
-
-        var choices = new List<string> { "relic", "card_pack", "potion" };
-        if (state.RelicIds.Count >= RelicData.AllRelicIds().Count)
-        {
-            choices.Remove("relic");
-        }
-
-        if (choices.Count == 0)
-        {
-            choices.Add("potion");
-        }
-
-        var pick = choices[_rng.Next(choices.Count)];
-        switch (pick)
-        {
-            case "relic":
-                OnPickRelicReward();
-                break;
-            case "card_pack":
-                _statusLabel.Text = LocalizationService.Get("ui.reward.random_reward_card_pack", "随机奖励：卡牌包");
-                OnPickCardPackReward();
-                break;
-            default:
-                OnPickPotionReward();
-                break;
-        }
+        ReturnToRewardTypeSelection(LocalizationService.Get("ui.reward.random_disabled", "随机奖励已停用。"));
     }
 
     private void OnSkipPressed()
@@ -288,32 +324,168 @@ public partial class RewardScene : Control
         var state = GetNode<GameState>("/root/GameState");
         state.PendingRewardOptions.Clear();
 
+        if (_isPreviewingRelicReward)
+        {
+            ReturnToRewardTypeSelection(LocalizationService.Get(
+                "ui.reward.back_from_relic_preview",
+                "你放弃了本次遗物奖励，已返回奖励列表。"));
+            return;
+        }
+
+        if (_isPreviewingPotionReward)
+        {
+            ReturnToRewardTypeSelection(LocalizationService.Get(
+                "ui.reward.back_from_potion_preview",
+                "你放弃了本次药水奖励，已返回奖励列表。"));
+            return;
+        }
+
         if (_isChoosingPotionReplacement)
         {
-            var incomingPotion = GetPendingReplacementPotion();
-            _isChoosingPotionReplacement = false;
-            _pendingPotionReplacementId = string.Empty;
-            ExitToMap(
-                LocalizationService.Format(
-                    "ui.reward.potion_replace_skip",
-                    "你放弃了新的药水：{0}",
-                    incomingPotion.Name),
-                clearCardPack: true);
+            ReturnToRewardTypeSelection(LocalizationService.Get(
+                "ui.reward.back_from_potion_replace",
+                "你放弃了本次药水替换，已返回奖励列表。"));
             return;
         }
 
         if (_isChoosingFromCardPack)
         {
-            ExitToMap(LocalizationService.Get("ui.reward.skip_card_pack", "你跳过了卡牌包奖励。"), clearCardPack: true);
+            ReturnToRewardTypeSelection(LocalizationService.Get(
+                "ui.reward.back_from_card_pack",
+                "你放弃了本次卡牌包奖励，已返回奖励列表。"));
             return;
         }
 
         ExitToMap(LocalizationService.Get("ui.reward.skip_reward", "你跳过了战后奖励。"), clearCardPack: true);
     }
 
+    private void StartRelicRewardPreview(string relicId)
+    {
+        _isChoosingFromCardPack = false;
+        _isChoosingPotionReplacement = false;
+        _isPreviewingPotionReward = false;
+        _pendingPotionRewardId = string.Empty;
+        _pendingPotionFromRelicFallback = false;
+        _pendingPotionReplacementId = string.Empty;
+
+        _isPreviewingRelicReward = true;
+        _pendingRelicRewardId = relicId;
+
+        _rewardTypeWrap.Visible = true;
+        _cardPackWrap.Visible = false;
+        ClearCardPreviews();
+        RefreshRelicPreviewText();
+    }
+
+    private void RefreshRelicPreviewText()
+    {
+        var relic = string.IsNullOrWhiteSpace(_pendingRelicRewardId)
+            ? RelicData.CreateById("lantern")
+            : RelicData.CreateById(_pendingRelicRewardId);
+
+        _titleLabel.Text = LocalizationService.Get("ui.reward.post_battle", "战后奖励");
+        _statusLabel.Text = LocalizationService.Format(
+            "ui.reward.preview_relic_status",
+            "确认获得遗物：{0}\\n{1}",
+            relic.LocalizedName,
+            relic.Description);
+
+        _relicRewardButton.Visible = true;
+        _relicRewardButton.Text = LocalizationService.Get("ui.reward.confirm_relic", "确认遗物奖励");
+        _cardPackRewardButton.Visible = false;
+        _potionRewardButton.Visible = false;
+        _randomRewardButton.Visible = false;
+        _skipButton.Text = LocalizationService.Get("ui.reward.back_to_reward_list", "返回奖励列表");
+    }
+
+    private void ConfirmRelicReward()
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        var relicId = string.IsNullOrWhiteSpace(_pendingRelicRewardId) ? "lantern" : _pendingRelicRewardId;
+        var relic = RelicData.CreateById(relicId);
+
+        state.AddRelic(relicId);
+        _isPreviewingRelicReward = false;
+        _pendingRelicRewardId = string.Empty;
+        ExitToMap(LocalizationService.Format("ui.reward.got_relic", "获得遗物：{0}", relic.LocalizedName));
+    }
+
+    private void StartPotionRewardPreview(PotionData potion, bool fromRelicFallback)
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        if (state.PotionIds.Count >= GameState.PotionInventoryCapacity)
+        {
+            StartPotionReplacementSelection(potion);
+            return;
+        }
+
+        _isChoosingFromCardPack = false;
+        _isChoosingPotionReplacement = false;
+        _isPreviewingRelicReward = false;
+        _pendingRelicRewardId = string.Empty;
+        _pendingPotionReplacementId = string.Empty;
+
+        _isPreviewingPotionReward = true;
+        _pendingPotionRewardId = potion.Id;
+        _pendingPotionFromRelicFallback = fromRelicFallback;
+
+        _rewardTypeWrap.Visible = true;
+        _cardPackWrap.Visible = false;
+        ClearCardPreviews();
+        RefreshPotionPreviewText();
+    }
+
+    private void RefreshPotionPreviewText()
+    {
+        var potion = GetPendingPreviewPotion();
+        _titleLabel.Text = LocalizationService.Get("ui.reward.post_battle", "战后奖励");
+        _statusLabel.Text = LocalizationService.Format(
+            "ui.reward.preview_potion_status",
+            "确认获得药水：{0}\\n{1}",
+            potion.Name,
+            potion.Description);
+
+        _relicRewardButton.Visible = false;
+        _cardPackRewardButton.Visible = false;
+        _potionRewardButton.Visible = true;
+        _potionRewardButton.Text = LocalizationService.Get("ui.reward.confirm_potion", "确认药水奖励");
+        _randomRewardButton.Visible = false;
+        _skipButton.Text = LocalizationService.Get("ui.reward.back_to_reward_list", "返回奖励列表");
+    }
+
+    private void ConfirmPotionReward()
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        var potion = GetPendingPreviewPotion();
+
+        if (!state.TryAddPotion(potion.Id))
+        {
+            StartPotionReplacementSelection(potion);
+            return;
+        }
+
+        var fromRelicFallback = _pendingPotionFromRelicFallback;
+        _isPreviewingPotionReward = false;
+        _pendingPotionRewardId = string.Empty;
+        _pendingPotionFromRelicFallback = false;
+
+        if (fromRelicFallback)
+        {
+            ExitToMap(LocalizationService.Format("ui.reward.pending_relic_full", "遗物已拿满，改为获得药水：{0}", potion.Name));
+            return;
+        }
+
+        ExitToMap(LocalizationService.Format("ui.reward.got_potion", "获得药水：{0}\\n{1}", potion.Name, potion.Description));
+    }
+
     private void StartPotionReplacementSelection(PotionData incomingPotion)
     {
         _isChoosingFromCardPack = false;
+        _isPreviewingRelicReward = false;
+        _isPreviewingPotionReward = false;
+        _pendingRelicRewardId = string.Empty;
+        _pendingPotionRewardId = string.Empty;
+        _pendingPotionFromRelicFallback = false;
         _isChoosingPotionReplacement = true;
         _pendingPotionReplacementId = incomingPotion.Id;
 
@@ -333,7 +505,7 @@ public partial class RewardScene : Control
             "药水栏已满。请选择一瓶丢弃，以获得：{0}\\n{1}",
             incomingPotion.Name,
             incomingPotion.Description);
-        _skipButton.Text = LocalizationService.Get("ui.common.skip", "跳过");
+        _skipButton.Text = LocalizationService.Get("ui.reward.back_to_reward_list", "返回奖励列表");
 
         var state = GetNode<GameState>("/root/GameState");
         ConfigurePotionReplacementButton(_relicRewardButton, state, 0);
@@ -417,11 +589,51 @@ public partial class RewardScene : Control
         var state = GetNode<GameState>("/root/GameState");
         var snapshot = new RewardSnapshot
         {
-            Mode = _isChoosingFromCardPack ? "card_pack" : _isChoosingPotionReplacement ? "potion_replace" : "reward_type",
+            Mode = _isChoosingFromCardPack
+                ? "card_pack"
+                : _isChoosingPotionReplacement
+                    ? "potion_replace"
+                    : _isPreviewingRelicReward
+                        ? "relic_preview"
+                        : _isPreviewingPotionReward
+                            ? "potion_preview"
+                            : "reward_type",
             RewardTypes = _isChoosingPotionReplacement
                 ? new List<string> { "relic", "card_pack", "potion", "skip" }
-                : new List<string> { "relic", "card_pack", "potion", "random", "skip" }
+                : _isPreviewingRelicReward
+                    ? new List<string> { "relic", "skip" }
+                    : _isPreviewingPotionReward
+                        ? new List<string> { "potion", "skip" }
+                        : new List<string> { "relic", "card_pack", "potion", "skip" }
         };
+
+        if (_isPreviewingRelicReward)
+        {
+            var relic = string.IsNullOrWhiteSpace(_pendingRelicRewardId)
+                ? RelicData.CreateById("lantern")
+                : RelicData.CreateById(_pendingRelicRewardId);
+            snapshot.RelicOptions.Add(new RewardOptionSnapshot
+            {
+                OptionIndex = 0,
+                Id = relic.Id,
+                Name = relic.Name,
+                Description = relic.Description
+            });
+            return snapshot;
+        }
+
+        if (_isPreviewingPotionReward)
+        {
+            var potion = GetPendingPreviewPotion();
+            snapshot.RelicOptions.Add(new RewardOptionSnapshot
+            {
+                OptionIndex = 0,
+                Id = potion.Id,
+                Name = potion.Name,
+                Description = potion.Description
+            });
+            return snapshot;
+        }
 
         if (_isChoosingPotionReplacement)
         {
@@ -470,6 +682,46 @@ public partial class RewardScene : Control
     public List<LegalActionSnapshot> BuildLegalActions()
     {
         var actions = new List<LegalActionSnapshot>();
+        if (_isPreviewingRelicReward)
+        {
+            actions.Add(new LegalActionSnapshot
+            {
+                Kind = "choose_reward_type",
+                Label = "Confirm relic reward",
+                Parameters = new Dictionary<string, object?>
+                {
+                    ["rewardType"] = "relic"
+                }
+            });
+
+            actions.Add(new LegalActionSnapshot
+            {
+                Kind = "skip_reward",
+                Label = "Back to reward list"
+            });
+            return actions;
+        }
+
+        if (_isPreviewingPotionReward)
+        {
+            actions.Add(new LegalActionSnapshot
+            {
+                Kind = "choose_reward_type",
+                Label = "Confirm potion reward",
+                Parameters = new Dictionary<string, object?>
+                {
+                    ["rewardType"] = "potion"
+                }
+            });
+
+            actions.Add(new LegalActionSnapshot
+            {
+                Kind = "skip_reward",
+                Label = "Back to reward list"
+            });
+            return actions;
+        }
+
         if (_isChoosingPotionReplacement)
         {
             var state = GetNode<GameState>("/root/GameState");
@@ -491,7 +743,7 @@ public partial class RewardScene : Control
             actions.Add(new LegalActionSnapshot
             {
                 Kind = "skip_reward",
-                Label = "Skip replacing potion"
+                Label = "Back to reward list"
             });
             return actions;
         }
@@ -516,12 +768,12 @@ public partial class RewardScene : Control
             actions.Add(new LegalActionSnapshot
             {
                 Kind = "skip_reward",
-                Label = "Skip the card reward"
+                Label = "Back to reward list"
             });
             return actions;
         }
 
-        foreach (var rewardType in new[] { "relic", "card_pack", "potion", "random" })
+        foreach (var rewardType in new[] { "relic", "card_pack", "potion" })
         {
             actions.Add(new LegalActionSnapshot
             {
@@ -550,6 +802,36 @@ public partial class RewardScene : Control
         }
 
         var normalized = rewardType?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (_isPreviewingRelicReward)
+        {
+            switch (normalized)
+            {
+                case "relic":
+                    OnPickRelicReward();
+                    return null;
+                case "skip":
+                    OnSkipPressed();
+                    return null;
+                default:
+                    return $"Unsupported relic preview action '{rewardType}'. Use relic/skip.";
+            }
+        }
+
+        if (_isPreviewingPotionReward)
+        {
+            switch (normalized)
+            {
+                case "potion":
+                    OnPickPotionReward();
+                    return null;
+                case "skip":
+                    OnSkipPressed();
+                    return null;
+                default:
+                    return $"Unsupported potion preview action '{rewardType}'. Use potion/skip.";
+            }
+        }
+
         if (_isChoosingPotionReplacement)
         {
             switch (normalized)
@@ -583,8 +865,7 @@ public partial class RewardScene : Control
                 OnPickPotionReward();
                 return null;
             case "random":
-                OnPickRandomReward();
-                return null;
+                return LocalizationService.Get("ui.reward.random_disabled", "Random reward is disabled.");
             case "skip":
                 OnSkipPressed();
                 return null;
