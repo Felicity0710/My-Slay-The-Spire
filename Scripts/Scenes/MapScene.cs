@@ -192,9 +192,19 @@ public partial class MapScene : Control
     private void ApplyScrollFocus(float focusY)
     {
         var viewHeight = _mapScroll.Size.Y;
-        var maxScroll = Mathf.Max(0f, _mapCanvas.Size.Y - viewHeight);
-        var desired = Mathf.Clamp(focusY - viewHeight * 0.72f, 0f, maxScroll);
+        var maxVerticalScroll = Mathf.Max(0f, _mapCanvas.Size.Y - viewHeight);
+        var desired = Mathf.Clamp(focusY - viewHeight * 0.72f, 0f, maxVerticalScroll);
         _mapScroll.ScrollVertical = Mathf.RoundToInt(desired);
+        CenterMapHorizontally();
+    }
+
+    private void CenterMapHorizontally()
+    {
+        var viewWidth = _mapScroll.Size.X;
+        var maxHorizontalScroll = Mathf.Max(0f, _mapCanvas.Size.X - viewWidth);
+        _mapScroll.ScrollHorizontal = maxHorizontalScroll <= 0f
+            ? 0
+            : Mathf.RoundToInt(maxHorizontalScroll * 0.5f);
     }
 
     private List<List<Vector2>> BuildNodePositions(GameState state)
