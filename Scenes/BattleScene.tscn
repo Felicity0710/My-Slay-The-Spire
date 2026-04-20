@@ -485,10 +485,12 @@ text = "Test Victory"
 
 [node name="LogOverlay" type="PanelContainer" parent="."]
 layout_mode = 1
-offset_left = 1505.0
-offset_top = 693.0
-offset_right = 1905.0
-offset_bottom = 913.0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -406.0
+offset_top = 86.0
+offset_right = -16.0
+offset_bottom = 350.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_log")
 
@@ -629,12 +631,38 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Cards: 0"
 
-[node name="PileViewerList" type="RichTextLabel" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+[node name="PileViewerToolbar" type="HBoxContainer" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PileViewerSortLabel" type="Label" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent/PileViewerToolbar"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 320)
+layout_mode = 2
+text = "Sort"
+
+[node name="PileViewerSortOption" type="OptionButton" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent/PileViewerToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PileViewerList" type="ItemList" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 220)
 layout_mode = 2
 size_flags_vertical = 3
-bbcode_enabled = true
+
+[node name="PileViewerDetailTitle" type="Label" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Card Details"
+
+[node name="PileViewerDetailText" type="RichTextLabel" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+bbcode_enabled = false
+fit_content = false
+scroll_active = true
 
 [node name="PileViewerCloseButton" type="Button" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
 unique_name_in_owner = true
