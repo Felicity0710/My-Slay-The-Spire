@@ -5,6 +5,10 @@ using System.Text;
 
 public partial class MapScene : Control
 {
+    private const float MapCanvasMinWidth = 760f;
+    private const float MapCanvasMaxWidth = 1220f;
+    private const float MapViewportHorizontalPadding = 64f;
+
     private Label _titleLabel = null!;
     private Label _runInfoLabel = null!;
     private Label _statusLabel = null!;
@@ -26,15 +30,75 @@ public partial class MapScene : Control
         _mapCanvas = GetNode<MapCanvas>("%MapCanvas");
         _menuButton = GetNode<Button>("%MenuButton");
 
+        SetupDeckViewerUi();
         _menuButton.Pressed += OnMenuPressed;
+        _mapScroll.Resized += OnMapViewportResized;
         LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
         RefreshUi();
+        CallDeferred(nameof(ApplyInitialMapLayout));
     }
 
     public override void _ExitTree()
     {
+        if (IsInstanceValid(_mapScroll))
+        {
+            _mapScroll.Resized -= OnMapViewportResized;
+        }
+
+        TearDownDeckViewerUi();
         LocalizationSettings.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void ApplyInitialMapLayout()
+    {
+        if (!IsInstanceValid(_mapCanvas))
+        {
+            return;
+        }
+
+        UpdateMapCanvasWidth();
+        BuildTreasureMap(GetNode<GameState>("/root/GameState"));
+    }
+
+    private void OnMapViewportResized()
+    {
+        if (!IsInstanceValid(_mapCanvas))
+        {
+            return;
+        }
+
+        UpdateMapCanvasWidth();
+        BuildTreasureMap(GetNode<GameState>("/root/GameState"));
+    }
+
+    private void UpdateMapCanvasWidth()
+    {
+        var viewportWidth = _mapScroll.Size.X;
+        if (viewportWidth <= 0f)
+        {
+            return;
+        }
+
+        var targetWidth = Mathf.Clamp(
+            viewportWidth - MapViewportHorizontalPadding,
+            MapCanvasMinWidth,
+            MapCanvasMaxWidth);
+
+        var currentMinimumSize = _mapCanvas.CustomMinimumSize;
+        if (Mathf.Abs(currentMinimumSize.X - targetWidth) < 0.5f)
+        {
+            return;
+        }
+
+        _mapCanvas.CustomMinimumSize = new Vector2(targetWidth, currentMinimumSize.Y);
+    }
+
+    private Vector2 GetEffectiveMapCanvasSize()
+    {
+        return new Vector2(
+            Mathf.Max(_mapCanvas.Size.X, _mapCanvas.CustomMinimumSize.X),
+            Mathf.Max(_mapCanvas.Size.Y, _mapCanvas.CustomMinimumSize.Y));
     }
 
     private void RefreshUi(string status = "")
@@ -85,6 +149,8 @@ public partial class MapScene : Control
 
         _relicLabel.Text = relicText.ToString();
 
+        UpdateMapCanvasWidth();
+        RefreshDeckViewerUi(state);
         BuildTreasureMap(state);
     }
 
@@ -191,16 +257,29 @@ public partial class MapScene : Control
 
     private void ApplyScrollFocus(float focusY)
     {
+        var mapSize = GetEffectiveMapCanvasSize();
         var viewHeight = _mapScroll.Size.Y;
-        var maxScroll = Mathf.Max(0f, _mapCanvas.Size.Y - viewHeight);
-        var desired = Mathf.Clamp(focusY - viewHeight * 0.72f, 0f, maxScroll);
+        var maxVerticalScroll = Mathf.Max(0f, mapSize.Y - viewHeight);
+        var desired = Mathf.Clamp(focusY - viewHeight * 0.72f, 0f, maxVerticalScroll);
         _mapScroll.ScrollVertical = Mathf.RoundToInt(desired);
+        CenterMapHorizontally();
+    }
+
+    private void CenterMapHorizontally()
+    {
+        var mapSize = GetEffectiveMapCanvasSize();
+        var viewWidth = _mapScroll.Size.X;
+        var maxHorizontalScroll = Mathf.Max(0f, mapSize.X - viewWidth);
+        _mapScroll.ScrollHorizontal = maxHorizontalScroll <= 0f
+            ? 0
+            : Mathf.RoundToInt(maxHorizontalScroll * 0.5f);
     }
 
     private List<List<Vector2>> BuildNodePositions(GameState state)
     {
-        var mapWidth = _mapCanvas.Size.X;
-        var mapHeight = _mapCanvas.Size.Y;
+        var mapSize = GetEffectiveMapCanvasSize();
+        var mapWidth = mapSize.X;
+        var mapHeight = mapSize.Y;
 
         var rows = state.MapLayout.Count;
         var cols = state.MapLayout[0].Count;

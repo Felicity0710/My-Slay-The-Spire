@@ -427,6 +427,58 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Hand: 0 | Draw: 0 | Discard: 0"
 
+[node name="PotionBarLabel" type="Label" parent="MainMargin/MainVBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Potions"
+
+[node name="PotionBar" type="HBoxContainer" parent="MainMargin/MainVBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PotionButton1" type="Button" parent="MainMargin/MainVBox/StatsRow/PotionBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "1. Empty"
+
+[node name="PotionButton2" type="Button" parent="MainMargin/MainVBox/StatsRow/PotionBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "2. Empty"
+
+[node name="PotionButton3" type="Button" parent="MainMargin/MainVBox/StatsRow/PotionBar"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "3. Empty"
+
+[node name="StatsSpacer" type="Control" parent="MainMargin/MainVBox/StatsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DrawPileButton" type="Button" parent="MainMargin/MainVBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "Draw Pile"
+
+[node name="DiscardPileButton" type="Button" parent="MainMargin/MainVBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "Discard Pile"
+
 [node name="HandPanel" type="PanelContainer" parent="MainMargin/MainVBox"]
 custom_minimum_size = Vector2(0, 260)
 layout_mode = 2
@@ -467,10 +519,12 @@ text = "Test Victory"
 
 [node name="LogOverlay" type="PanelContainer" parent="."]
 layout_mode = 1
-offset_left = 1505.0
-offset_top = 693.0
-offset_right = 1905.0
-offset_bottom = 913.0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -406.0
+offset_top = 86.0
+offset_right = -16.0
+offset_bottom = 350.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_log")
 
@@ -550,6 +604,107 @@ layout_mode = 2
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
+
+[node name="PileViewerModal" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="PileViewerBackdrop" type="ColorRect" parent="PileViewerModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+color = Color(0, 0, 0, 0.55)
+
+[node name="PileViewerDialog" type="PanelContainer" parent="PileViewerModal"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -250.0
+offset_right = 340.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="PileViewerMargin" type="MarginContainer" parent="PileViewerModal/PileViewerDialog"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="PileViewerContent" type="VBoxContainer" parent="PileViewerModal/PileViewerDialog/PileViewerMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="PileViewerTitle" type="Label" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Draw Pile"
+
+[node name="PileViewerCountLabel" type="Label" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Cards: 0"
+
+[node name="PileViewerToolbar" type="HBoxContainer" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PileViewerSortLabel" type="Label" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent/PileViewerToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Sort"
+
+[node name="PileViewerSortOption" type="OptionButton" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent/PileViewerToolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PileViewerList" type="ItemList" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PileViewerDetailTitle" type="Label" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Card Details"
+
+[node name="PileViewerDetailText" type="RichTextLabel" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+bbcode_enabled = false
+fit_content = false
+scroll_active = true
+
+[node name="PileViewerCloseButton" type="Button" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
+text = "Close"
 
 [node name="SettingsModal" type="Control" parent="."]
 unique_name_in_owner = true
