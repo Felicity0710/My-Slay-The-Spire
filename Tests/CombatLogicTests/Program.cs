@@ -40,6 +40,9 @@ internal static class Program
             ("Triage carries DrawCards + DiscardCards effects", TestTriageEffectsParse),
             ("Bone Shrapnel+ adds Curious keyword", TestBoneShrapnelUpgradeAddsCurious),
             ("MaybeUpgradeCardId handles edge cases", TestMaybeUpgradeCardIdEdgeCases),
+            ("Upgrade chance scales with Act", TestUpgradeChanceForActMonotonic),
+            ("Map progression caps at 3 acts", TestMapProgressionMaxActs),
+            ("Enemy catalog contains the Boss encounter", TestEnemyCatalogHasBossEncounter),
             ("Card pools only contain known card ids", TestCardPoolsContainKnownCardIds),
             ("Enemy catalog contains configured encounter rules", TestEnemyCatalogRuleCoverage),
             ("Card effect pipeline preserves execution order", TestCardEffectPipelineOrder),
@@ -486,6 +489,59 @@ internal static class Program
         if (CardUpgradeRules.CardIdHasUpgrade("strike+"))
         {
             throw new InvalidOperationException("strike+ is already upgraded; should not be flagged.");
+        }
+    }
+
+    private static void TestUpgradeChanceForActMonotonic()
+    {
+        var act1 = MapProgressionRules.UpgradeChanceForAct(1);
+        var act2 = MapProgressionRules.UpgradeChanceForAct(2);
+        var act3 = MapProgressionRules.UpgradeChanceForAct(3);
+        var act4 = MapProgressionRules.UpgradeChanceForAct(4);
+        var act0 = MapProgressionRules.UpgradeChanceForAct(0);
+
+        if (!(act1 < act2 && act2 < act3))
+        {
+            throw new InvalidOperationException($"UpgradeChanceForAct must increase with act; got {act1}/{act2}/{act3}.");
+        }
+
+        if (act4 < act3)
+        {
+            throw new InvalidOperationException("UpgradeChanceForAct should clamp non-decreasing past act 3.");
+        }
+
+        if (act0 > act1)
+        {
+            throw new InvalidOperationException("UpgradeChanceForAct(<=0) should not exceed act 1.");
+        }
+
+        if (act1 < 0.0 || act3 > 1.0)
+        {
+            throw new InvalidOperationException("UpgradeChanceForAct must lie in [0,1].");
+        }
+    }
+
+    private static void TestMapProgressionMaxActs()
+    {
+        ExpectEqual(3, MapProgressionRules.MaxActs, "MaxActs constant");
+        ExpectEqual(10, MapProgressionRules.RowsPerAct, "RowsPerAct constant");
+    }
+
+    private static void TestEnemyCatalogHasBossEncounter()
+    {
+        var catalog = EnemyEncounterCatalog.Load();
+        ExpectEqual(true, catalog.EncounterMembersByType.ContainsKey(MapNodeType.Boss), "Boss encounter exists");
+
+        var roster = EnemyEncounterBuilder.BuildEncounter(MapNodeType.Boss, floor: 8);
+        if (roster.Count == 0)
+        {
+            throw new InvalidOperationException("Boss encounter should produce at least one enemy.");
+        }
+
+        var boss = roster[0];
+        if (boss.MaxHp <= 0)
+        {
+            throw new InvalidOperationException("Boss enemy should have positive MaxHp.");
         }
     }
 

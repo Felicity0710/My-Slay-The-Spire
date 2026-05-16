@@ -8,12 +8,14 @@ public partial class GameState : Node
     private Random _rng = new();
 
     private const int MapWidth = 5;
-    private const int MapRows = 8;
+    private const int MapRows = MapProgressionRules.RowsPerAct;
     public const int PotionInventoryCapacity = 3;
 
     public int MaxHp { get; private set; } = 80;
     public int PlayerHp { get; set; } = 80;
     public int Floor { get; private set; } = 1;
+    public int Act { get; private set; } = 1;
+    public bool RunCompleted { get; private set; }
     public int BattlesWon { get; private set; }
     public int PotionCharges { get; private set; }
     public int Gold { get; private set; }
@@ -63,6 +65,8 @@ public partial class GameState : Node
         MaxHp = 80;
         PlayerHp = 80;
         Floor = 1;
+        Act = 1;
+        RunCompleted = false;
         BattlesWon = 0;
         PotionCharges = 0;
         Gold = 99;
@@ -332,7 +336,8 @@ public partial class GameState : Node
             return true;
         }
 
-        if (CurrentMapColumn < 0 || CurrentMapColumn >= MapWidth)
+        var prevRowWidth = MapLayout[CurrentMapRow - 1].Count;
+        if (CurrentMapColumn < 0 || CurrentMapColumn >= prevRowWidth)
         {
             // Fallback for debug/forced encounters that did not originate from map node selection.
             return true;
@@ -498,11 +503,15 @@ public partial class GameState : Node
         AdvanceFloor();
     }
 
-    public const double DefaultUpgradeChance = 0.25;
-
-    public string MaybeUpgradeCardId(string cardId, double chance = DefaultUpgradeChance)
+    public double CurrentUpgradeChance()
     {
-        return CardUpgradeRules.MaybeUpgrade(cardId, chance, _rng);
+        return MapProgressionRules.UpgradeChanceForAct(Act);
+    }
+
+    public string MaybeUpgradeCardId(string cardId, double chance = -1.0)
+    {
+        var resolvedChance = chance < 0 ? CurrentUpgradeChance() : chance;
+        return CardUpgradeRules.MaybeUpgrade(cardId, resolvedChance, _rng);
     }
 
     public bool DeckCardIsUpgradable(int index)
@@ -573,6 +582,8 @@ public partial class GameState : Node
             MapNodeType.Rest => LocalizationService.Get("map.node.rest", "Rest") ,
             MapNodeType.Shop => LocalizationService.Get("map.node.shop", "Shop") ,
             MapNodeType.MerchantFight => LocalizationService.Get("map.node.merchant_fight", "Merchant") ,
+            MapNodeType.Intro => LocalizationService.Get("map.node.intro", "Act Intro") ,
+            MapNodeType.Boss => LocalizationService.Get("map.node.boss", "Boss") ,
             _ => LocalizationService.Get("map.node.unknown", "Unknown")
         };
     }
@@ -587,6 +598,8 @@ public partial class GameState : Node
             MapNodeType.Rest => LocalizationService.Get("map.node_symbol.rest", "\u2665") ,
             MapNodeType.Shop => LocalizationService.Get("map.node_symbol.shop", "$") ,
             MapNodeType.MerchantFight => LocalizationService.Get("map.node_symbol.merchant_fight", "!") ,
+            MapNodeType.Intro => LocalizationService.Get("map.node_symbol.intro", "\u2605") ,
+            MapNodeType.Boss => LocalizationService.Get("map.node_symbol.boss", "\u272a") ,
             _ => LocalizationService.Get("map.node_symbol.unknown", "\uff1f")
         };
     }
@@ -646,12 +659,38 @@ public partial class GameState : Node
         MapLayout.Clear();
         MapConnections.Clear();
 
+        var lastRow = MapRows - 1;
+        var restRow = MapRows - 2;
+
         for (var row = 0; row < MapRows; row++)
         {
-            var rowTypes = new List<MapNodeType>(MapWidth);
-            for (var col = 0; col < MapWidth; col++)
+            List<MapNodeType> rowTypes;
+            if (row == 0)
             {
-                rowTypes.Add(RollNodeType(row));
+                // Single intro node at the bottom of the act.
+                rowTypes = new List<MapNodeType> { MapNodeType.Intro };
+            }
+            else if (row == lastRow)
+            {
+                // Single boss node at the top of the act.
+                rowTypes = new List<MapNodeType> { MapNodeType.Boss };
+            }
+            else if (row == restRow)
+            {
+                // The row immediately before the boss is always a campfire.
+                rowTypes = new List<MapNodeType>(MapWidth);
+                for (var col = 0; col < MapWidth; col++)
+                {
+                    rowTypes.Add(MapNodeType.Rest);
+                }
+            }
+            else
+            {
+                rowTypes = new List<MapNodeType>(MapWidth);
+                for (var col = 0; col < MapWidth; col++)
+                {
+                    rowTypes.Add(RollNodeType(row));
+                }
             }
 
             MapLayout.Add(rowTypes);
@@ -659,21 +698,43 @@ public partial class GameState : Node
 
         for (var row = 0; row < MapRows - 1; row++)
         {
-            var rowConnections = new List<List<int>>(MapWidth);
-            for (var col = 0; col < MapWidth; col++)
+            var srcCount = MapLayout[row].Count;
+            var dstCount = MapLayout[row + 1].Count;
+            var rowConnections = new List<List<int>>(srcCount);
+
+            for (var col = 0; col < srcCount; col++)
             {
-                var next = new List<int> { col };
-                if (col > 0 && _rng.NextDouble() < 0.55)
+                List<int> next;
+                if (dstCount == 1)
                 {
-                    next.Add(col - 1);
+                    // Every node on this row funnels into the single node above (boss).
+                    next = new List<int> { 0 };
+                }
+                else if (srcCount == 1)
+                {
+                    // The single intro node connects to every column on the row above.
+                    next = new List<int>(dstCount);
+                    for (var c = 0; c < dstCount; c++)
+                    {
+                        next.Add(c);
+                    }
+                }
+                else
+                {
+                    next = new List<int> { Math.Clamp(col, 0, dstCount - 1) };
+                    if (col > 0 && _rng.NextDouble() < 0.55)
+                    {
+                        next.Add(col - 1);
+                    }
+
+                    if (col < dstCount - 1 && _rng.NextDouble() < 0.55)
+                    {
+                        next.Add(col + 1);
+                    }
+
+                    Shuffle(next);
                 }
 
-                if (col < MapWidth - 1 && _rng.NextDouble() < 0.55)
-                {
-                    next.Add(col + 1);
-                }
-
-                Shuffle(next);
                 rowConnections.Add(next);
             }
 
@@ -685,10 +746,24 @@ public partial class GameState : Node
 
     private void EnforceProgressionLandmarks()
     {
-        MapLayout[0][_rng.Next(MapWidth)] = MapNodeType.NormalBattle;
-        MapLayout[3][_rng.Next(MapWidth)] = MapNodeType.Shop;
-        MapLayout[6][_rng.Next(MapWidth)] = MapNodeType.Rest;
-        MapLayout[7][_rng.Next(MapWidth)] = MapNodeType.EliteBattle;
+        // Row 0 is intro, MapRows-1 is boss, MapRows-2 is forced Rest. Place mid-act
+        // landmarks among the regular rows (indices 1..MapRows-3).
+        if (MapRows >= 4)
+        {
+            MapLayout[1][_rng.Next(MapLayout[1].Count)] = MapNodeType.NormalBattle;
+        }
+
+        if (MapRows >= 6)
+        {
+            MapLayout[3][_rng.Next(MapLayout[3].Count)] = MapNodeType.Shop;
+        }
+
+        if (MapRows >= 8)
+        {
+            // Mid-act elite encounter on a content row that isn't already forced.
+            var eliteRow = MapRows - 4;
+            MapLayout[eliteRow][_rng.Next(MapLayout[eliteRow].Count)] = MapNodeType.EliteBattle;
+        }
     }
 
     private MapNodeType RollNodeType(int row)
@@ -746,6 +821,19 @@ public partial class GameState : Node
 
         if (CurrentMapRow >= MapRows)
         {
+            // Finished an act. Either roll into the next act's map, or end the run if the
+            // player has cleared the final act.
+            var nextAct = Act + 1;
+            if (nextAct > MapProgressionRules.MaxActs)
+            {
+                RunCompleted = true;
+                // Keep CurrentMapRow at the post-final value so external snapshots show the
+                // player having stepped past the last node. The map layout for the cleared
+                // act remains valid until the player returns to the menu.
+                return;
+            }
+
+            Act = nextAct;
             CurrentMapRow = 0;
             CurrentMapColumn = -1;
             GenerateMap();

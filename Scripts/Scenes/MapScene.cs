@@ -25,8 +25,15 @@ public partial class MapScene : Control
 
     public override void _Ready()
     {
+        var stateAtEntry = GetNode<GameState>("/root/GameState");
+        if (stateAtEntry.RunCompleted)
+        {
+            CallDeferred(nameof(GoToVictoryScene));
+            return;
+        }
+
         _titleLabel = GetNode<Label>("Margin/VBox/Title");
-        GetNode<GameState>("/root/GameState").SetUiPhase("map");
+        stateAtEntry.SetUiPhase("map");
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
@@ -59,6 +66,11 @@ public partial class MapScene : Control
 
         TearDownDeckViewerUi();
         LocalizationSettings.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void GoToVictoryScene()
+    {
+        GetTree().ChangeSceneToFile("res://Scenes/VictoryScene.tscn");
     }
 
     private void ApplyInitialMapLayout()
@@ -131,6 +143,7 @@ public partial class MapScene : Control
 
         _runInfoLabel.Text = string.Join("    ", new[]
         {
+            LocalizationService.Format("ui.map.act", "Act {0}/{1}", state.Act, MapProgressionRules.MaxActs),
             LocalizationService.Format("ui.map.floor", "Floor {0}", state.Floor),
             LocalizationService.Format("ui.map.hp", "HP {0}/{1}", state.PlayerHp, state.MaxHp),
             LocalizationService.Format("ui.map.gold", "Gold {0}", state.Gold),
@@ -294,28 +307,38 @@ public partial class MapScene : Control
         var mapHeight = mapSize.Y;
 
         var rows = state.MapLayout.Count;
-        var cols = state.MapLayout[0].Count;
-
         var horizontalMargin = 72f;
         var verticalMargin = 50f;
-        var xStep = (mapWidth - horizontalMargin * 2f) / Math.Max(1, cols - 1);
         var yStep = (mapHeight - verticalMargin * 2f) / Math.Max(1, rows - 1);
 
         var pos = new List<List<Vector2>>(rows);
         for (var row = 0; row < rows; row++)
         {
+            var cols = state.MapLayout[row].Count;
             var rowPos = new List<Vector2>(cols);
-            for (var col = 0; col < cols; col++)
+            var baseY = mapHeight - verticalMargin - yStep * row;
+
+            if (cols == 1)
             {
-                var baseX = horizontalMargin + xStep * col;
-                var baseY = mapHeight - verticalMargin - yStep * row;
-
-                var jitterX = Noise(row, col, 17) * xStep * 0.34f;
-                var jitterY = Noise(row, col, 41) * yStep * 0.28f;
-
-                var x = Mathf.Clamp(baseX + jitterX, horizontalMargin - 16f, mapWidth - horizontalMargin + 16f);
-                var y = Mathf.Clamp(baseY + jitterY, verticalMargin - 12f, mapHeight - verticalMargin + 12f);
+                // Center the single intro/boss node.
+                var x = mapWidth * 0.5f;
+                var y = Mathf.Clamp(baseY, verticalMargin - 12f, mapHeight - verticalMargin + 12f);
                 rowPos.Add(new Vector2(x, y));
+            }
+            else
+            {
+                var xStep = (mapWidth - horizontalMargin * 2f) / Math.Max(1, cols - 1);
+                for (var col = 0; col < cols; col++)
+                {
+                    var baseX = horizontalMargin + xStep * col;
+
+                    var jitterX = Noise(row, col, 17) * xStep * 0.34f;
+                    var jitterY = Noise(row, col, 41) * yStep * 0.28f;
+
+                    var x = Mathf.Clamp(baseX + jitterX, horizontalMargin - 16f, mapWidth - horizontalMargin + 16f);
+                    var y = Mathf.Clamp(baseY + jitterY, verticalMargin - 12f, mapHeight - verticalMargin + 12f);
+                    rowPos.Add(new Vector2(x, y));
+                }
             }
 
             pos.Add(rowPos);
@@ -351,6 +374,8 @@ public partial class MapScene : Control
             MapNodeType.Event => new Color(0.72f, 0.63f, 0.86f, alpha),
             MapNodeType.Rest => new Color(0.47f, 0.75f, 0.52f, alpha),
             MapNodeType.Shop => new Color(0.92f, 0.77f, 0.36f, alpha),
+            MapNodeType.Intro => new Color(0.55f, 0.85f, 0.95f, alpha),
+            MapNodeType.Boss => new Color(0.95f, 0.20f, 0.22f, alpha),
             _ => new Color(0.85f, 0.85f, 0.85f, alpha)
         };
 
@@ -398,6 +423,16 @@ public partial class MapScene : Control
                 {
                     GetTree().ChangeSceneToFile("res://Scenes/ShopScene.tscn");
                 }
+                break;
+            case MapNodeType.Intro:
+                // Heal to full when stepping onto the act intro, then resolve the
+                // special intro event in its own scene.
+                state.PlayerHp = state.MaxHp;
+                GetTree().ChangeSceneToFile("res://Scenes/IntroEventScene.tscn");
+                break;
+            case MapNodeType.Boss:
+                state.BeginEncounter(MapNodeType.Boss);
+                GetTree().ChangeSceneToFile("res://Scenes/BattleScene.tscn");
                 break;
         }
     }

@@ -605,7 +605,8 @@ public partial class BattleScene : Control
         _enemies.Clear();
         _selectedEnemyIndex = 0;
         _enemies.AddRange(EnemyEncounterBuilder.BuildEncounter(_state.PendingEncounterType, _state.Floor));
-        _isElite = _state.PendingEncounterType == MapNodeType.EliteBattle;
+        _isElite = _state.PendingEncounterType == MapNodeType.EliteBattle
+            || _state.PendingEncounterType == MapNodeType.Boss;
 
         UpdateEnemySelectionUi();
         SyncEnemyVisualFromSelection();

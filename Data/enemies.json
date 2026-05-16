@@ -55,6 +55,14 @@
       "nameTemplate": "{displayName}",
       "baseHp": 55,
       "hpPerFloor": 5
+    },
+    {
+      "id": "act_boss_placeholder",
+      "displayName": "Act Boss",
+      "visualId": "elite_sentinel",
+      "nameTemplate": "{displayName}",
+      "baseHp": 95,
+      "hpPerFloor": 12
     }
   ],
   "encounters": {
@@ -169,6 +177,20 @@
           "floorDivisor": 3,
           "floorOffset": 0,
           "minValue": 1
+        }
+      }
+    ],
+    "Boss": [
+      {
+        "archetypeId": "act_boss_placeholder",
+        "suffix": "",
+        "minFloor": 1,
+        "strength": {
+          "baseValue": 2,
+          "floorMultiplier": 1,
+          "floorDivisor": 2,
+          "floorOffset": 0,
+          "minValue": 2
         }
       }
     ]

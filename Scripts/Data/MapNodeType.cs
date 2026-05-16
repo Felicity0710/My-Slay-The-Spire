@@ -5,5 +5,7 @@ public enum MapNodeType
     Event,
     Rest,
     Shop,
-    MerchantFight
+    MerchantFight,
+    Intro,
+    Boss
 }
