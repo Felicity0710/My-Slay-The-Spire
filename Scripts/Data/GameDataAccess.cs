@@ -10,20 +10,33 @@ public static class GameDataAccess
     public static bool TryReadResourceText(string resourcePath, out string text)
     {
         text = string.Empty;
+        if (ShouldSkipGodotResourceChecks())
+        {
+            return false;
+        }
+
         var normalized = NormalizeResourcePath(resourcePath);
-        if (!Godot.FileAccess.FileExists(normalized))
+        try
         {
+            if (!Godot.FileAccess.FileExists(normalized))
+            {
+                return false;
+            }
+
+            using var file = Godot.FileAccess.Open(normalized, Godot.FileAccess.ModeFlags.Read);
+            if (file == null)
+            {
+                return false;
+            }
+
+            text = file.GetAsText();
+            return true;
+        }
+        catch
+        {
+            // Console tests can hit data loaders before Godot native APIs are available.
             return false;
         }
-
-        using var file = Godot.FileAccess.Open(normalized, Godot.FileAccess.ModeFlags.Read);
-        if (file == null)
-        {
-            return false;
-        }
-
-        text = file.GetAsText();
-        return true;
     }
 
     public static string ReadResourceText(string resourcePath)
@@ -73,5 +86,13 @@ public static class GameDataAccess
         }
 
         return $"res://{resourcePath.TrimStart('/', '\\').Replace('\\', '/')}";
+    }
+
+    private static bool ShouldSkipGodotResourceChecks()
+    {
+        return string.Equals(
+            System.Environment.GetEnvironmentVariable("SLAY_HS_SKIP_GODOT_RESOURCE_CHECKS"),
+            "1",
+            StringComparison.Ordinal);
     }
 }
