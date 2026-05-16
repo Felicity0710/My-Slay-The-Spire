@@ -18,6 +18,11 @@ public partial class MapScene : Control
     private MapCanvas _mapCanvas = null!;
     private Button _menuButton = null!;
 
+    private Control _merchantFledOverlay = null!;
+    private Label _merchantFledTitleLabel = null!;
+    private Label _merchantFledSubtitleLabel = null!;
+    private bool _isPlayingMerchantFledTransition;
+
     public override void _Ready()
     {
         _titleLabel = GetNode<Label>("Margin/VBox/Title");
@@ -29,6 +34,12 @@ public partial class MapScene : Control
         _mapScroll = GetNode<ScrollContainer>("%MapScroll");
         _mapCanvas = GetNode<MapCanvas>("%MapCanvas");
         _menuButton = GetNode<Button>("%MenuButton");
+
+        _merchantFledOverlay = GetNode<Control>("%MerchantFledOverlay");
+        _merchantFledTitleLabel = GetNode<Label>("%MerchantFledTitle");
+        _merchantFledSubtitleLabel = GetNode<Label>("%MerchantFledSubtitle");
+        _merchantFledOverlay.Visible = false;
+        _merchantFledOverlay.Modulate = new Color(1, 1, 1, 0);
 
         SetupDeckViewerUi();
         _menuButton.Pressed += OnMenuPressed;
@@ -122,6 +133,7 @@ public partial class MapScene : Control
         {
             LocalizationService.Format("ui.map.floor", "Floor {0}", state.Floor),
             LocalizationService.Format("ui.map.hp", "HP {0}/{1}", state.PlayerHp, state.MaxHp),
+            LocalizationService.Format("ui.map.gold", "Gold {0}", state.Gold),
             LocalizationService.Format("ui.map.deck", "Deck {0}", state.DeckCardIds.Count),
             LocalizationService.Format("ui.map.potions", "Potions {0} ({1})", state.PotionCharges, potionSummary),
             LocalizationService.Format("ui.map.wins", "Wins {0}", state.BattlesWon)
@@ -352,6 +364,11 @@ public partial class MapScene : Control
 
     private void OnNodePressed(int column)
     {
+        if (_isPlayingMerchantFledTransition)
+        {
+            return;
+        }
+
         var state = GetNode<GameState>("/root/GameState");
         if (!state.ChooseMapNode(column, out var nodeType))
         {
@@ -374,10 +391,46 @@ public partial class MapScene : Control
                 RefreshUi(LocalizationService.Get("ui.map.rest_status", "You rest at the campfire and recover 18 HP. The climb continues."));
                 break;
             case MapNodeType.Shop:
-                state.ResolveShopNode();
-                RefreshUi(LocalizationService.Get("ui.map.shop_status", "You resupply at the shop and continue to the next route."));
+                if (state.MerchantFled)
+                {
+                    PlayMerchantFledTransition(state);
+                }
+                else
+                {
+                    GetTree().ChangeSceneToFile("res://Scenes/ShopScene.tscn");
+                }
                 break;
         }
+    }
+
+    private void PlayMerchantFledTransition(GameState state)
+    {
+        _isPlayingMerchantFledTransition = true;
+        _merchantFledTitleLabel.Text = LocalizationService.Get(
+            "ui.map.merchant_fled_title",
+            "The shop is deserted");
+        _merchantFledSubtitleLabel.Text = LocalizationService.Get(
+            "ui.map.merchant_fled_subtitle",
+            "The merchant has fled...");
+
+        _merchantFledOverlay.Visible = true;
+        _merchantFledOverlay.Modulate = new Color(1, 1, 1, 0);
+
+        var tween = CreateTween();
+        tween.TweenProperty(_merchantFledOverlay, "modulate:a", 1.0, 0.35);
+        tween.TweenInterval(1.2);
+        tween.TweenProperty(_merchantFledOverlay, "modulate:a", 0.0, 0.45);
+        tween.TweenCallback(Callable.From(() => OnMerchantFledTransitionFinished(state)));
+    }
+
+    private void OnMerchantFledTransitionFinished(GameState state)
+    {
+        _merchantFledOverlay.Visible = false;
+        _isPlayingMerchantFledTransition = false;
+        state.ResolveShopNode();
+        RefreshUi(LocalizationService.Get(
+            "ui.map.shop_empty_status",
+            "The merchant has fled. The shop is deserted."));
     }
 
     private void OnLanguageChanged()

@@ -16,6 +16,8 @@ public partial class GameState : Node
     public int Floor { get; private set; } = 1;
     public int BattlesWon { get; private set; }
     public int PotionCharges { get; private set; }
+    public int Gold { get; private set; }
+    public bool MerchantFled { get; private set; }
     public string CurrentUiPhase { get; private set; } = "main_menu";
     public bool ExternalFastMode { get; private set; }
 
@@ -42,6 +44,19 @@ public partial class GameState : Node
     public List<string> PendingRewardOptions { get; } = new();
     public List<string> PendingRelicOptions { get; } = new();
 
+    public sealed class ShopInventoryEntry
+    {
+        public string Kind { get; set; } = string.Empty; // "card" | "relic" | "potion"
+        public string Id { get; set; } = string.Empty;
+        public int Price { get; set; }
+        public bool Sold { get; set; }
+    }
+
+    public List<ShopInventoryEntry> ShopSnapshot { get; } = new();
+    public bool ShopSnapshotHasData { get; private set; }
+    public bool ShopSnapshotRemoveServiceUsed { get; private set; }
+    public bool PendingMerchantFightVictory { get; private set; }
+
     public void StartNewRun()
     {
         SetUiPhase("map");
@@ -50,6 +65,8 @@ public partial class GameState : Node
         Floor = 1;
         BattlesWon = 0;
         PotionCharges = 0;
+        Gold = 99;
+        MerchantFled = false;
 
         ApplySelectedDeckPreset();
 
@@ -60,6 +77,8 @@ public partial class GameState : Node
         PendingEventId = string.Empty;
         PendingRewardOptions.Clear();
         PendingRelicOptions.Clear();
+        ClearShopSnapshot();
+        PendingMerchantFightVictory = false;
 
         CurrentMapRow = 0;
         CurrentMapColumn = -1;
@@ -360,7 +379,101 @@ public partial class GameState : Node
             PlayerHp = Math.Min(PlayerHp + 2, MaxHp);
         }
 
+        var goldGain = PendingEncounterType == MapNodeType.EliteBattle
+            ? _rng.Next(25, 40)
+            : _rng.Next(15, 26);
+        AddGold(goldGain);
+
         AdvanceFloor();
+    }
+
+    public void AddGold(int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        Gold += amount;
+    }
+
+    public bool TrySpendGold(int amount)
+    {
+        if (amount < 0 || Gold < amount)
+        {
+            return false;
+        }
+
+        Gold -= amount;
+        return true;
+    }
+
+    public bool TryRemoveCardFromDeck(string cardId)
+    {
+        if (string.IsNullOrWhiteSpace(cardId))
+        {
+            return false;
+        }
+
+        var index = DeckCardIds.IndexOf(cardId);
+        if (index < 0)
+        {
+            return false;
+        }
+
+        DeckCardIds.RemoveAt(index);
+        return true;
+    }
+
+    public void MarkMerchantFled()
+    {
+        MerchantFled = true;
+    }
+
+    public void SaveShopSnapshot(IEnumerable<ShopInventoryEntry> items, bool removeServiceUsed)
+    {
+        ShopSnapshot.Clear();
+        foreach (var item in items)
+        {
+            ShopSnapshot.Add(new ShopInventoryEntry
+            {
+                Kind = item.Kind,
+                Id = item.Id,
+                Price = item.Price,
+                Sold = item.Sold
+            });
+        }
+
+        ShopSnapshotRemoveServiceUsed = removeServiceUsed;
+        ShopSnapshotHasData = true;
+    }
+
+    public void ClearShopSnapshot()
+    {
+        ShopSnapshot.Clear();
+        ShopSnapshotHasData = false;
+        ShopSnapshotRemoveServiceUsed = false;
+    }
+
+    public void BeginMerchantFight()
+    {
+        PendingEncounterType = MapNodeType.MerchantFight;
+        PendingMerchantFightVictory = false;
+    }
+
+    public void ResolveMerchantFightVictory()
+    {
+        // The rob fight is special: no floor advance, no reward roll, no gold reward.
+        // Just mark the merchant as fled so the shop unlocks free items on return,
+        // and let ShopScene clean up the snapshot once it has restored its UI.
+        BattlesWon += 1;
+        MerchantFled = true;
+        PendingMerchantFightVictory = true;
+    }
+
+    public void ConsumePendingMerchantFightVictory()
+    {
+        PendingMerchantFightVictory = false;
     }
 
     public void GainMaxHp(int amount)
@@ -377,16 +490,13 @@ public partial class GameState : Node
 
     public void ResolveShopNode()
     {
-        if (_rng.Next(2) == 0)
-        {
-            PlayerHp = Math.Min(PlayerHp + 12, MaxHp);
-        }
-        else
-        {
-            var pool = CardData.RewardPoolIds();
-            AddCardToDeck(pool[_rng.Next(pool.Count)]);
-        }
+        // The Shop node is handled interactively by ShopScene; this entry point
+        // only advances the map state when the merchant has already fled.
+        AdvanceFloor();
+    }
 
+    public void ResolveShopExit()
+    {
         AdvanceFloor();
     }
 
@@ -410,6 +520,7 @@ public partial class GameState : Node
             MapNodeType.Event => LocalizationService.Get("map.node.event", "Event") ,
             MapNodeType.Rest => LocalizationService.Get("map.node.rest", "Rest") ,
             MapNodeType.Shop => LocalizationService.Get("map.node.shop", "Shop") ,
+            MapNodeType.MerchantFight => LocalizationService.Get("map.node.merchant_fight", "Merchant") ,
             _ => LocalizationService.Get("map.node.unknown", "Unknown")
         };
     }
@@ -423,6 +534,7 @@ public partial class GameState : Node
             MapNodeType.Event => LocalizationService.Get("map.node_symbol.event", "\u25c6") ,
             MapNodeType.Rest => LocalizationService.Get("map.node_symbol.rest", "\u2665") ,
             MapNodeType.Shop => LocalizationService.Get("map.node_symbol.shop", "$") ,
+            MapNodeType.MerchantFight => LocalizationService.Get("map.node_symbol.merchant_fight", "!") ,
             _ => LocalizationService.Get("map.node_symbol.unknown", "\uff1f")
         };
     }

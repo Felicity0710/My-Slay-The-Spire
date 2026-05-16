@@ -4,5 +4,6 @@ public enum MapNodeType
     EliteBattle,
     Event,
     Rest,
-    Shop
+    Shop,
+    MerchantFight
 }

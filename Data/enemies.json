@@ -47,6 +47,14 @@
       "nameTemplate": "{displayName} {suffix}",
       "baseHp": 78,
       "hpPerFloor": 10
+    },
+    {
+      "id": "merchant",
+      "displayName": "Merchant",
+      "visualId": "merchant",
+      "nameTemplate": "{displayName}",
+      "baseHp": 55,
+      "hpPerFloor": 5
     }
   ],
   "encounters": {
@@ -145,6 +153,20 @@
           "baseValue": 1,
           "floorMultiplier": 1,
           "floorDivisor": 2,
+          "floorOffset": 0,
+          "minValue": 1
+        }
+      }
+    ],
+    "MerchantFight": [
+      {
+        "archetypeId": "merchant",
+        "suffix": "",
+        "minFloor": 1,
+        "strength": {
+          "baseValue": 1,
+          "floorMultiplier": 1,
+          "floorDivisor": 3,
           "floorOffset": 0,
           "minValue": 1
         }

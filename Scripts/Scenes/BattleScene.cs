@@ -1288,6 +1288,15 @@ public partial class BattleScene : Control
         Log(LocalizationService.Get("log.battle.victory", "Victory"), "#22c55e");
 
         _state.PlayerHp = _playerHp;
+
+        if (_state.PendingEncounterType == MapNodeType.MerchantFight)
+        {
+            _state.ResolveMerchantFightVictory();
+            _state.SetUiPhase("shop");
+            GetTree().ChangeSceneToFile("res://Scenes/ShopScene.tscn");
+            return;
+        }
+
         var hpBeforeResolve = _state.PlayerHp;
         var hpAfterCharm = _state.HasRelic("charm") ? Math.Min(hpBeforeResolve + 5, _state.MaxHp) : hpBeforeResolve;
         var charmHeal = hpAfterCharm - hpBeforeResolve;
