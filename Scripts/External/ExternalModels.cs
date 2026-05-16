@@ -70,6 +70,7 @@ public sealed class BattleSnapshot
     public bool InputLocked { get; set; }
     public int DrawPileCount { get; set; }
     public int DiscardPileCount { get; set; }
+    public int ExhaustPileCount { get; set; }
     public int SelectedEnemyIndex { get; set; }
     public PlayerBattleSnapshot Player { get; set; } = new();
     public List<CardSnapshot> Hand { get; set; } = new();

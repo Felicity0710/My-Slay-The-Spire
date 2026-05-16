@@ -13,8 +13,16 @@ public partial class BattleScene
         NameAsc = 3
     }
 
+    private enum PileViewerTarget
+    {
+        Draw,
+        Discard,
+        Exhaust
+    }
+
     private Button _drawPileButton = null!;
     private Button _discardPileButton = null!;
+    private Button _exhaustPileButton = null!;
     private Control _pileViewerModal = null!;
     private Label _pileViewerTitle = null!;
     private Label _pileViewerCountLabel = null!;
@@ -25,7 +33,7 @@ public partial class BattleScene
     private RichTextLabel _pileViewerDetailText = null!;
     private Button _pileViewerCloseButton = null!;
 
-    private bool _pileViewerShowsDrawPile = true;
+    private PileViewerTarget _pileViewerTarget = PileViewerTarget.Draw;
     private bool _pileViewerInputLockHeld;
     private PileSortMode _pileSortMode = PileSortMode.Natural;
     private readonly List<CardData> _pileViewerDisplayCards = new();
@@ -34,6 +42,7 @@ public partial class BattleScene
     {
         _drawPileButton = GetNode<Button>("%DrawPileButton");
         _discardPileButton = GetNode<Button>("%DiscardPileButton");
+        _exhaustPileButton = GetNode<Button>("%ExhaustPileButton");
         _pileViewerModal = GetNode<Control>("%PileViewerModal");
         _pileViewerTitle = GetNode<Label>("%PileViewerTitle");
         _pileViewerCountLabel = GetNode<Label>("%PileViewerCountLabel");
@@ -46,6 +55,7 @@ public partial class BattleScene
 
         _drawPileButton.Pressed += OnOpenDrawPilePressed;
         _discardPileButton.Pressed += OnOpenDiscardPilePressed;
+        _exhaustPileButton.Pressed += OnOpenExhaustPilePressed;
         _pileViewerSortOption.ItemSelected += OnPileSortSelected;
         _pileViewerList.ItemSelected += OnPileCardSelected;
         _pileViewerCloseButton.Pressed += OnClosePileViewerPressed;
@@ -80,10 +90,15 @@ public partial class BattleScene
             "ui.battle.view_discard_pile",
             "Discard Pile ({0})",
             _discardPile.Count);
+        _exhaustPileButton.Text = LocalizationService.Format(
+            "ui.battle.view_exhaust_pile",
+            "Exhaust Pile ({0})",
+            _exhaustPile.Count);
 
         var lockForOpen = IsInputLocked() && !_pileViewerModal.Visible;
         _drawPileButton.Disabled = lockForOpen;
         _discardPileButton.Disabled = lockForOpen;
+        _exhaustPileButton.Disabled = lockForOpen;
 
         RefreshPileSortUiText();
         _pileViewerDetailTitle.Text = LocalizationService.Get("ui.battle.pile_viewer_detail_title", "Card Details");
@@ -103,12 +118,17 @@ public partial class BattleScene
 
     private void OnOpenDrawPilePressed()
     {
-        OpenPileViewer(showDrawPile: true);
+        OpenPileViewer(PileViewerTarget.Draw);
     }
 
     private void OnOpenDiscardPilePressed()
     {
-        OpenPileViewer(showDrawPile: false);
+        OpenPileViewer(PileViewerTarget.Discard);
+    }
+
+    private void OnOpenExhaustPilePressed()
+    {
+        OpenPileViewer(PileViewerTarget.Exhaust);
     }
 
     private void OnClosePileViewerPressed()
@@ -135,14 +155,14 @@ public partial class BattleScene
         ShowPileCardDetail((int)selectedIndex);
     }
 
-    private void OpenPileViewer(bool showDrawPile)
+    private void OpenPileViewer(PileViewerTarget target)
     {
         if (_battleEnded)
         {
             return;
         }
 
-        _pileViewerShowsDrawPile = showDrawPile;
+        _pileViewerTarget = target;
         if (!_pileViewerModal.Visible)
         {
             // Ensure this modal stays on top if multiple overlay elements exist.
@@ -196,14 +216,26 @@ public partial class BattleScene
 
     private void RefreshPileViewerModalContent()
     {
-        var pile = _pileViewerShowsDrawPile ? _drawPile : _discardPile;
+        IReadOnlyList<CardData> pile = _pileViewerTarget switch
+        {
+            PileViewerTarget.Draw => _drawPile,
+            PileViewerTarget.Discard => _discardPile,
+            PileViewerTarget.Exhaust => _exhaustPile,
+            _ => _drawPile
+        };
+
         var ordered = BuildOrderedPileCards(pile);
         _pileViewerDisplayCards.Clear();
         _pileViewerDisplayCards.AddRange(ordered);
 
-        _pileViewerTitle.Text = _pileViewerShowsDrawPile
-            ? LocalizationService.Get("ui.battle.pile_viewer_draw_title", "Draw Pile")
-            : LocalizationService.Get("ui.battle.pile_viewer_discard_title", "Discard Pile");
+        _pileViewerTitle.Text = _pileViewerTarget switch
+        {
+            PileViewerTarget.Draw => LocalizationService.Get("ui.battle.pile_viewer_draw_title", "Draw Pile"),
+            PileViewerTarget.Discard => LocalizationService.Get("ui.battle.pile_viewer_discard_title", "Discard Pile"),
+            PileViewerTarget.Exhaust => LocalizationService.Get("ui.battle.pile_viewer_exhaust_title", "Exhaust Pile"),
+            _ => LocalizationService.Get("ui.battle.pile_viewer_draw_title", "Draw Pile")
+        };
+
         _pileViewerCountLabel.Text = LocalizationService.Format("ui.battle.pile_viewer_count", "Cards: {0}", pile.Count);
         _pileViewerList.Clear();
 
@@ -229,7 +261,7 @@ public partial class BattleScene
         var ordered = new List<CardData>(pile.Count);
         if (_pileSortMode == PileSortMode.Natural)
         {
-            if (_pileViewerShowsDrawPile)
+            if (_pileViewerTarget == PileViewerTarget.Draw)
             {
                 for (var i = 0; i < pile.Count; i++)
                 {

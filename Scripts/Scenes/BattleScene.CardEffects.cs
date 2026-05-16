@@ -1,5 +1,7 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 public partial class BattleScene
 {
@@ -42,6 +44,11 @@ public partial class BattleScene
         public void ExecuteHeal(CardData card, CardEffectData effect)
         {
             _scene.ApplyHealEffect(card, effect);
+        }
+
+        public void ExecuteDiscardCards(CardData card, CardEffectData effect)
+        {
+            _scene.ResolveDiscardCardsEffect(card, effect);
         }
     }
 
@@ -205,6 +212,71 @@ public partial class BattleScene
         SpawnRuneEffect(effectTarget, new Color("d8b4fe"));
 
         RefreshEnemyRuntimeStatusUi();
+    }
+
+    private void ResolveDiscardCardsEffect(CardData sourceCard, CardEffectData effect)
+    {
+        var count = effect.Amount;
+        if (count <= 0 || _hand.Count == 0)
+        {
+            return;
+        }
+
+        var candidates = new List<CardData>(_hand.Count);
+        for (var i = 0; i < _hand.Count; i++)
+        {
+            if (!ReferenceEquals(_hand[i], sourceCard))
+            {
+                candidates.Add(_hand[i]);
+            }
+        }
+
+        if (candidates.Count == 0)
+        {
+            return;
+        }
+
+        // Fisher-Yates partial shuffle to pick `count` distinct random cards from candidates.
+        for (var i = 0; i < Math.Min(count, candidates.Count); i++)
+        {
+            var swap = i + _rng.Next(candidates.Count - i);
+            (candidates[i], candidates[swap]) = (candidates[swap], candidates[i]);
+        }
+
+        var pickCount = Math.Min(count, candidates.Count);
+        for (var i = 0; i < pickCount; i++)
+        {
+            var discarded = candidates[i];
+            _hand.Remove(discarded);
+
+            Log(LocalizationService.Format(
+                "log.battle.discarded",
+                "{0} is discarded",
+                discarded.GetLocalizedName()), "#94a3b8");
+
+            if (discarded.Keywords.Contains(CardKeyword.Curious))
+            {
+                Log(LocalizationService.Format(
+                    "log.battle.curious",
+                    "{0} curiously activates",
+                    discarded.GetLocalizedName()), "#fcd34d");
+
+                var relicAttackBonus = _state.HasRelic("whetstone") ? 1 : 0;
+                var executor = new BattleCardEffectExecutor(this, relicAttackBonus);
+                CardEffectPipeline.Execute(discarded, executor);
+                // Note: any DrawCards from a Curious auto-play is intentionally ignored here;
+                // the outer card's pipeline owns DrawCount aggregation.
+            }
+
+            if (discarded.Keywords.Contains(CardKeyword.Exhaust))
+            {
+                _exhaustPile.Add(discarded);
+            }
+            else
+            {
+                _discardPile.Add(discarded);
+            }
+        }
     }
 
     private void RefreshEnemyRuntimeStatusUi()

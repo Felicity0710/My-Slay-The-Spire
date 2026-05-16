@@ -9,6 +9,7 @@ public interface ICardEffectRuntime
     void ExecuteGainStrength(CardData card, CardEffectData effect);
     void ExecuteGainEnergy(CardData card, CardEffectData effect);
     void ExecuteHeal(CardData card, CardEffectData effect);
+    void ExecuteDiscardCards(CardData card, CardEffectData effect);
 }
 
 public delegate void CardEffectHandler(
@@ -43,6 +44,7 @@ public static class CardEffectPipeline
         RegisterOrReplaceHandler(CardEffectType.GainEnergy, (card, effect, _, runtime) => runtime.ExecuteGainEnergy(card, effect));
         RegisterOrReplaceHandler(CardEffectType.Heal, (card, effect, _, runtime) => runtime.ExecuteHeal(card, effect));
         RegisterOrReplaceHandler(CardEffectType.DrawCards, (_, effect, result, _) => result.AddDraw(effect.Amount));
+        RegisterOrReplaceHandler(CardEffectType.DiscardCards, (card, effect, _, runtime) => runtime.ExecuteDiscardCards(card, effect));
     }
 
     public static void RegisterOrReplaceHandler(CardEffectType effectType, CardEffectHandler handler)
@@ -68,17 +70,21 @@ public static class CardEffectPipeline
         }
 
         var result = new CardEffectExecutionResult();
+        var replays = card.ReplayCount < 1 ? 1 : card.ReplayCount;
 
-        foreach (var effect in card.Effects)
+        for (var r = 0; r < replays; r++)
         {
-            if (!Handlers.TryGetValue(effect.Type, out var handler))
+            foreach (var effect in card.Effects)
             {
-                throw new InvalidOperationException($"No handler registered for card effect type: {effect.Type}");
-            }
+                if (!Handlers.TryGetValue(effect.Type, out var handler))
+                {
+                    throw new InvalidOperationException($"No handler registered for card effect type: {effect.Type}");
+                }
 
-            for (var i = 0; i < effect.Repeat; i++)
-            {
-                handler(card, effect, result, runtime);
+                for (var i = 0; i < effect.Repeat; i++)
+                {
+                    handler(card, effect, result, runtime);
+                }
             }
         }
 

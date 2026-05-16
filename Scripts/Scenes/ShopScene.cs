@@ -147,24 +147,28 @@ public partial class ShopScene : Control
     {
         _items.Clear();
 
+        var state = GetNode<GameState>("/root/GameState");
         var cardPool = CardData.RewardPoolIds();
         cardPool.RemoveAll(id => id == "strike" || id == "defend");
         Shuffle(cardPool);
         var cardCount = Math.Min(3, cardPool.Count);
         for (var i = 0; i < cardCount; i++)
         {
-            var cardId = cardPool[i];
-            var card = CardData.CreateById(cardId);
+            var rolledId = state.MaybeUpgradeCardId(cardPool[i]);
+            var card = CardData.CreateById(rolledId);
             var price = 45 + card.Cost * 10 + _rng.Next(0, 16);
+            if (card.IsUpgraded)
+            {
+                price += 30;
+            }
             _items.Add(new ShopItem
             {
                 Kind = ShopItemKind.Card,
-                Id = cardId,
+                Id = rolledId,
                 Price = price
             });
         }
 
-        var state = GetNode<GameState>("/root/GameState");
         var relicPool = new List<string>(RelicData.AllRelicIds());
         relicPool.RemoveAll(state.HasRelic);
         Shuffle(relicPool);

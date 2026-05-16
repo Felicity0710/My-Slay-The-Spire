@@ -17,7 +17,8 @@ public enum CardEffectType
     DrawCards,
     GainStrength,
     GainEnergy,
-    Heal
+    Heal,
+    DiscardCards
 }
 
 public enum CardEffectTarget
@@ -25,6 +26,77 @@ public enum CardEffectTarget
     Player,
     SelectedEnemy,
     AllEnemies
+}
+
+public enum CardKeyword
+{
+    Retain,
+    Exhaust,
+    Curious
+}
+
+public static class CardUpgradeRules
+{
+    public static bool CardIdHasUpgrade(string cardId)
+    {
+        if (string.IsNullOrEmpty(cardId))
+        {
+            return false;
+        }
+
+        if (cardId.EndsWith("+", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return CardData.CreateById(cardId).Upgrade != null;
+    }
+
+    public static string MaybeUpgrade(string cardId, double chance, Random rng)
+    {
+        if (!CardIdHasUpgrade(cardId))
+        {
+            return cardId;
+        }
+
+        if (chance <= 0.0)
+        {
+            return cardId;
+        }
+
+        if (chance >= 1.0 || (rng != null && rng.NextDouble() < chance))
+        {
+            return cardId + "+";
+        }
+
+        return cardId;
+    }
+}
+
+public sealed class CardUpgradeRecipe
+{
+    public int CostDelta { get; }
+    public int ReplayCountOverride { get; }
+    public IReadOnlyList<int> AmountDeltas { get; }
+    public IReadOnlyList<CardKeyword> AddKeywords { get; }
+    public string DescriptionOverride { get; }
+    public string DescriptionZhOverride { get; }
+
+    public CardUpgradeRecipe(
+        int costDelta,
+        int replayCountOverride,
+        IReadOnlyList<int>? amountDeltas,
+        IReadOnlyList<CardKeyword>? addKeywords,
+        string? descriptionOverride,
+        string? descriptionZhOverride)
+    {
+        CostDelta = costDelta;
+        ReplayCountOverride = replayCountOverride < 0 ? 0 : replayCountOverride;
+        AmountDeltas = amountDeltas ?? Array.Empty<int>();
+        AddKeywords = addKeywords ?? Array.Empty<CardKeyword>();
+        DescriptionOverride = descriptionOverride ?? string.Empty;
+        DescriptionZhOverride = descriptionZhOverride ?? string.Empty;
+    }
 }
 
 public sealed class CardEffectData
@@ -74,6 +146,12 @@ public sealed class CardData
     public CardKind Kind { get; }
     public int Cost { get; }
     public IReadOnlyList<CardEffectData> Effects { get; }
+    public IReadOnlyList<CardKeyword> Keywords { get; }
+    public int ReplayCount { get; }
+
+    public CardUpgradeRecipe? Upgrade { get; }
+    public bool IsUpgraded { get; }
+    public string BaseId { get; }
 
     // Legacy aggregates kept for compatibility with existing UI and logic helpers.
     public int Damage { get; }
@@ -91,7 +169,12 @@ public sealed class CardData
         string artPath,
         CardKind kind,
         int cost,
-        IReadOnlyList<CardEffectData> effects)
+        IReadOnlyList<CardEffectData> effects,
+        IReadOnlyList<CardKeyword>? keywords = null,
+        int replayCount = 1,
+        CardUpgradeRecipe? upgrade = null,
+        bool isUpgraded = false,
+        string? baseId = null)
     {
         Id = id;
         _fallbackName = string.IsNullOrWhiteSpace(name) ? id : name;
@@ -105,6 +188,11 @@ public sealed class CardData
         Kind = kind;
         Cost = cost;
         Effects = effects;
+        Keywords = keywords ?? Array.Empty<CardKeyword>();
+        ReplayCount = replayCount < 1 ? 1 : replayCount;
+        Upgrade = upgrade;
+        IsUpgraded = isUpgraded;
+        BaseId = string.IsNullOrWhiteSpace(baseId) ? id : baseId;
 
         Damage = Effects
             .Where(e => e.Type == CardEffectType.Damage && e.Target == CardEffectTarget.SelectedEnemy)
@@ -132,7 +220,8 @@ public sealed class CardData
 
     public string GetLocalizedName()
     {
-        return ResolveLocalizedText(_fallbackName, NameKey, _fallbackName, _fallbackName);
+        var localizedBase = ResolveLocalizedText(_fallbackName, NameKey, _fallbackName, _fallbackName);
+        return IsUpgraded ? localizedBase + "+" : localizedBase;
     }
 
     private static string ResolveLocalizedText(
@@ -165,6 +254,15 @@ public sealed class CardData
 
     public static CardData CreateById(string id)
     {
+        if (!string.IsNullOrEmpty(id) && id.EndsWith("+", StringComparison.Ordinal))
+        {
+            var baseId = id.Substring(0, id.Length - 1);
+            if (Catalog.CardsById.TryGetValue(baseId, out var baseCard))
+            {
+                return BuildUpgradedClone(baseCard);
+            }
+        }
+
         if (Catalog.CardsById.TryGetValue(id, out var card))
         {
             return CloneCard(card);
@@ -176,6 +274,75 @@ public sealed class CardData
         }
 
         throw new InvalidOperationException("No fallback card 'strike' configured in cards.json.");
+    }
+
+    private static CardData BuildUpgradedClone(CardData baseCard)
+    {
+        var recipe = baseCard.Upgrade;
+        var effects = new List<CardEffectData>(baseCard.Effects.Count);
+        for (var i = 0; i < baseCard.Effects.Count; i++)
+        {
+            var source = baseCard.Effects[i];
+            var amount = source.Amount;
+            if (recipe != null && i < recipe.AmountDeltas.Count)
+            {
+                amount = Math.Max(0, amount + recipe.AmountDeltas[i]);
+            }
+
+            effects.Add(new CardEffectData(
+                source.Type,
+                source.Target,
+                amount,
+                source.Repeat,
+                source.UseAttackerStrength,
+                source.UseTargetVulnerable,
+                source.FlatBonus));
+        }
+
+        var costDelta = recipe?.CostDelta ?? 0;
+        var newCost = Math.Max(0, baseCard.Cost + costDelta);
+
+        var replayCount = baseCard.ReplayCount;
+        if (recipe != null && recipe.ReplayCountOverride > 0)
+        {
+            replayCount = recipe.ReplayCountOverride;
+        }
+
+        var keywords = new List<CardKeyword>(baseCard.Keywords);
+        if (recipe != null)
+        {
+            foreach (var keyword in recipe.AddKeywords)
+            {
+                if (!keywords.Contains(keyword))
+                {
+                    keywords.Add(keyword);
+                }
+            }
+        }
+
+        var description = !string.IsNullOrWhiteSpace(recipe?.DescriptionOverride)
+            ? recipe!.DescriptionOverride
+            : baseCard.Description;
+        var descriptionZh = !string.IsNullOrWhiteSpace(recipe?.DescriptionZhOverride)
+            ? recipe!.DescriptionZhOverride
+            : baseCard.DescriptionZh;
+
+        return new CardData(
+            baseCard.Id + "+",
+            baseCard.Name,
+            description,
+            descriptionZh,
+            baseCard.NameKey,
+            string.Empty,
+            baseCard.ArtPath,
+            baseCard.Kind,
+            newCost,
+            effects,
+            keywords,
+            replayCount,
+            upgrade: null,
+            isUpgraded: true,
+            baseId: baseCard.Id);
     }
 
     public static List<string> StarterDeckIds()
@@ -210,6 +377,10 @@ public sealed class CardData
                 effect.FlatBonus))
             .ToList();
 
+        var keywords = source.Keywords.Count == 0
+            ? (IReadOnlyList<CardKeyword>)Array.Empty<CardKeyword>()
+            : new List<CardKeyword>(source.Keywords);
+
         return new CardData(
             source.Id,
             source.Name,
@@ -220,7 +391,12 @@ public sealed class CardData
             source.ArtPath,
             source.Kind,
             source.Cost,
-            effects);
+            effects,
+            keywords,
+            source.ReplayCount,
+            source.Upgrade,
+            source.IsUpgraded,
+            source.BaseId);
     }
 
     private static string ResolveArtPath(string id, string? path)
@@ -317,6 +493,42 @@ public sealed class CardData
                         effectDto.FlatBonus));
                 }
 
+                var keywords = new List<CardKeyword>();
+                foreach (var raw in cardDto.Keywords ?? new List<string>())
+                {
+                    if (string.IsNullOrWhiteSpace(raw))
+                    {
+                        continue;
+                    }
+
+                    keywords.Add(ParseEnum<CardKeyword>(raw, "card keyword"));
+                }
+
+                var replayCount = cardDto.ReplayCount <= 0 ? 1 : cardDto.ReplayCount;
+
+                CardUpgradeRecipe? upgrade = null;
+                if (cardDto.Upgrade != null)
+                {
+                    var addKeywords = new List<CardKeyword>();
+                    foreach (var raw in cardDto.Upgrade.AddKeywords ?? new List<string>())
+                    {
+                        if (string.IsNullOrWhiteSpace(raw))
+                        {
+                            continue;
+                        }
+
+                        addKeywords.Add(ParseEnum<CardKeyword>(raw, "upgrade keyword"));
+                    }
+
+                    upgrade = new CardUpgradeRecipe(
+                        cardDto.Upgrade.CostDelta,
+                        cardDto.Upgrade.ReplayCount,
+                        cardDto.Upgrade.AmountDeltas,
+                        addKeywords,
+                        cardDto.Upgrade.Description,
+                        cardDto.Upgrade.DescriptionZh);
+                }
+
                 var card = new CardData(
                     cardDto.Id,
                     cardDto.Name ?? cardDto.Id,
@@ -327,7 +539,10 @@ public sealed class CardData
                     cardDto.ArtPath,
                     ParseEnum<CardKind>(cardDto.Kind, "card kind"),
                     cardDto.Cost,
-                    effects);
+                    effects,
+                    keywords,
+                    replayCount,
+                    upgrade);
 
                 cardsById[card.Id] = card;
             }

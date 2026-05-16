@@ -15,6 +15,7 @@ public partial class BattleScene
             InputLocked = IsInputLocked(),
             DrawPileCount = _drawPile.Count,
             DiscardPileCount = _discardPile.Count,
+            ExhaustPileCount = _exhaustPile.Count,
             SelectedEnemyIndex = _selectedEnemyIndex,
             Player = new PlayerBattleSnapshot
             {

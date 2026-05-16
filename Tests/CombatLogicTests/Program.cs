@@ -33,6 +33,13 @@ internal static class Program
             ("Elite encounter roster scales by floor", TestEliteEncounterRoster),
             ("Card effects aggregate into legacy fields", TestCardEffectsAggregateLegacyFields),
             ("CreateById returns independent card instances", TestCreateByIdReturnsIndependentInstances),
+            ("Upgraded card applies recipe deltas", TestUpgradedCardAppliesRecipe),
+            ("Upgraded card can add a keyword", TestUpgradedCardCanAddKeyword),
+            ("Defend+ adds Retain keyword and boosts block", TestDefendUpgradeAddsRetain),
+            ("Replay count repeats card effects", TestReplayCountRepeatsEffects),
+            ("Triage carries DrawCards + DiscardCards effects", TestTriageEffectsParse),
+            ("Bone Shrapnel+ adds Curious keyword", TestBoneShrapnelUpgradeAddsCurious),
+            ("MaybeUpgradeCardId handles edge cases", TestMaybeUpgradeCardIdEdgeCases),
             ("Card pools only contain known card ids", TestCardPoolsContainKnownCardIds),
             ("Enemy catalog contains configured encounter rules", TestEnemyCatalogRuleCoverage),
             ("Card effect pipeline preserves execution order", TestCardEffectPipelineOrder),
@@ -343,6 +350,142 @@ internal static class Program
         if (ReferenceEquals(a, b))
         {
             throw new InvalidOperationException("CreateById should return independent instances for duplicate cards in deck/hand.");
+        }
+    }
+
+    private static void TestUpgradedCardAppliesRecipe()
+    {
+        var basic = CardData.CreateById("strike");
+        var upgraded = CardData.CreateById("strike+");
+
+        ExpectEqual(6, basic.Damage, "Strike base damage");
+        ExpectEqual(false, basic.IsUpgraded, "Strike base IsUpgraded");
+        ExpectEqual("strike", basic.BaseId, "Strike base BaseId");
+
+        ExpectEqual(9, upgraded.Damage, "Strike+ damage");
+        ExpectEqual(true, upgraded.IsUpgraded, "Strike+ IsUpgraded");
+        ExpectEqual("strike", upgraded.BaseId, "Strike+ BaseId");
+        ExpectEqual("strike+", upgraded.Id, "Strike+ Id");
+        ExpectEqual(basic.Cost, upgraded.Cost, "Strike+ cost (no delta)");
+    }
+
+    private static void TestUpgradedCardCanAddKeyword()
+    {
+        var basic = CardData.CreateById("glass_cannon");
+        var upgraded = CardData.CreateById("glass_cannon+");
+
+        if (basic.Keywords.Contains(CardKeyword.Exhaust))
+        {
+            throw new InvalidOperationException("Base Glass Cannon should not have Exhaust.");
+        }
+
+        if (!upgraded.Keywords.Contains(CardKeyword.Exhaust))
+        {
+            throw new InvalidOperationException("Upgraded Glass Cannon should have Exhaust.");
+        }
+
+        ExpectEqual(16, upgraded.Damage, "Glass Cannon+ damage");
+    }
+
+    private static void TestDefendUpgradeAddsRetain()
+    {
+        var basic = CardData.CreateById("defend");
+        var upgraded = CardData.CreateById("defend+");
+
+        ExpectEqual(5, basic.Block, "Defend base block");
+        ExpectEqual(false, basic.Keywords.Contains(CardKeyword.Retain), "Defend base has no Retain");
+        ExpectEqual(8, upgraded.Block, "Defend+ block");
+
+        if (!upgraded.Keywords.Contains(CardKeyword.Retain))
+        {
+            throw new InvalidOperationException("Defend+ should have Retain keyword.");
+        }
+    }
+
+    private static void TestReplayCountRepeatsEffects()
+    {
+        var basic = CardData.CreateById("quick_slash");
+        var upgraded = CardData.CreateById("quick_slash+");
+
+        ExpectEqual(1, basic.ReplayCount, "Quick Slash base replay count");
+        ExpectEqual(2, upgraded.ReplayCount, "Quick Slash+ replay count");
+
+        var log = new List<string>();
+        var result = CardEffectPipeline.Execute(upgraded, new RecordingEffectExecutor(log));
+
+        ExpectEqual(2, log.Count, "Quick Slash+ damage handler invocations");
+        ExpectEqual("Damage:7", log[0], "Quick Slash+ first damage entry");
+        ExpectEqual("Damage:7", log[1], "Quick Slash+ second damage entry");
+        ExpectEqual(2, result.DrawCount, "Quick Slash+ draw count accumulates across replays");
+    }
+
+    private static void TestTriageEffectsParse()
+    {
+        var triage = CardData.CreateById("triage");
+        ExpectEqual(0, triage.Cost, "Triage cost");
+
+        var log = new List<string>();
+        var result = CardEffectPipeline.Execute(triage, new RecordingEffectExecutor(log));
+
+        ExpectEqual(1, log.Count, "Triage records exactly one discard side-effect");
+        ExpectEqual("Discard:1", log[0], "Triage discard entry");
+        ExpectEqual(2, result.DrawCount, "Triage draws 2 cards");
+    }
+
+    private static void TestBoneShrapnelUpgradeAddsCurious()
+    {
+        var basic = CardData.CreateById("bone_shrapnel");
+        var upgraded = CardData.CreateById("bone_shrapnel+");
+
+        if (basic.Keywords.Contains(CardKeyword.Curious))
+        {
+            throw new InvalidOperationException("Base Bone Shrapnel should not have Curious.");
+        }
+
+        if (!upgraded.Keywords.Contains(CardKeyword.Curious))
+        {
+            throw new InvalidOperationException("Bone Shrapnel+ should have Curious keyword.");
+        }
+
+        ExpectEqual(6, upgraded.Damage, "Bone Shrapnel+ damage");
+    }
+
+    private static void TestMaybeUpgradeCardIdEdgeCases()
+    {
+        var rng = new Random(1);
+
+        // chance == 1.0 always upgrades when the card has an upgrade recipe.
+        var always = CardUpgradeRules.MaybeUpgrade("strike", 1.0, rng);
+        ExpectEqual("strike+", always, "MaybeUpgrade chance=1 upgradable");
+
+        // chance == 0.0 never upgrades.
+        var never = CardUpgradeRules.MaybeUpgrade("strike", 0.0, rng);
+        ExpectEqual("strike", never, "MaybeUpgrade chance=0 upgradable");
+
+        // Card without upgrade recipe stays put even at chance=1.
+        var noRecipe = CardUpgradeRules.MaybeUpgrade("heavy_slash", 1.0, rng);
+        ExpectEqual("heavy_slash", noRecipe, "MaybeUpgrade no recipe");
+
+        // Already-upgraded id passes through unchanged.
+        var alreadyUp = CardUpgradeRules.MaybeUpgrade("strike+", 1.0, rng);
+        ExpectEqual("strike+", alreadyUp, "MaybeUpgrade already upgraded");
+
+        // Empty id passes through unchanged.
+        var empty = CardUpgradeRules.MaybeUpgrade(string.Empty, 1.0, rng);
+        ExpectEqual(string.Empty, empty, "MaybeUpgrade empty id");
+
+        // CardIdHasUpgrade aligns with MaybeUpgrade eligibility.
+        if (!CardUpgradeRules.CardIdHasUpgrade("strike"))
+        {
+            throw new InvalidOperationException("strike should be flagged as upgradable.");
+        }
+        if (CardUpgradeRules.CardIdHasUpgrade("heavy_slash"))
+        {
+            throw new InvalidOperationException("heavy_slash should not be flagged as upgradable.");
+        }
+        if (CardUpgradeRules.CardIdHasUpgrade("strike+"))
+        {
+            throw new InvalidOperationException("strike+ is already upgraded; should not be flagged.");
         }
     }
 
@@ -772,6 +915,11 @@ internal static class Program
         {
             _log.Add($"Heal:{effect.Amount}");
         }
+
+        public void ExecuteDiscardCards(CardData card, CardEffectData effect)
+        {
+            _log.Add($"Discard:{effect.Amount}");
+        }
     }
 
     private sealed class CountingRuntime : ICardEffectRuntime
@@ -779,6 +927,7 @@ internal static class Program
         public int GainStrengthCount;
         public int GainEnergyCount;
         public int HealCount;
+        public int DiscardCount;
 
         public void ExecuteDamage(CardData card, CardEffectData effect) { }
         public void ExecuteGainBlock(CardData card, CardEffectData effect) { }
@@ -797,6 +946,11 @@ internal static class Program
         public void ExecuteHeal(CardData card, CardEffectData effect)
         {
             HealCount++;
+        }
+
+        public void ExecuteDiscardCards(CardData card, CardEffectData effect)
+        {
+            DiscardCount++;
         }
     }
 

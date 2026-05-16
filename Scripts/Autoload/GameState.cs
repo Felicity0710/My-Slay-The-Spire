@@ -482,10 +482,62 @@ public partial class GameState : Node
         PlayerHp = Math.Min(PlayerHp + amount, MaxHp);
     }
 
+    public int RestHealAmount()
+    {
+        return Math.Max(1, (MaxHp * 3) / 10);
+    }
+
+    public void ApplyRestHeal()
+    {
+        PlayerHp = Math.Min(PlayerHp + RestHealAmount(), MaxHp);
+        AdvanceFloor();
+    }
+
+    public void ApplyRestSkip()
+    {
+        AdvanceFloor();
+    }
+
+    public const double DefaultUpgradeChance = 0.25;
+
+    public string MaybeUpgradeCardId(string cardId, double chance = DefaultUpgradeChance)
+    {
+        return CardUpgradeRules.MaybeUpgrade(cardId, chance, _rng);
+    }
+
+    public bool DeckCardIsUpgradable(int index)
+    {
+        if (index < 0 || index >= DeckCardIds.Count)
+        {
+            return false;
+        }
+
+        var id = DeckCardIds[index];
+        if (string.IsNullOrEmpty(id) || id.EndsWith("+", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return CardData.CreateById(id).Upgrade != null;
+    }
+
+    public bool ApplyRestUpgrade(int deckIndex)
+    {
+        if (!DeckCardIsUpgradable(deckIndex))
+        {
+            return false;
+        }
+
+        DeckCardIds[deckIndex] = DeckCardIds[deckIndex] + "+";
+        AdvanceFloor();
+        return true;
+    }
+
+    // Legacy entry point kept so the older inline-heal behavior is preserved if any
+    // path calls it directly without going through the new rest scene.
     public void ResolveRestNode()
     {
-        PlayerHp = Math.Min(PlayerHp + 18, MaxHp);
-        AdvanceFloor();
+        ApplyRestHeal();
     }
 
     public void ResolveShopNode()
@@ -556,7 +608,7 @@ public partial class GameState : Node
         if (buildCards.Count > 0 && count > 0)
         {
             var guaranteed = buildCards[_rng.Next(buildCards.Count)];
-            PendingRewardOptions.Add(guaranteed);
+            PendingRewardOptions.Add(MaybeUpgradeCardId(guaranteed));
             pool.Remove(guaranteed);
         }
 
@@ -565,7 +617,7 @@ public partial class GameState : Node
         var cap = Math.Min(count - PendingRewardOptions.Count, pool.Count);
         for (var i = 0; i < cap; i++)
         {
-            PendingRewardOptions.Add(pool[i]);
+            PendingRewardOptions.Add(MaybeUpgradeCardId(pool[i]));
         }
     }
 

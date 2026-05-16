@@ -9,6 +9,7 @@ public partial class CardView : PanelContainer
     private Label _costLabel = null!;
     private TextureRect _artTexture = null!;
     private RichTextLabel _descLabel = null!;
+    private Label _keywordLabel = null!;
 
     private bool _dragging;
     private bool _playable = true;
@@ -525,9 +526,19 @@ public partial class CardView : PanelContainer
         _descLabel.MouseFilter = MouseFilterEnum.Ignore;
         _descLabel.AddThemeColorOverride("default_color", new Color("cbd5e1"));
 
+        _keywordLabel = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            Visible = false
+        };
+        _keywordLabel.MouseFilter = MouseFilterEnum.Ignore;
+        _keywordLabel.AddThemeColorOverride("font_color", new Color("fbcfe8"));
+
         vbox.AddChild(_nameLabel);
         vbox.AddChild(_artTexture);
         vbox.AddChild(costBadge);
+        vbox.AddChild(_keywordLabel);
         vbox.AddChild(_descLabel);
 
         RefreshText();
@@ -547,6 +558,41 @@ public partial class CardView : PanelContainer
         var text = LocalizationSettings.HighlightCardDescription(description);
         _descLabel.Text = text;
         _artTexture.Texture = LoadCardArt(Card.ArtPath);
+        UpdateKeywordChip();
+    }
+
+    private void UpdateKeywordChip()
+    {
+        if (_keywordLabel == null)
+        {
+            return;
+        }
+
+        var chips = new System.Collections.Generic.List<string>();
+        foreach (var keyword in Card.Keywords)
+        {
+            chips.Add(LocalizationService.Get(
+                $"ui.keyword.{keyword.ToString().ToLowerInvariant()}",
+                keyword.ToString()));
+        }
+
+        if (Card.ReplayCount > 1)
+        {
+            chips.Add(LocalizationService.Format(
+                "ui.keyword.replay",
+                "Replay x{0}",
+                Card.ReplayCount));
+        }
+
+        if (chips.Count == 0)
+        {
+            _keywordLabel.Visible = false;
+            _keywordLabel.Text = string.Empty;
+            return;
+        }
+
+        _keywordLabel.Visible = true;
+        _keywordLabel.Text = string.Join("  ", chips);
     }
 
     private static Texture2D LoadCardArt(string path)

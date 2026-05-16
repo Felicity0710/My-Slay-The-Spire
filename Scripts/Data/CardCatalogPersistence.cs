@@ -23,6 +23,19 @@ public sealed class CardEntryData
     public string Kind { get; set; } = string.Empty;
     public int Cost { get; set; }
     public List<CardEffectEntryData> Effects { get; set; } = new();
+    public List<string>? Keywords { get; set; }
+    public int ReplayCount { get; set; } = 1;
+    public CardUpgradeEntryData? Upgrade { get; set; }
+}
+
+public sealed class CardUpgradeEntryData
+{
+    public int CostDelta { get; set; }
+    public int ReplayCount { get; set; }
+    public List<int>? AmountDeltas { get; set; }
+    public List<string>? AddKeywords { get; set; }
+    public string? Description { get; set; }
+    public string? DescriptionZh { get; set; }
 }
 
 public sealed class CardEffectEntryData
@@ -175,6 +188,35 @@ public static class CardCatalogPersistence
                 if (effect.Repeat < 1)
                 {
                     errors.Add($"effect repeat must be >= 1 for {card.Id}");
+                }
+            }
+
+            foreach (var keyword in card.Keywords ?? new List<string>())
+            {
+                if (!Enum.TryParse<CardKeyword>(keyword, ignoreCase: true, out _))
+                {
+                    errors.Add($"invalid keyword for {card.Id}: {keyword}");
+                }
+            }
+
+            if (card.ReplayCount < 1)
+            {
+                errors.Add($"replayCount must be >= 1 for {card.Id}");
+            }
+
+            if (card.Upgrade != null)
+            {
+                foreach (var keyword in card.Upgrade.AddKeywords ?? new List<string>())
+                {
+                    if (!Enum.TryParse<CardKeyword>(keyword, ignoreCase: true, out _))
+                    {
+                        errors.Add($"invalid upgrade keyword for {card.Id}: {keyword}");
+                    }
+                }
+
+                if (card.Upgrade.ReplayCount < 0)
+                {
+                    errors.Add($"upgrade replayCount must be >= 0 for {card.Id}");
                 }
             }
         }

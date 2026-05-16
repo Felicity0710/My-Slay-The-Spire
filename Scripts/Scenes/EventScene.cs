@@ -84,7 +84,7 @@ public partial class EventScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         state.PlayerHp = Mathf.Max(1, state.PlayerHp - 6);
-        state.AddCardToDeck("quick_slash");
+        state.AddCardToDeck(state.MaybeUpgradeCardId("quick_slash"));
         state.ResolveEventFinished();
         state.SetUiPhase("map");
         GetTree().ChangeSceneToFile("res://Scenes/MapScene.tscn");

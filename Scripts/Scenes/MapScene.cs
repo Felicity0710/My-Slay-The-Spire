@@ -387,8 +387,7 @@ public partial class MapScene : Control
                 GetTree().ChangeSceneToFile("res://Scenes/EventScene.tscn");
                 break;
             case MapNodeType.Rest:
-                state.ResolveRestNode();
-                RefreshUi(LocalizationService.Get("ui.map.rest_status", "You rest at the campfire and recover 18 HP. The climb continues."));
+                GetTree().ChangeSceneToFile("res://Scenes/RestScene.tscn");
                 break;
             case MapNodeType.Shop:
                 if (state.MerchantFled)

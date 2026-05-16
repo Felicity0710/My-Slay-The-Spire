@@ -118,6 +118,7 @@ public partial class BattleScene : Control
     private readonly Random _rng = new();
     private readonly List<CardData> _drawPile = new();
     private readonly List<CardData> _discardPile = new();
+    private readonly List<CardData> _exhaustPile = new();
     private readonly List<CardData> _hand = new();
     private readonly Dictionary<CardData, CardView> _handViews = new();
     private readonly Stack<CardView> _cardViewPool = new();
@@ -611,6 +612,7 @@ public partial class BattleScene : Control
 
         _drawPile.Clear();
         _discardPile.Clear();
+        _exhaustPile.Clear();
         _hand.Clear();
 
         _drawPile.AddRange(_state.CreateDeckCards());
@@ -823,6 +825,25 @@ public partial class BattleScene : Control
         _ = EndTurnAsync();
     }
 
+    private void MoveNonRetainedHandToDiscard()
+    {
+        for (var i = _hand.Count - 1; i >= 0; i--)
+        {
+            var card = _hand[i];
+            if (card.Keywords.Contains(CardKeyword.Retain))
+            {
+                Log(LocalizationService.Format(
+                    "log.battle.retain",
+                    "{0} is retained",
+                    card.GetLocalizedName()), "#fbbf24");
+                continue;
+            }
+
+            _discardPile.Add(card);
+            _hand.RemoveAt(i);
+        }
+    }
+
     private async Task EndTurnAsync()
     {
         if (_battleEnded || IsInputLocked())
@@ -833,7 +854,7 @@ public partial class BattleScene : Control
         EmitUiSfx("turn_end");
         PushInputLock();
 
-        TurnFlowResolver.MoveHandToDiscard(_hand, _discardPile);
+        MoveNonRetainedHandToDiscard();
 
         await RenderHand();
 
@@ -982,12 +1003,32 @@ public partial class BattleScene : Control
 
         _energy -= card.Cost;
 
+        if (card.ReplayCount > 1)
+        {
+            Log(LocalizationService.Format(
+                "log.battle.replay",
+                "{0} replays x{1}",
+                card.GetLocalizedName(),
+                card.ReplayCount), "#a5f3fc");
+        }
+
         var relicAttackBonus = _state.HasRelic("whetstone") ? 1 : 0;
         var effectExecutor = new BattleCardEffectExecutor(this, relicAttackBonus);
         var effectResult = CardEffectPipeline.Execute(card, effectExecutor);
 
         _hand.Remove(card);
-        _discardPile.Add(card);
+        if (card.Keywords.Contains(CardKeyword.Exhaust))
+        {
+            _exhaustPile.Add(card);
+            Log(LocalizationService.Format(
+                "log.battle.exhaust",
+                "{0} is exhausted",
+                card.GetLocalizedName()), "#f9a8d4");
+        }
+        else
+        {
+            _discardPile.Add(card);
+        }
 
         if (effectResult.DrawCount > 0)
         {

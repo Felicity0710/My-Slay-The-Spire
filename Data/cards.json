@@ -16,7 +16,12 @@
                       "descriptionZh":  "造成6点伤害。",
                       "artPath":  "res://Assets/Cards/strike.png",
                       "nameKey":  "card.strike.name",
-                      "descriptionKey":  "card.strike.description"
+                      "descriptionKey":  "card.strike.description",
+                      "upgrade":  {
+                                      "amountDeltas":  [ 3 ],
+                                      "description":  "Deal 9 damage.",
+                                      "descriptionZh":  "造成9点伤害。"
+                                  }
                   },
                   {
                       "id":  "defend",
@@ -36,7 +41,13 @@
                       "descriptionZh":  "获得5点格挡。",
                       "artPath":  "res://Assets/Cards/defend.png",
                       "nameKey":  "card.defend.name",
-                      "descriptionKey":  "card.defend.description"
+                      "descriptionKey":  "card.defend.description",
+                      "upgrade":  {
+                                      "amountDeltas":  [ 3 ],
+                                      "addKeywords":  [ "Retain" ],
+                                      "description":  "Gain 8 Block. Retain.",
+                                      "descriptionZh":  "获得8点格挡。保留。"
+                                  }
                   },
                   {
                       "id":  "heavy_slash",
@@ -130,7 +141,12 @@
                       "descriptionZh":  "造成7点伤害。抽1张牌。",
                       "artPath":  "res://Assets/Cards/quick_slash.png",
                       "nameKey":  "card.quick_slash.name",
-                      "descriptionKey":  "card.quick_slash.description"
+                      "descriptionKey":  "card.quick_slash.description",
+                      "upgrade":  {
+                                      "replayCount":  2,
+                                      "description":  "Deal 7 damage. Draw 1 card. Replay x2.",
+                                      "descriptionZh":  "造成7点伤害。抽1张牌。重放2次。"
+                                  }
                   },
                   {
                       "id":  "whirlwind",
@@ -483,7 +499,13 @@
                       "descriptionZh":  "造成11点伤害。对自己施加1层易伤。",
                       "artPath":  "res://Assets/Cards/glass_cannon.png",
                       "nameKey":  "card.glass_cannon.name",
-                      "descriptionKey":  "card.glass_cannon.description"
+                      "descriptionKey":  "card.glass_cannon.description",
+                      "upgrade":  {
+                                      "amountDeltas":  [ 5, 0 ],
+                                      "addKeywords":  [ "Exhaust" ],
+                                      "description":  "Deal 16 damage. Apply 1 Vulnerable to yourself. Exhaust.",
+                                      "descriptionZh":  "造成16点伤害。对自己施加1层易伤。消耗。"
+                                  }
                   },
                   {
                       "id":  "war_cry",
@@ -860,7 +882,13 @@
                       "descriptionZh":  "造成4点伤害。施加1层易伤。",
                       "artPath":  "res://Assets/Cards/bone_shrapnel.png",
                       "nameKey":  "card.bone_shrapnel.name",
-                      "descriptionKey":  "card.bone_shrapnel.description"
+                      "descriptionKey":  "card.bone_shrapnel.description",
+                      "upgrade":  {
+                                      "amountDeltas":  [ 2, 0 ],
+                                      "addKeywords":  [ "Curious" ],
+                                      "description":  "Deal 6 damage. Apply 1 Vulnerable. Curious.",
+                                      "descriptionZh":  "造成6点伤害。施加1层易伤。奇巧。"
+                                  }
                   },
                   {
                       "id":  "death_chorus",
@@ -973,6 +1001,33 @@
                       "artPath":  "res://Assets/Cards/arcane_barrage.png",
                       "nameKey":  "card.arcane_barrage.name",
                       "descriptionKey":  "card.arcane_barrage.description"
+                  },
+                  {
+                      "id":  "triage",
+                      "name":  "Triage",
+                      "description":  "Draw 2 cards. Discard 1 random card.",
+                      "kind":  "Skill",
+                      "cost":  0,
+                      "effects":  [
+                                      {
+                                          "type":  "DrawCards",
+                                          "target":  "Player",
+                                          "amount":  2,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      },
+                                      {
+                                          "type":  "DiscardCards",
+                                          "target":  "Player",
+                                          "amount":  1,
+                                          "useAttackerStrength":  false,
+                                          "useTargetVulnerable":  false
+                                      }
+                                  ],
+                      "descriptionZh":  "抽2张牌。随机丢弃1张牌。",
+                      "artPath":  "res://Assets/Cards/triage.png",
+                      "nameKey":  "card.triage.name",
+                      "descriptionKey":  "card.triage.description"
                   }
               ],
     "starterDeck":  [
@@ -1026,6 +1081,7 @@
                        "death_chorus",
                        "soul_siphon",
                        "phoenix_cycle",
-                       "arcane_barrage"
+                       "arcane_barrage",
+                       "triage"
                    ]
 }
