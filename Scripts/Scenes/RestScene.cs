@@ -23,6 +23,7 @@ public partial class RestScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("rest");
+        AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
 
         _titleLabel = GetNode<Label>("%TitleLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");

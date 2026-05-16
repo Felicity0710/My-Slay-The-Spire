@@ -37,7 +37,7 @@ public partial class ShopScene : Control
     private Button _confirmRemoveButton = null!;
     private Button _cancelRemoveButton = null!;
 
-    private readonly Random _rng = new();
+    private Random _rng = null!;
     private readonly List<ShopItem> _items = new();
     private bool _removeServiceUsed;
     private bool _robbed;
@@ -46,6 +46,8 @@ public partial class ShopScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("shop");
+        _rng = state.Rng;
+        AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
 
         _titleLabel = GetNode<Label>("%TitleLabel");
         _goldLabel = GetNode<Label>("%GoldLabel");

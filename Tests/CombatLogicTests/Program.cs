@@ -43,6 +43,7 @@ internal static class Program
             ("Upgrade chance scales with Act", TestUpgradeChanceForActMonotonic),
             ("Map progression caps at 3 acts", TestMapProgressionMaxActs),
             ("Enemy catalog contains the Boss encounter", TestEnemyCatalogHasBossEncounter),
+            ("GameRng restores identical stream from snapshotted state", TestGameRngStateSnapshot),
             ("Card pools only contain known card ids", TestCardPoolsContainKnownCardIds),
             ("Enemy catalog contains configured encounter rules", TestEnemyCatalogRuleCoverage),
             ("Card effect pipeline preserves execution order", TestCardEffectPipelineOrder),
@@ -542,6 +543,51 @@ internal static class Program
         if (boss.MaxHp <= 0)
         {
             throw new InvalidOperationException("Boss enemy should have positive MaxHp.");
+        }
+    }
+
+    private static void TestGameRngStateSnapshot()
+    {
+        var rng = new GameRng(12345);
+
+        // Burn some rolls then snapshot — this is what SaveNodeEntrySnapshot does at node entry.
+        for (var i = 0; i < 4; i++)
+        {
+            rng.Next();
+            rng.NextDouble();
+        }
+
+        var savedState = rng.State;
+
+        // Produce a reference sequence after the snapshot point.
+        var reference = new List<long>();
+        for (var i = 0; i < 16; i++)
+        {
+            reference.Add(rng.Next());
+            reference.Add((long)(rng.NextDouble() * 1_000_000_000));
+            reference.Add(rng.Next(1, 1000));
+        }
+
+        // Restore the state and replay — every value must match the first run.
+        rng.State = savedState;
+        for (var i = 0; i < 16; i++)
+        {
+            var n1 = (long)rng.Next();
+            var d1 = (long)(rng.NextDouble() * 1_000_000_000);
+            var b1 = (long)rng.Next(1, 1000);
+
+            if (n1 != reference[i * 3 + 0])
+            {
+                throw new InvalidOperationException($"GameRng diverged at Next() iter {i}");
+            }
+            if (d1 != reference[i * 3 + 1])
+            {
+                throw new InvalidOperationException($"GameRng diverged at NextDouble() iter {i}");
+            }
+            if (b1 != reference[i * 3 + 2])
+            {
+                throw new InvalidOperationException($"GameRng diverged at Next(min,max) iter {i}");
+            }
         }
     }
 

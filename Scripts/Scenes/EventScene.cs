@@ -10,7 +10,9 @@ public partial class EventScene : Control
 
     public override void _Ready()
     {
-        GetNode<GameState>("/root/GameState").SetUiPhase("event");
+        var state = GetNode<GameState>("/root/GameState");
+        state.SetUiPhase("event");
+        AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
         _titleLabel = GetNode<Label>("%TitleLabel");
         _descLabel = GetNode<Label>("%DescLabel");
         _option1Button = GetNode<Button>("%Option1Button");

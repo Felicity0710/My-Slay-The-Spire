@@ -5,7 +5,9 @@ using System.Linq;
 
 public partial class GameState : Node
 {
-    private Random _rng = new();
+    private GameRng _rng = new();
+
+    public GameRng Rng => _rng;
 
     private const int MapWidth = 5;
     private const int MapRows = MapProgressionRules.RowsPerAct;
@@ -58,6 +60,39 @@ public partial class GameState : Node
     public bool ShopSnapshotHasData { get; private set; }
     public bool ShopSnapshotRemoveServiceUsed { get; private set; }
     public bool PendingMerchantFightVictory { get; private set; }
+
+    public sealed class NodeEntrySnapshot
+    {
+        public int PlayerHp;
+        public int MaxHp;
+        public int Gold;
+        public List<string> DeckCardIds = new();
+        public List<string> Relics = new();
+        public List<string> PotionIds = new();
+        public int PotionCharges;
+        public int Floor;
+        public int Act;
+        public bool RunCompleted;
+        public bool MerchantFled;
+        public int CurrentMapRow;
+        public int CurrentMapColumn;
+        public int PendingMapColumn;
+        public MapNodeType PendingEncounterType;
+        public string PendingEventId = string.Empty;
+        public int BattlesWon;
+        public ulong RngState;
+        public List<ShopInventoryEntry> ShopSnapshot = new();
+        public bool ShopSnapshotHasData;
+        public bool ShopSnapshotRemoveServiceUsed;
+        public bool PendingMerchantFightVictory;
+        public List<string> PendingRewardOptions = new();
+        public List<string> PendingPotionRewardOptions = new();
+        public List<string> PendingRelicOptions = new();
+        public string SceneFilePath = string.Empty;
+    }
+
+    private NodeEntrySnapshot? _nodeEntrySnapshot;
+    public bool HasNodeEntrySnapshot => _nodeEntrySnapshot != null;
 
     public void StartNewRun()
     {
@@ -163,7 +198,7 @@ public partial class GameState : Node
 
     private void ResetRandom(int? seed)
     {
-        _rng = seed.HasValue ? new Random(seed.Value) : new Random();
+        _rng = seed.HasValue ? new GameRng((ulong)(uint)seed.Value) : new GameRng();
     }
 
     private string ChooseRandomBattleTestPresetId()
@@ -370,26 +405,160 @@ public partial class GameState : Node
         PendingEncounterType = nodeType;
     }
 
+    public sealed class BattleRewardSummary
+    {
+        public bool IsEliteTier { get; set; }
+        public int GoldGained { get; set; }
+        public int HealedFromCharm { get; set; }
+        public int HealedFromBloodVial { get; set; }
+    }
+
+    private static readonly IReadOnlyList<string> EliteTierPotionPool = new[]
+    {
+        "strength_potion",
+        "guard_potion",
+        "fury_potion"
+    };
+
+    public BattleRewardSummary LastBattleReward { get; private set; } = new();
+    public List<string> PendingPotionRewardOptions { get; } = new();
+
     public void ResolveBattleVictory()
     {
         BattlesWon += 1;
+        RollBattleRewardOffers();
+        AdvanceFloor();
+    }
+
+    private void RollBattleRewardOffers()
+    {
+        // Wipe any leftovers from a previous battle in case the player skipped picks.
+        PendingRewardOptions.Clear();
+        PendingPotionRewardOptions.Clear();
+        PendingRelicOptions.Clear();
+
+        var summary = new BattleRewardSummary();
+        var isElite = PendingEncounterType == MapNodeType.EliteBattle
+            || PendingEncounterType == MapNodeType.Boss;
+        summary.IsEliteTier = isElite;
 
         if (HasRelic("charm"))
         {
+            var before = PlayerHp;
             PlayerHp = Math.Min(PlayerHp + 5, MaxHp);
+            summary.HealedFromCharm = PlayerHp - before;
         }
 
         if (HasRelic("blood_vial"))
         {
+            var before = PlayerHp;
             PlayerHp = Math.Min(PlayerHp + 2, MaxHp);
+            summary.HealedFromBloodVial = PlayerHp - before;
         }
 
-        var goldGain = PendingEncounterType == MapNodeType.EliteBattle
-            ? _rng.Next(25, 40)
-            : _rng.Next(15, 26);
+        // Gold is auto-granted (not part of the "pick one" picker UI).
+        var goldGain = isElite ? _rng.Next(40, 60) : _rng.Next(18, 28);
         AddGold(goldGain);
+        summary.GoldGained = goldGain;
 
-        AdvanceFloor();
+        // Card offers. Elite/Boss show one extra card and a boosted upgrade chance.
+        var cardOfferCount = isElite ? 4 : 3;
+        var baseUpgradeChance = CurrentUpgradeChance();
+        var upgradeChance = isElite
+            ? Math.Clamp(baseUpgradeChance + 0.20, 0.0, 1.0)
+            : baseUpgradeChance;
+
+        var cardPool = CardData.RewardPoolIds();
+        cardPool.RemoveAll(id => id == "strike" || id == "defend");
+        Shuffle(cardPool);
+        for (var i = 0; i < cardOfferCount && i < cardPool.Count; i++)
+        {
+            PendingRewardOptions.Add(MaybeUpgradeCardId(cardPool[i], upgradeChance));
+        }
+
+        // Potion offers. Elite/Boss roll from a higher-impact pool and show more.
+        var potionOfferCount = isElite ? 3 : 2;
+        var potionPool = isElite
+            ? new List<string>(EliteTierPotionPool)
+            : new List<string>(PotionData.AllPotionIds());
+        Shuffle(potionPool);
+        for (var i = 0; i < potionOfferCount && i < potionPool.Count; i++)
+        {
+            PendingPotionRewardOptions.Add(potionPool[i]);
+        }
+
+        // Relic offers — elite/boss only. Show two options; pick one or skip.
+        if (isElite)
+        {
+            var relicPool = new List<string>(RelicData.AllRelicIds());
+            relicPool.RemoveAll(HasRelic);
+            Shuffle(relicPool);
+            var relicOfferCount = Math.Min(2, relicPool.Count);
+            for (var i = 0; i < relicOfferCount; i++)
+            {
+                PendingRelicOptions.Add(relicPool[i]);
+            }
+        }
+
+        LastBattleReward = summary;
+    }
+
+    public bool TakeRewardCardOption(int index)
+    {
+        if (index < 0 || index >= PendingRewardOptions.Count)
+        {
+            return false;
+        }
+
+        AddCardToDeck(PendingRewardOptions[index]);
+        PendingRewardOptions.Clear();
+        return true;
+    }
+
+    public bool TakeRewardPotionOption(int index)
+    {
+        if (index < 0 || index >= PendingPotionRewardOptions.Count)
+        {
+            return false;
+        }
+
+        var success = TryAddPotion(PendingPotionRewardOptions[index]);
+        PendingPotionRewardOptions.Clear();
+        return success;
+    }
+
+    public bool TakeRewardRelicOption(int index)
+    {
+        if (index < 0 || index >= PendingRelicOptions.Count)
+        {
+            return false;
+        }
+
+        AddRelic(PendingRelicOptions[index]);
+        PendingRelicOptions.Clear();
+        return true;
+    }
+
+    public void SkipRewardCards()
+    {
+        PendingRewardOptions.Clear();
+    }
+
+    public void SkipRewardPotions()
+    {
+        PendingPotionRewardOptions.Clear();
+    }
+
+    public void SkipRewardRelics()
+    {
+        PendingRelicOptions.Clear();
+    }
+
+    public void ClearBattleRewardOffers()
+    {
+        PendingRewardOptions.Clear();
+        PendingPotionRewardOptions.Clear();
+        PendingRelicOptions.Clear();
     }
 
     public void AddGold(int amount)
@@ -458,6 +627,122 @@ public partial class GameState : Node
         ShopSnapshot.Clear();
         ShopSnapshotHasData = false;
         ShopSnapshotRemoveServiceUsed = false;
+    }
+
+    public void SaveNodeEntrySnapshot(string sceneFilePath)
+    {
+        var snap = new NodeEntrySnapshot
+        {
+            PlayerHp = PlayerHp,
+            MaxHp = MaxHp,
+            Gold = Gold,
+            DeckCardIds = new List<string>(DeckCardIds),
+            Relics = new List<string>(RelicIds),
+            PotionIds = new List<string>(PotionIds),
+            PotionCharges = PotionCharges,
+            Floor = Floor,
+            Act = Act,
+            RunCompleted = RunCompleted,
+            MerchantFled = MerchantFled,
+            CurrentMapRow = CurrentMapRow,
+            CurrentMapColumn = CurrentMapColumn,
+            PendingMapColumn = PendingMapColumn,
+            PendingEncounterType = PendingEncounterType,
+            PendingEventId = PendingEventId,
+            BattlesWon = BattlesWon,
+            RngState = _rng.State,
+            ShopSnapshotHasData = ShopSnapshotHasData,
+            ShopSnapshotRemoveServiceUsed = ShopSnapshotRemoveServiceUsed,
+            PendingMerchantFightVictory = PendingMerchantFightVictory,
+            SceneFilePath = sceneFilePath
+        };
+
+        foreach (var entry in ShopSnapshot)
+        {
+            snap.ShopSnapshot.Add(new ShopInventoryEntry
+            {
+                Kind = entry.Kind,
+                Id = entry.Id,
+                Price = entry.Price,
+                Sold = entry.Sold
+            });
+        }
+
+        snap.PendingRewardOptions.AddRange(PendingRewardOptions);
+        snap.PendingPotionRewardOptions.AddRange(PendingPotionRewardOptions);
+        snap.PendingRelicOptions.AddRange(PendingRelicOptions);
+
+        _nodeEntrySnapshot = snap;
+    }
+
+    public bool RestoreNodeEntrySnapshot()
+    {
+        var snap = _nodeEntrySnapshot;
+        if (snap == null)
+        {
+            return false;
+        }
+
+        PlayerHp = snap.PlayerHp;
+        MaxHp = snap.MaxHp;
+        Gold = snap.Gold;
+
+        DeckCardIds.Clear();
+        DeckCardIds.AddRange(snap.DeckCardIds);
+
+        RelicIds.Clear();
+        RelicIds.AddRange(snap.Relics);
+
+        PotionIds.Clear();
+        PotionIds.AddRange(snap.PotionIds);
+        PotionCharges = snap.PotionCharges;
+
+        Floor = snap.Floor;
+        Act = snap.Act;
+        RunCompleted = snap.RunCompleted;
+        MerchantFled = snap.MerchantFled;
+        CurrentMapRow = snap.CurrentMapRow;
+        CurrentMapColumn = snap.CurrentMapColumn;
+        PendingMapColumn = snap.PendingMapColumn;
+        PendingEncounterType = snap.PendingEncounterType;
+        PendingEventId = snap.PendingEventId;
+        BattlesWon = snap.BattlesWon;
+        _rng.State = snap.RngState;
+
+        ShopSnapshot.Clear();
+        foreach (var entry in snap.ShopSnapshot)
+        {
+            ShopSnapshot.Add(new ShopInventoryEntry
+            {
+                Kind = entry.Kind,
+                Id = entry.Id,
+                Price = entry.Price,
+                Sold = entry.Sold
+            });
+        }
+
+        ShopSnapshotHasData = snap.ShopSnapshotHasData;
+        ShopSnapshotRemoveServiceUsed = snap.ShopSnapshotRemoveServiceUsed;
+        PendingMerchantFightVictory = snap.PendingMerchantFightVictory;
+
+        PendingRewardOptions.Clear();
+        PendingRewardOptions.AddRange(snap.PendingRewardOptions);
+        PendingPotionRewardOptions.Clear();
+        PendingPotionRewardOptions.AddRange(snap.PendingPotionRewardOptions);
+        PendingRelicOptions.Clear();
+        PendingRelicOptions.AddRange(snap.PendingRelicOptions);
+
+        return true;
+    }
+
+    public string GetNodeEntrySceneFilePath()
+    {
+        return _nodeEntrySnapshot?.SceneFilePath ?? string.Empty;
+    }
+
+    public void ClearNodeEntrySnapshot()
+    {
+        _nodeEntrySnapshot = null;
     }
 
     public void BeginMerchantFight()

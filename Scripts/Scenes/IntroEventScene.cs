@@ -11,6 +11,7 @@ public partial class IntroEventScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("intro");
+        AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
 
         // Heal-to-full again here as a safety net in case the intro was entered
         // through a non-standard path. Idempotent — Min keeps HP within MaxHp.

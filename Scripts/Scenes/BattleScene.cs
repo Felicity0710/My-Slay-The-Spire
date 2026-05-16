@@ -115,7 +115,7 @@ public partial class BattleScene : Control
     [Export]
     private bool _showHandDebugOverlay = false;
 
-    private readonly Random _rng = new();
+    private Random _rng = null!;
     private readonly List<CardData> _drawPile = new();
     private readonly List<CardData> _discardPile = new();
     private readonly List<CardData> _exhaustPile = new();
@@ -316,6 +316,9 @@ public partial class BattleScene : Control
             _state.StartNewRun();
             _state.BeginEncounter(MapNodeType.NormalBattle);
         }
+
+        _rng = _state.Rng;
+        AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
 
         SetupPotionUi();
 
@@ -1339,24 +1342,19 @@ public partial class BattleScene : Control
             return;
         }
 
-        var hpBeforeResolve = _state.PlayerHp;
-        var hpAfterCharm = _state.HasRelic("charm") ? Math.Min(hpBeforeResolve + 5, _state.MaxHp) : hpBeforeResolve;
-        var charmHeal = hpAfterCharm - hpBeforeResolve;
-        var hpAfterBloodVial = _state.HasRelic("blood_vial") ? Math.Min(hpAfterCharm + 2, _state.MaxHp) : hpAfterCharm;
-        var bloodVialHeal = hpAfterBloodVial - hpAfterCharm;
-
         _state.ResolveBattleVictory();
         _state.SetUiPhase("reward");
 
-        if (charmHeal > 0)
+        var reward = _state.LastBattleReward;
+        if (reward.HealedFromCharm > 0)
         {
-            Log(LocalizationService.Format("log.battle.lucky_charm", "Lucky Charm heals {0} HP", charmHeal), "#86efac");
+            Log(LocalizationService.Format("log.battle.lucky_charm", "Lucky Charm heals {0} HP", reward.HealedFromCharm), "#86efac");
             FlashRelic("charm");
         }
 
-        if (bloodVialHeal > 0)
+        if (reward.HealedFromBloodVial > 0)
         {
-            Log(LocalizationService.Format("log.battle.blood_vial", "Blood Vial heals {0} HP", bloodVialHeal), "#fca5a5");
+            Log(LocalizationService.Format("log.battle.blood_vial", "Blood Vial heals {0} HP", reward.HealedFromBloodVial), "#fca5a5");
             FlashRelic("blood_vial");
         }
 

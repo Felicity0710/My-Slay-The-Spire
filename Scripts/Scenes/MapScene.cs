@@ -395,6 +395,13 @@ public partial class MapScene : Control
         }
 
         var state = GetNode<GameState>("/root/GameState");
+
+        // Snapshot the map state RIGHT BEFORE consuming this click. "Re-enter
+        // current node" from inside a node scene restores this snapshot and
+        // returns us here, with the same RNG cursor — picking the same node
+        // again reproduces every random roll exactly.
+        state.SaveNodeEntrySnapshot("res://Scenes/MapScene.tscn");
+
         if (!state.ChooseMapNode(column, out var nodeType))
         {
             return;
