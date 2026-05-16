@@ -7,7 +7,16 @@ public partial class MapScene : Control
 {
     private const float MapCanvasMinWidth = 760f;
     private const float MapCanvasMaxWidth = 1220f;
+    private const float MapCanvasBaseHeight = 980f;
     private const float MapViewportHorizontalPadding = 64f;
+
+    private const float MapZoomMin = 0.6f;
+    private const float MapZoomMax = 2.0f;
+    private const float MapZoomStep = 1.12f;
+
+    private float _zoom = 1f;
+    private Vector2 _baseCanvasSize = new(MapCanvasMinWidth, MapCanvasBaseHeight);
+    private bool _isPanningMap;
 
     private Label _titleLabel = null!;
     private Label _runInfoLabel = null!;
@@ -51,6 +60,7 @@ public partial class MapScene : Control
         SetupDeckViewerUi();
         _menuButton.Pressed += OnMenuPressed;
         _mapScroll.Resized += OnMapViewportResized;
+        _mapScroll.GuiInput += OnMapScrollGuiInput;
         LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
         RefreshUi();
@@ -62,10 +72,65 @@ public partial class MapScene : Control
         if (IsInstanceValid(_mapScroll))
         {
             _mapScroll.Resized -= OnMapViewportResized;
+            _mapScroll.GuiInput -= OnMapScrollGuiInput;
         }
 
         TearDownDeckViewerUi();
         LocalizationSettings.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void OnMapScrollGuiInput(InputEvent @event)
+    {
+        if (_isPlayingMerchantFledTransition)
+        {
+            return;
+        }
+
+        if (@event is InputEventMouseButton mb && mb.Pressed)
+        {
+            switch (mb.ButtonIndex)
+            {
+                case MouseButton.WheelUp:
+                    ZoomBy(MapZoomStep);
+                    _mapScroll.AcceptEvent();
+                    return;
+                case MouseButton.WheelDown:
+                    ZoomBy(1f / MapZoomStep);
+                    _mapScroll.AcceptEvent();
+                    return;
+                case MouseButton.Right:
+                    _isPanningMap = true;
+                    _mapScroll.AcceptEvent();
+                    return;
+            }
+        }
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (!IsInstanceValid(_mapScroll))
+        {
+            return;
+        }
+
+        // Right-mouse release ends panning regardless of where the cursor is.
+        if (@event is InputEventMouseButton release
+            && release.ButtonIndex == MouseButton.Right
+            && !release.Pressed
+            && _isPanningMap)
+        {
+            _isPanningMap = false;
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        // While panning, mouse motion anywhere on screen drags the map.
+        if (_isPanningMap && @event is InputEventMouseMotion motion)
+        {
+            _mapScroll.ScrollVertical -= Mathf.RoundToInt(motion.Relative.Y);
+            _mapScroll.ScrollHorizontal -= Mathf.RoundToInt(motion.Relative.X);
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     private void GoToVictoryScene()
@@ -108,20 +173,41 @@ public partial class MapScene : Control
             MapCanvasMinWidth,
             MapCanvasMaxWidth);
 
-        var currentMinimumSize = _mapCanvas.CustomMinimumSize;
-        if (Mathf.Abs(currentMinimumSize.X - targetWidth) < 0.5f)
+        _baseCanvasSize = new Vector2(targetWidth, MapCanvasBaseHeight);
+        ApplyZoomTransform();
+    }
+
+    private void ApplyZoomTransform()
+    {
+        if (!IsInstanceValid(_mapCanvas))
         {
             return;
         }
 
-        _mapCanvas.CustomMinimumSize = new Vector2(targetWidth, currentMinimumSize.Y);
+        _mapCanvas.PivotOffset = Vector2.Zero;
+        _mapCanvas.Scale = new Vector2(_zoom, _zoom);
+        _mapCanvas.CustomMinimumSize = new Vector2(
+            _baseCanvasSize.X * _zoom,
+            _baseCanvasSize.Y * _zoom);
     }
 
+    private void ZoomBy(float multiplier)
+    {
+        var newZoom = Mathf.Clamp(_zoom * multiplier, MapZoomMin, MapZoomMax);
+        if (Mathf.IsEqualApprox(newZoom, _zoom))
+        {
+            return;
+        }
+
+        _zoom = newZoom;
+        ApplyZoomTransform();
+    }
+
+    // Returns the unscaled "logical" map canvas size used by BuildNodePositions.
+    // The visual scale is applied separately via _mapCanvas.Scale.
     private Vector2 GetEffectiveMapCanvasSize()
     {
-        return new Vector2(
-            Mathf.Max(_mapCanvas.Size.X, _mapCanvas.CustomMinimumSize.X),
-            Mathf.Max(_mapCanvas.Size.Y, _mapCanvas.CustomMinimumSize.Y));
+        return _baseCanvasSize;
     }
 
     private void RefreshUi(string status = "")
@@ -282,19 +368,20 @@ public partial class MapScene : Control
 
     private void ApplyScrollFocus(float focusY)
     {
-        var mapSize = GetEffectiveMapCanvasSize();
+        // focusY is in unscaled canvas coords; convert to scaled scroll space.
+        var scaledMapHeight = _baseCanvasSize.Y * _zoom;
         var viewHeight = _mapScroll.Size.Y;
-        var maxVerticalScroll = Mathf.Max(0f, mapSize.Y - viewHeight);
-        var desired = Mathf.Clamp(focusY - viewHeight * 0.72f, 0f, maxVerticalScroll);
+        var maxVerticalScroll = Mathf.Max(0f, scaledMapHeight - viewHeight);
+        var desired = Mathf.Clamp(focusY * _zoom - viewHeight * 0.72f, 0f, maxVerticalScroll);
         _mapScroll.ScrollVertical = Mathf.RoundToInt(desired);
         CenterMapHorizontally();
     }
 
     private void CenterMapHorizontally()
     {
-        var mapSize = GetEffectiveMapCanvasSize();
+        var scaledMapWidth = _baseCanvasSize.X * _zoom;
         var viewWidth = _mapScroll.Size.X;
-        var maxHorizontalScroll = Mathf.Max(0f, mapSize.X - viewWidth);
+        var maxHorizontalScroll = Mathf.Max(0f, scaledMapWidth - viewWidth);
         _mapScroll.ScrollHorizontal = maxHorizontalScroll <= 0f
             ? 0
             : Mathf.RoundToInt(maxHorizontalScroll * 0.5f);
