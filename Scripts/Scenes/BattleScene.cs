@@ -258,6 +258,7 @@ public partial class BattleScene : Control
         _topHpLabel = GetNode<Label>("%TopHpLabel");
         _handCountLabel = GetNode<Label>("%HandCountLabel");
         _relicBarLabel = GetNode<Label>("%RelicBarLabel");
+        _relicBarLabel.Visible = false;
         _relicIcons = GetNode<HBoxContainer>("%RelicIcons");
         _logText = GetNode<RichTextLabel>("%LogText");
 
@@ -289,6 +290,14 @@ public partial class BattleScene : Control
         _testVictoryButton = GetNode<Button>("%TestVictoryButton");
         _settingsButton = GetNode<Button>("%SettingsButton");
         _settingsModal = GetNode<Control>("%SettingsModal");
+
+        // Hand cards push their ZIndex up to 100 within the default canvas layer
+        // when hovered. Lift the settings modal into the overlay canvas (Layer 50)
+        // so it always draws on top of hand cards regardless of hover state.
+        _settingsModal.Reparent(_overlayCanvas);
+        _settingsModal.TopLevel = false;
+        _settingsModal.ZIndex = 200;
+        _settingsModal.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         _resolutionOption = GetNode<OptionButton>("%ResolutionOption");
         _maxFpsOption = GetNode<OptionButton>("%MaxFpsOption");
         _vsyncCheckBox = GetNode<CheckBox>("%VsyncCheckBox");
@@ -1948,7 +1957,7 @@ public partial class BattleScene : Control
             AliveEnemyCount());
         RefreshPotionUi();
         RefreshPileViewerUi();
-        _relicBarLabel.Text = BuildRelicBarText();
+        // Relic text bar is hidden — icons (which carry tooltips) are the only display now.
         RefreshRelicIcons();
         UpdateEnemySelectionUi();
         UpdateInputControls();

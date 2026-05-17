@@ -22,6 +22,7 @@ public partial class MapScene : Control
     private Label _runInfoLabel = null!;
     private Label _statusLabel = null!;
     private Label _relicLabel = null!;
+    private HBoxContainer _relicIcons = null!;
     private Label _legendLabel = null!;
     private ScrollContainer _mapScroll = null!;
     private MapCanvas _mapCanvas = null!;
@@ -46,6 +47,7 @@ public partial class MapScene : Control
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
+        _relicIcons = GetNode<HBoxContainer>("%RelicIcons");
         _legendLabel = GetNode<Label>("Margin/VBox/Legend");
         _mapScroll = GetNode<ScrollContainer>("%MapScroll");
         _mapCanvas = GetNode<MapCanvas>("%MapCanvas");
@@ -274,29 +276,47 @@ public partial class MapScene : Control
 
         _statusLabel.Text = status;
 
-        var relicText = new StringBuilder(LocalizationService.Get("ui.map.relics_prefix", "Relics: "));
-        if (state.RelicIds.Count == 0)
-        {
-            relicText.Append(LocalizationService.Get("ui.map.relics_none", "None"));
-        }
-        else
-        {
-            for (var i = 0; i < state.RelicIds.Count; i++)
-            {
-                if (i > 0)
-                {
-                    relicText.Append(", ");
-                }
-
-                relicText.Append(RelicData.CreateById(state.RelicIds[i]).LocalizedName);
-            }
-        }
-
-        _relicLabel.Text = relicText.ToString();
+        _relicLabel.Text = LocalizationService.Get("ui.map.relics_prefix", "Relics:");
+        RefreshRelicIcons(state);
 
         UpdateMapCanvasWidth();
         RefreshDeckViewerUi(state);
         BuildTreasureMap(state);
+    }
+
+    private void RefreshRelicIcons(GameState state)
+    {
+        foreach (var child in _relicIcons.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        if (state.RelicIds.Count == 0)
+        {
+            var none = new Label
+            {
+                Text = LocalizationService.Get("ui.map.relics_none", "None"),
+                Modulate = new Color(1f, 1f, 1f, 0.55f)
+            };
+            _relicIcons.AddChild(none);
+            return;
+        }
+
+        foreach (var relicId in state.RelicIds)
+        {
+            var relic = RelicData.CreateById(relicId);
+            var iconPath = CombatVisualCatalog.GetRelicIconPath(relicId);
+            var icon = new TextureRect
+            {
+                CustomMinimumSize = new Vector2(28, 28),
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+                TooltipText = relic.ToRelicText(),
+                MouseFilter = MouseFilterEnum.Stop,
+                Texture = ResourceLoader.Exists(iconPath) ? GD.Load<Texture2D>(iconPath) : null
+            };
+            _relicIcons.AddChild(icon);
+        }
     }
 
     private void RefreshStaticText()

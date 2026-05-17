@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 public partial class CardView : PanelContainer
 {
     private Label _nameLabel = null!;
+    private Label _kindLabel = null!;
     private Label _costLabel = null!;
     private TextureRect _artTexture = null!;
     private RichTextLabel _descLabel = null!;
@@ -485,6 +486,13 @@ public partial class CardView : PanelContainer
         _nameLabel.MouseFilter = MouseFilterEnum.Ignore;
         _nameLabel.AddThemeColorOverride("font_color", new Color("e2e8f0"));
 
+        _kindLabel = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        _kindLabel.MouseFilter = MouseFilterEnum.Ignore;
+        _kindLabel.AddThemeFontSizeOverride("font_size", 12);
+
         _artTexture = new TextureRect
         {
             ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
@@ -536,6 +544,7 @@ public partial class CardView : PanelContainer
         _keywordLabel.AddThemeColorOverride("font_color", new Color("fbcfe8"));
 
         vbox.AddChild(_nameLabel);
+        vbox.AddChild(_kindLabel);
         vbox.AddChild(_artTexture);
         vbox.AddChild(costBadge);
         vbox.AddChild(_keywordLabel);
@@ -553,12 +562,36 @@ public partial class CardView : PanelContainer
     private void RefreshText()
     {
         _nameLabel.Text = Card.GetLocalizedName();
+        UpdateKindLabel();
         _costLabel.Text = $"{LocalizationSettings.CostLabel()}: {Card.Cost}";
         var description = string.IsNullOrEmpty(_previewDescription) ? Card.GetLocalizedDescription() : _previewDescription;
         var text = LocalizationSettings.HighlightCardDescription(description);
         _descLabel.Text = text;
         _artTexture.Texture = LoadCardArt(Card.ArtPath);
         UpdateKeywordChip();
+    }
+
+    private void UpdateKindLabel()
+    {
+        if (_kindLabel == null)
+        {
+            return;
+        }
+
+        var kindKey = $"ui.card_kind.{Card.Kind.ToString().ToLowerInvariant()}";
+        var fallback = Card.Kind switch
+        {
+            CardKind.Attack => "Attack",
+            CardKind.Skill => "Skill",
+            _ => Card.Kind.ToString()
+        };
+        _kindLabel.Text = LocalizationService.Get(kindKey, fallback);
+        _kindLabel.AddThemeColorOverride("font_color", Card.Kind switch
+        {
+            CardKind.Attack => new Color("fca5a5"),
+            CardKind.Skill => new Color("93c5fd"),
+            _ => new Color("d1d5db")
+        });
     }
 
     private void UpdateKeywordChip()
