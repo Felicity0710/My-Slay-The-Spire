@@ -60,7 +60,14 @@ public partial class MapScene : Control
         SetupDeckViewerUi();
         _menuButton.Pressed += OnMenuPressed;
         _mapScroll.Resized += OnMapViewportResized;
+
+        // Let mouse events flow through MapCanvas to the ScrollContainer; otherwise
+        // MapCanvas's default Stop filter consumes wheel and right-click before we
+        // can see them. The map node Buttons are siblings under it and still get
+        // their own clicks since they're separate Controls.
+        _mapCanvas.MouseFilter = MouseFilterEnum.Pass;
         _mapScroll.GuiInput += OnMapScrollGuiInput;
+
         LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
         RefreshUi();
@@ -86,23 +93,37 @@ public partial class MapScene : Control
             return;
         }
 
-        if (@event is InputEventMouseButton mb && mb.Pressed)
+        if (@event is not InputEventMouseButton mb)
         {
-            switch (mb.ButtonIndex)
+            return;
+        }
+
+        // Wheel events come through as Pressed=true once (no release).
+        if (mb.Pressed && mb.ButtonIndex == MouseButton.WheelUp)
+        {
+            ZoomBy(MapZoomStep);
+            _mapScroll.AcceptEvent();
+            return;
+        }
+
+        if (mb.Pressed && mb.ButtonIndex == MouseButton.WheelDown)
+        {
+            ZoomBy(1f / MapZoomStep);
+            _mapScroll.AcceptEvent();
+            return;
+        }
+
+        if (mb.ButtonIndex == MouseButton.Right)
+        {
+            if (mb.Pressed)
             {
-                case MouseButton.WheelUp:
-                    ZoomBy(MapZoomStep);
-                    _mapScroll.AcceptEvent();
-                    return;
-                case MouseButton.WheelDown:
-                    ZoomBy(1f / MapZoomStep);
-                    _mapScroll.AcceptEvent();
-                    return;
-                case MouseButton.Right:
-                    _isPanningMap = true;
-                    _mapScroll.AcceptEvent();
-                    return;
+                _isPanningMap = true;
             }
+            else if (_isPanningMap)
+            {
+                _isPanningMap = false;
+            }
+            _mapScroll.AcceptEvent();
         }
     }
 
@@ -113,7 +134,7 @@ public partial class MapScene : Control
             return;
         }
 
-        // Right-mouse release ends panning regardless of where the cursor is.
+        // Right-mouse release ends panning even if the cursor is now off the map.
         if (@event is InputEventMouseButton release
             && release.ButtonIndex == MouseButton.Right
             && !release.Pressed
@@ -184,8 +205,10 @@ public partial class MapScene : Control
             return;
         }
 
+        // Reset any leftover Scale from earlier prototypes; geometry is baked into
+        // positions and sizes at rebuild time instead.
+        _mapCanvas.Scale = Vector2.One;
         _mapCanvas.PivotOffset = Vector2.Zero;
-        _mapCanvas.Scale = new Vector2(_zoom, _zoom);
         _mapCanvas.CustomMinimumSize = new Vector2(
             _baseCanvasSize.X * _zoom,
             _baseCanvasSize.Y * _zoom);
@@ -201,13 +224,24 @@ public partial class MapScene : Control
 
         _zoom = newZoom;
         ApplyZoomTransform();
+
+        // Rebuild the map so node positions / sizes pick up the new zoom factor.
+        var state = GetNodeOrNull<GameState>("/root/GameState");
+        if (state != null)
+        {
+            BuildTreasureMap(state);
+        }
+
+        // Always recenter after zoom — BuildTreasureMap only refocuses if there
+        // are selectable nodes on the current row; this guarantees centering.
+        CallDeferred(MethodName.CenterMapHorizontally);
     }
 
-    // Returns the unscaled "logical" map canvas size used by BuildNodePositions.
-    // The visual scale is applied separately via _mapCanvas.Scale.
+    // Returns the SCALED canvas size used by BuildNodePositions — the entire
+    // map (background, lines, buttons) is positioned in this scaled space.
     private Vector2 GetEffectiveMapCanvasSize()
     {
-        return _baseCanvasSize;
+        return new Vector2(_baseCanvasSize.X * _zoom, _baseCanvasSize.Y * _zoom);
     }
 
     private void RefreshUi(string status = "")
@@ -309,14 +343,15 @@ public partial class MapScene : Control
                 var canSelect = state.CanChooseMapNode(row, col);
 
                 var nodeButton = new Button();
-                var nodeSize = canSelect ? 70f : 54f;
+                var nodeSize = (canSelect ? 70f : 54f) * _zoom;
                 nodeButton.Size = new Vector2(nodeSize, nodeSize);
                 nodeButton.CustomMinimumSize = new Vector2(nodeSize, nodeSize);
                 nodeButton.Text = state.MapNodeSymbol(nodeType);
                 nodeButton.TooltipText = $"{row + 1:00}F - {state.MapNodeLabel(nodeType)}";
                 nodeButton.Position = positions[row][col] - nodeButton.Size / 2f;
                 nodeButton.Disabled = !canSelect;
-                nodeButton.AddThemeFontSizeOverride("font_size", canSelect ? 34 : 26);
+                var fontSize = Mathf.RoundToInt((canSelect ? 34 : 26) * _zoom);
+                nodeButton.AddThemeFontSizeOverride("font_size", fontSize);
                 nodeButton.AddThemeColorOverride("font_color", canSelect ? new Color(1f, 0.98f, 0.88f) : Colors.White);
                 nodeButton.AddThemeColorOverride("font_focus_color", canSelect ? new Color(1f, 0.98f, 0.88f) : Colors.White);
 
@@ -368,20 +403,21 @@ public partial class MapScene : Control
 
     private void ApplyScrollFocus(float focusY)
     {
-        // focusY is in unscaled canvas coords; convert to scaled scroll space.
-        var scaledMapHeight = _baseCanvasSize.Y * _zoom;
+        // focusY already comes from BuildNodePositions, which now operates in the
+        // scaled canvas space, so no extra zoom multiplication needed here.
+        var mapSize = GetEffectiveMapCanvasSize();
         var viewHeight = _mapScroll.Size.Y;
-        var maxVerticalScroll = Mathf.Max(0f, scaledMapHeight - viewHeight);
-        var desired = Mathf.Clamp(focusY * _zoom - viewHeight * 0.72f, 0f, maxVerticalScroll);
+        var maxVerticalScroll = Mathf.Max(0f, mapSize.Y - viewHeight);
+        var desired = Mathf.Clamp(focusY - viewHeight * 0.72f, 0f, maxVerticalScroll);
         _mapScroll.ScrollVertical = Mathf.RoundToInt(desired);
         CenterMapHorizontally();
     }
 
     private void CenterMapHorizontally()
     {
-        var scaledMapWidth = _baseCanvasSize.X * _zoom;
+        var mapSize = GetEffectiveMapCanvasSize();
         var viewWidth = _mapScroll.Size.X;
-        var maxHorizontalScroll = Mathf.Max(0f, scaledMapWidth - viewWidth);
+        var maxHorizontalScroll = Mathf.Max(0f, mapSize.X - viewWidth);
         _mapScroll.ScrollHorizontal = maxHorizontalScroll <= 0f
             ? 0
             : Mathf.RoundToInt(maxHorizontalScroll * 0.5f);
