@@ -355,11 +355,7 @@ public partial class MapScene : Control
                 foreach (var nextCol in state.MapConnections[row][col])
                 {
                     var end = positions[row + 1][nextCol];
-                    var tint = row == state.CurrentMapRow && state.CurrentMapColumn == col
-                        ? new Color(0.95f, 0.84f, 0.48f, 0.95f)
-                        : new Color(0.78f, 0.68f, 0.49f, 0.8f);
-
-                    lines.Add((start, end, tint));
+                    lines.Add((start, end, LineTint(state, row, col)));
                 }
             }
         }
@@ -374,17 +370,26 @@ public partial class MapScene : Control
                 var canSelect = state.CanChooseMapNode(row, col);
 
                 var nodeButton = new Button();
-                var nodeSize = (canSelect ? 70f : 54f) * _zoom;
+                var explored = row < state.CurrentMapRow;
+                var nodeSize = (canSelect ? 82f : explored ? 62f : 72f) * _zoom;
                 nodeButton.Size = new Vector2(nodeSize, nodeSize);
                 nodeButton.CustomMinimumSize = new Vector2(nodeSize, nodeSize);
                 nodeButton.Text = state.MapNodeSymbol(nodeType);
                 nodeButton.TooltipText = $"{row + 1:00}F - {state.MapNodeLabel(nodeType)}";
                 nodeButton.Position = positions[row][col] - nodeButton.Size / 2f;
                 nodeButton.Disabled = !canSelect;
-                var fontSize = Mathf.RoundToInt((canSelect ? 34 : 26) * _zoom);
+                var fontSize = Mathf.RoundToInt((canSelect ? 56 : explored ? 42 : 50) * _zoom);
                 nodeButton.AddThemeFontSizeOverride("font_size", fontSize);
                 nodeButton.AddThemeColorOverride("font_color", canSelect ? new Color(1f, 0.98f, 0.88f) : Colors.White);
                 nodeButton.AddThemeColorOverride("font_focus_color", canSelect ? new Color(1f, 0.98f, 0.88f) : Colors.White);
+
+                // Strip the default button chrome — we only want the icon glyph.
+                var transparent = new StyleBoxEmpty();
+                nodeButton.AddThemeStyleboxOverride("normal", transparent);
+                nodeButton.AddThemeStyleboxOverride("hover", transparent);
+                nodeButton.AddThemeStyleboxOverride("pressed", transparent);
+                nodeButton.AddThemeStyleboxOverride("disabled", transparent);
+                nodeButton.AddThemeStyleboxOverride("focus", transparent);
 
                 nodeButton.Modulate = NodeTint(nodeType, row, state.CurrentMapRow, canSelect);
 
@@ -461,8 +466,14 @@ public partial class MapScene : Control
         var mapHeight = mapSize.Y;
 
         var rows = state.MapLayout.Count;
-        var horizontalMargin = 72f;
-        var verticalMargin = 50f;
+        // Everything that influences node placement must scale uniformly with
+        // _zoom — otherwise margins shrink (relatively) at high zoom and the
+        // layout's apparent shape changes. With everything *_zoom, the entire
+        // map is a pure visual scale.
+        var horizontalMargin = 72f * _zoom;
+        var verticalMargin = 50f * _zoom;
+        var clampPadX = 16f * _zoom;
+        var clampPadY = 12f * _zoom;
         var yStep = (mapHeight - verticalMargin * 2f) / Math.Max(1, rows - 1);
 
         var pos = new List<List<Vector2>>(rows);
@@ -476,7 +487,7 @@ public partial class MapScene : Control
             {
                 // Center the single intro/boss node.
                 var x = mapWidth * 0.5f;
-                var y = Mathf.Clamp(baseY, verticalMargin - 12f, mapHeight - verticalMargin + 12f);
+                var y = Mathf.Clamp(baseY, verticalMargin - clampPadY, mapHeight - verticalMargin + clampPadY);
                 rowPos.Add(new Vector2(x, y));
             }
             else
@@ -486,11 +497,14 @@ public partial class MapScene : Control
                 {
                     var baseX = horizontalMargin + xStep * col;
 
-                    var jitterX = Noise(row, col, 17) * xStep * 0.34f;
-                    var jitterY = Noise(row, col, 41) * yStep * 0.28f;
+                    // Tight jitter keeps the grid readable while still feeling
+                    // hand-drawn — too much wobble causes nodes to collide and
+                    // makes connection curves overlap each other.
+                    var jitterX = Noise(row, col, 17) * xStep * 0.18f;
+                    var jitterY = Noise(row, col, 41) * yStep * 0.14f;
 
-                    var x = Mathf.Clamp(baseX + jitterX, horizontalMargin - 16f, mapWidth - horizontalMargin + 16f);
-                    var y = Mathf.Clamp(baseY + jitterY, verticalMargin - 12f, mapHeight - verticalMargin + 12f);
+                    var x = Mathf.Clamp(baseX + jitterX, horizontalMargin - clampPadX, mapWidth - horizontalMargin + clampPadX);
+                    var y = Mathf.Clamp(baseY + jitterY, verticalMargin - clampPadY, mapHeight - verticalMargin + clampPadY);
                     rowPos.Add(new Vector2(x, y));
                 }
             }
@@ -515,10 +529,21 @@ public partial class MapScene : Control
 
     private static Color NodeTint(MapNodeType type, int row, int currentRow, bool canSelect)
     {
-        var alpha = row == currentRow ? 1f : 0.72f;
-        if (!canSelect && row == currentRow)
+        // Only rows the player has already walked past are dimmed. The current
+        // row's selectable nodes are fully lit, unreachable siblings keep most
+        // of their color, and every future row stays fully opaque.
+        float alpha;
+        if (row < currentRow)
         {
-            alpha = 0.45f;
+            alpha = 0.6f;
+        }
+        else if (row == currentRow && !canSelect)
+        {
+            alpha = 0.75f;
+        }
+        else
+        {
+            alpha = 1f;
         }
 
         var baseColor = type switch
@@ -533,12 +558,34 @@ public partial class MapScene : Control
             _ => new Color(0.85f, 0.85f, 0.85f, alpha)
         };
 
+        // Selectable nodes get a slight lighten so the active row pops; every
+        // other future node keeps its full saturation so it reads as opaque
+        // rather than washed out (Lightened mixes with white, which the player
+        // perceives as transparent).
         if (canSelect)
         {
-            return baseColor.Lightened(0.3f);
+            return baseColor.Lightened(0.25f);
         }
 
         return baseColor;
+    }
+
+    private static Color LineTint(GameState state, int row, int col)
+    {
+        // All edges are drawn as black dashed lines; alpha encodes "walked past"
+        // vs "currently active" vs "still ahead" so the player can read the map
+        // at a glance.
+        if (row < state.CurrentMapRow)
+        {
+            return new Color(0f, 0f, 0f, 0.22f);
+        }
+
+        if (row == state.CurrentMapRow && state.CurrentMapColumn == col)
+        {
+            return new Color(0f, 0f, 0f, 0.85f);
+        }
+
+        return new Color(0f, 0f, 0f, 0.55f);
     }
 
     private void OnNodePressed(int column)
