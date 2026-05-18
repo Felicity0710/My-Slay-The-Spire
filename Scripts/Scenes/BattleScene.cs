@@ -130,11 +130,12 @@ public partial class BattleScene : Control
     private Label _enemyNameLabel = null!;
     private Label _turnLabel = null!;
     private Label _energyLabel = null!;
+    private Label _energyValueLabel = null!;
     private Label _topHpLabel = null!;
     private Label _handCountLabel = null!;
     private Label _relicBarLabel = null!;
     private RichTextLabel _logText = null!;
-    private HBoxContainer _relicIcons = null!;
+    private BoxContainer _relicIcons = null!;
 
     private Control _mainMargin = null!;
     private Control _handContainer = null!;
@@ -162,25 +163,7 @@ public partial class BattleScene : Control
     private Button _endTurnButton = null!;
     private Button _backButton = null!;
     private Button _testVictoryButton = null!;
-    private Button _settingsButton = null!;
-    private Control _settingsModal = null!;
-    private OptionButton _resolutionOption = null!;
-    private OptionButton _maxFpsOption = null!;
-    private CheckBox _vsyncCheckBox = null!;
-    private CheckBox _fpsCounterCheckBox = null!;
-    private HSlider _masterVolumeSlider = null!;
-    private HSlider _musicVolumeSlider = null!;
-    private Label _settingsTitle = null!;
-    private Label _resolutionLabel = null!;
-    private Label _maxFpsLabel = null!;
-    private Label _vsyncLabel = null!;
-    private Label _fpsCounterLabelText = null!;
-    private Label _masterVolumeLabel = null!;
-    private Label _musicVolumeLabel = null!;
-    private Button _settingsCloseButton = null!;
     private Label _logTitleLabel = null!;
-    private readonly int[] _fpsCaps = { 0, 30, 60, 120, 144, 165, 240 };
-    private List<Vector2I> _windowSizes = new();
 
     private readonly StyleBoxFlat _dropNormalStyle = new();
     private readonly StyleBoxFlat _dropHotStyle = new();
@@ -208,6 +191,7 @@ public partial class BattleScene : Control
     private Vector2 _playerPanelBasePos;
     private Vector2 _enemyDropAreaBasePos;
     private Vector2 _enemyDropAreaBaseScale;
+    private bool _arenaBasePositionsCaptured;
     private Vector2 _enemyShadowBaseSize;
     private Vector2 _playerShadowBaseSize;
     private ColorRect _enemyShadow = null!;
@@ -255,11 +239,12 @@ public partial class BattleScene : Control
         _enemyIntentLabel = GetNode<Label>("%EnemyIntentLabel");
         _turnLabel = GetNode<Label>("%TurnLabel");
         _energyLabel = GetNode<Label>("%EnergyLabel");
+        _energyValueLabel = GetNodeOrNull<Label>("%EnergyValueLabel") ?? _energyLabel;
         _topHpLabel = GetNode<Label>("%TopHpLabel");
         _handCountLabel = GetNode<Label>("%HandCountLabel");
         _relicBarLabel = GetNode<Label>("%RelicBarLabel");
         _relicBarLabel.Visible = false;
-        _relicIcons = GetNode<HBoxContainer>("%RelicIcons");
+        _relicIcons = GetNode<BoxContainer>("%RelicIcons");
         _logText = GetNode<RichTextLabel>("%LogText");
 
         _mainMargin = GetNode<Control>("%MainMargin");
@@ -288,30 +273,14 @@ public partial class BattleScene : Control
         _endTurnButton = GetNode<Button>("%EndTurnButton");
         _backButton = GetNode<Button>("%BackButton");
         _testVictoryButton = GetNode<Button>("%TestVictoryButton");
-        _settingsButton = GetNode<Button>("%SettingsButton");
-        _settingsModal = GetNode<Control>("%SettingsModal");
+        // Settings UI now lives in NodeSettingsOverlay (top-right gear).
+        // Hide the legacy in-scene SettingsButton + SettingsModal so they don't
+        // collide visually with the overlay or steal input.
+        var legacySettingsButton = GetNodeOrNull<Button>("%SettingsButton");
+        if (legacySettingsButton != null) legacySettingsButton.Visible = false;
+        var legacySettingsModal = GetNodeOrNull<Control>("%SettingsModal");
+        if (legacySettingsModal != null) legacySettingsModal.Visible = false;
 
-        // Hand cards push their ZIndex up to 100 within the default canvas layer
-        // when hovered. Lift the settings modal into the overlay canvas (Layer 50)
-        // so it always draws on top of hand cards regardless of hover state.
-        _settingsModal.Reparent(_overlayCanvas);
-        _settingsModal.TopLevel = false;
-        _settingsModal.ZIndex = 200;
-        _settingsModal.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        _resolutionOption = GetNode<OptionButton>("%ResolutionOption");
-        _maxFpsOption = GetNode<OptionButton>("%MaxFpsOption");
-        _vsyncCheckBox = GetNode<CheckBox>("%VsyncCheckBox");
-        _fpsCounterCheckBox = GetNode<CheckBox>("%FpsCounterCheckBox");
-        _masterVolumeSlider = GetNode<HSlider>("%MasterVolumeSlider");
-        _musicVolumeSlider = GetNode<HSlider>("%MusicVolumeSlider");
-        _settingsTitle = GetNode<Label>("%SettingsTitle");
-        _resolutionLabel = GetNode<Label>("%ResolutionLabel");
-        _maxFpsLabel = GetNode<Label>("%MaxFpsLabel");
-        _vsyncLabel = GetNode<Label>("%VsyncLabel");
-        _fpsCounterLabelText = GetNode<Label>("%FpsCounterLabelText");
-        _masterVolumeLabel = GetNode<Label>("%MasterVolumeLabel");
-        _musicVolumeLabel = GetNode<Label>("%MusicVolumeLabel");
-        _settingsCloseButton = GetNode<Button>("%SettingsCloseButton");
         _logTitleLabel = GetNode<Label>("LogOverlay/LogMargin/LogVBox/LogTitle");
 
         SetupDragGuide();
@@ -332,8 +301,6 @@ public partial class BattleScene : Control
         SetupPotionUi();
 
         _endTurnButton.Pressed += EndTurn;
-        _settingsButton.Pressed += OnOpenSettingsPressed;
-        _settingsCloseButton.Pressed += OnCloseSettingsPressed;
         SetupSettingsUi();
         SetupPileViewerUi();
         _backButton.Pressed += BackToMap;
@@ -342,11 +309,10 @@ public partial class BattleScene : Control
         LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
         SetupFromGameState();
-        _playerPanelBasePos = _playerPanel.Position;
-        _enemyDropAreaBasePos = _enemyDropArea.Position;
-        _enemyDropAreaBaseScale = _enemyDropArea.Scale;
-        _enemyShadowBaseSize = _enemyShadow.Size;
-        _playerShadowBaseSize = _playerShadow.Size;
+        // Arena base positions are captured lazily inside _Process once the
+        // anchored layout has actually placed the panels (see
+        // EnsureArenaBasePositionsCaptured).
+        _arenaBasePositionsCaptured = false;
 
         RefreshBattleStaticText();
         Log(LocalizationService.Get("log.battle.start", "Battle start"), "#cbd5e1");
@@ -395,6 +361,17 @@ public partial class BattleScene : Control
         _arenaFarBg.Position = new Vector2(nx * -6f, ny * -4f);
         _arenaMidBg.Position = new Vector2(nx * -10f, ny * -6f);
         _arenaFrontFog.Position = new Vector2(nx * -14f, ny * -8f);
+
+        // Position-overriding "breathe" animations only run after the anchor-based
+        // layout has settled and we've captured the post-layout base positions.
+        // Without this gate the first few _Process ticks would overwrite
+        // PlayerPanel / EnemyDropArea positions with (0,0) + offset, pinning them
+        // to the top-left of the screen.
+        EnsureArenaBasePositionsCaptured();
+        if (!_arenaBasePositionsCaptured)
+        {
+            return;
+        }
 
         var breathePlayer = Mathf.Sin(_animTime * 1.2f) * 2.2f;
         var breatheEnemy = Mathf.Sin(_animTime * 1.1f + 1.3f) * 2.8f;
@@ -505,13 +482,45 @@ public partial class BattleScene : Control
     private async Task StartBattleFlow()
     {
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        _playerPanelBasePos = _playerPanel.Position;
-        _enemyDropAreaBasePos = _enemyDropArea.Position;
-        _enemyDropAreaBaseScale = _enemyDropArea.Scale;
-        _enemyShadowBaseSize = _enemyShadow.Size;
-        _playerShadowBaseSize = _playerShadow.Size;
+        EnsureArenaBasePositionsCaptured();
         await PlayEnemyEntrance();
         await StartPlayerTurn();
+    }
+
+    private void EnsureArenaBasePositionsCaptured()
+    {
+        if (_arenaBasePositionsCaptured)
+        {
+            return;
+        }
+
+        if (!IsInstanceValid(_playerPanel) || !IsInstanceValid(_enemyDropArea))
+        {
+            return;
+        }
+
+        // Wait until both anchored panels have actually been placed by the
+        // layout system. Until then their Position is (0,0) which would freeze
+        // the breathing animation at the top-left of the viewport.
+        var playerPos = _playerPanel.Position;
+        var enemyPos = _enemyDropArea.Position;
+        if (playerPos == Vector2.Zero && enemyPos == Vector2.Zero)
+        {
+            return;
+        }
+
+        _playerPanelBasePos = playerPos;
+        _enemyDropAreaBasePos = enemyPos;
+        _enemyDropAreaBaseScale = _enemyDropArea.Scale;
+        if (IsInstanceValid(_enemyShadow))
+        {
+            _enemyShadowBaseSize = _enemyShadow.Size;
+        }
+        if (IsInstanceValid(_playerShadow))
+        {
+            _playerShadowBaseSize = _playerShadow.Size;
+        }
+        _arenaBasePositionsCaptured = true;
     }
 
     private async Task PlayEnemyEntrance()
@@ -1948,6 +1957,7 @@ public partial class BattleScene : Control
         _topHpLabel.Text = LocalizationService.Format("ui.player_status.hp", "HP {0}/{1}", _playerHp, _playerMaxHp);
         _turnLabel.Text = LocalizationService.Format("ui.battle.turn", "Turn {0}", _turn);
         _energyLabel.Text = LocalizationService.Format("ui.battle.energy", "Energy {0}/{1}", _energy, MaxEnergy);
+        _energyValueLabel.Text = $"{_energy}/{MaxEnergy}";
         _handCountLabel.Text = LocalizationService.Format(
             "ui.battle.hand_status",
             "Hand: {0} | Draw: {1} | Discard: {2} | Enemies: {3}",

@@ -1,6 +1,56 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://Scripts/UI/NodeSettingsOverlay.cs" id="1_node_settings"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gear_normal"]
+bg_color = Color(0.13, 0.18, 0.25, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.97, 0.78, 0.36, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 4
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gear_hover"]
+bg_color = Color(0.2, 0.28, 0.36, 0.97)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.9, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gear_pressed"]
+bg_color = Color(0.1, 0.14, 0.2, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.97, 0.78, 0.36, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 14.0
+content_margin_top = 8.0
+content_margin_right = 14.0
+content_margin_bottom = 8.0
 
 [node name="NodeSettingsOverlay" type="CanvasLayer"]
 layer = 100
@@ -19,11 +69,21 @@ mouse_filter = 2
 [node name="GearButton" type="Button" parent="Root"]
 unique_name_in_owner = true
 layout_mode = 1
-offset_left = 16.0
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -148.0
 offset_top = 16.0
-offset_right = 92.0
-offset_bottom = 56.0
-text = "Settings"
+offset_right = -16.0
+offset_bottom = 60.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 0.98, 0.88, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_gear_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_gear_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_gear_pressed")
+text = "⚙ Settings"
 
 [node name="Modal" type="Control" parent="Root"]
 unique_name_in_owner = true
@@ -43,7 +103,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.65)
 
 [node name="Dialog" type="PanelContainer" parent="Root/Modal"]
 layout_mode = 1
@@ -52,42 +112,139 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -140.0
-offset_right = 220.0
-offset_bottom = 140.0
+offset_left = -280.0
+offset_top = -270.0
+offset_right = 280.0
+offset_bottom = 270.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="DialogMargin" type="MarginContainer" parent="Root/Modal/Dialog"]
 layout_mode = 2
-theme_override_constants/margin_left = 20
+theme_override_constants/margin_left = 22
 theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 20
+theme_override_constants/margin_right = 22
 theme_override_constants/margin_bottom = 18
 
 [node name="DialogVBox" type="VBoxContainer" parent="Root/Modal/Dialog/DialogMargin"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Settings"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 26
+
+[node name="SectionNodeLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Current node"
 
 [node name="HintLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Rewind this node back to the state it was in when you stepped onto it."
+text = "Rewind to the moment you stepped onto this node."
 autowrap_mode = 3
 
 [node name="ReenterButton" type="Button" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 44)
 text = "Re-enter current node"
+
+[node name="DividerA" type="HSeparator" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+
+[node name="SectionDisplayLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Display"
+
+[node name="DisplayGrid" type="GridContainer" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 8
+
+[node name="ResolutionLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Resolution"
+
+[node name="ResolutionOption" type="OptionButton" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MaxFpsLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Max FPS"
+
+[node name="MaxFpsOption" type="OptionButton" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VsyncLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "VSync"
+
+[node name="VsyncCheckBox" type="CheckBox" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="FpsCounterLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Show FPS"
+
+[node name="FpsCounterCheckBox" type="CheckBox" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DividerB" type="HSeparator" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+
+[node name="SectionAudioLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Audio"
+
+[node name="AudioGrid" type="GridContainer" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 8
+
+[node name="MasterVolumeLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/AudioGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Master Volume"
+
+[node name="MasterVolumeSlider" type="HSlider" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/AudioGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
+step = 1.0
+
+[node name="MusicVolumeLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/AudioGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Music Volume"
+
+[node name="MusicVolumeSlider" type="HSlider" parent="Root/Modal/Dialog/DialogMargin/DialogVBox/AudioGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.0
+max_value = 100.0
+step = 1.0
 
 [node name="CloseButton" type="Button" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
 unique_name_in_owner = true
