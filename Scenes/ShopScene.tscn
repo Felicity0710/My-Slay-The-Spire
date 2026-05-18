@@ -1,6 +1,74 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/ShopScene.cs" id="1_shop"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.13, 0.10, 0.07, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.65, 0.50, 0.25, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_section"]
+bg_color = Color(0.09, 0.07, 0.05, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.4, 0.2, 0.45)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 14.0
+content_margin_top = 14.0
+content_margin_right = 14.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_remove_normal"]
+bg_color = Color(0.30, 0.18, 0.12, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.65, 0.30, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0.95, 0.45, 0.15, 0.45)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_remove_hover"]
+bg_color = Color(0.42, 0.24, 0.16, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.78, 0.42, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_remove_disabled"]
+bg_color = Color(0.18, 0.14, 0.10, 0.7)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.3, 0.18, 0.6)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="ShopScene" type="Control"]
 layout_mode = 3
@@ -18,7 +86,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.08, 0.06, 0.04, 1)
+color = Color(0.07, 0.05, 0.03, 1)
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -27,69 +95,218 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 28
+theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 28
+theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="MainHBox" type="HBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="MerchantPanel" type="PanelContainer" parent="Margin/MainHBox"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MerchantMargin" type="MarginContainer" parent="Margin/MainHBox/MerchantPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="MerchantVBox" type="VBoxContainer" parent="Margin/MainHBox/MerchantPanel/MerchantMargin"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="Margin/VBox"]
+[node name="MerchantPortrait" type="TextureRect" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+stretch_mode = 5
+expand_mode = 1
+
+[node name="MerchantPortraitFallback" type="Label" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox/MerchantPortrait"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "🧙"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 120
+theme_override_colors/font_color = Color(0.85, 0.72, 0.42, 1)
+
+[node name="MerchantNameLabel" type="Label" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Merchant"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+
+[node name="MerchantSep1" type="HSeparator" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+layout_mode = 2
+
+[node name="GoldRow" type="HBoxContainer" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="GoldIcon" type="Label" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox/GoldRow"]
+layout_mode = 2
+text = "💰"
+theme_override_font_sizes/font_size = 24
+
+[node name="GoldLabel" type="Label" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox/GoldRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "99"
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+vertical_alignment = 1
+
+[node name="MerchantSep2" type="HSeparator" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+layout_mode = 2
+
+[node name="RemoveCardButton" type="Button" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.92, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 0.98, 0.88, 1)
+theme_override_colors/font_disabled_color = Color(0.6, 0.55, 0.45, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_remove_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_remove_hover")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_remove_disabled")
+text = "🗡 Remove a card
+75g"
+
+[node name="MerchantFiller" type="Control" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContentVBox" type="VBoxContainer" parent="Margin/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="Margin/MainHBox/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Shop"
 theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
 
-[node name="HeaderRow" type="HBoxContainer" parent="Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="GoldLabel" type="Label" parent="Margin/VBox/HeaderRow"]
+[node name="StatusLabel" type="Label" parent="Margin/MainHBox/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Gold: 99"
-
-[node name="StatusLabel" type="Label" parent="Margin/VBox/HeaderRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
 text = "Welcome, traveler."
+autowrap_mode = 3
 
-[node name="ItemsScroll" type="ScrollContainer" parent="Margin/VBox"]
+[node name="ItemsScroll" type="ScrollContainer" parent="Margin/MainHBox/ContentVBox"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="ItemsVBox" type="VBoxContainer" parent="Margin/VBox/ItemsScroll"]
+[node name="SectionsVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 6
+theme_override_constants/separation = 14
 
-[node name="ServiceRow" type="HBoxContainer" parent="Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="RemoveCardButton" type="Button" parent="Margin/VBox/ServiceRow"]
+[node name="CardSection" type="PanelContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 48)
-text = "Remove a card: 75g"
+theme_override_styles/panel = SubResource("StyleBoxFlat_section")
 
-[node name="ActionRow" type="HBoxContainer" parent="Margin/VBox"]
+[node name="CardSectionVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/CardSection"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="RobButton" type="Button" parent="Margin/VBox/ActionRow"]
+[node name="CardSectionLabel" type="Label" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/CardSection/CardSectionVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cards"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.85, 0.55, 1)
+
+[node name="CardGrid" type="GridContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/CardSection/CardSectionVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+columns = 3
+
+[node name="RelicSection" type="PanelContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section")
+
+[node name="RelicSectionVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/RelicSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="RelicSectionLabel" type="Label" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/RelicSection/RelicSectionVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Relics"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.85, 0.55, 1)
+
+[node name="RelicGrid" type="GridContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/RelicSection/RelicSectionVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+columns = 4
+
+[node name="PotionSection" type="PanelContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section")
+
+[node name="PotionSectionVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/PotionSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PotionSectionLabel" type="Label" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/PotionSection/PotionSectionVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Potions"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.85, 0.55, 1)
+
+[node name="PotionGrid" type="GridContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/PotionSection/PotionSectionVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+columns = 4
+
+[node name="ItemsVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="ActionRow" type="HBoxContainer" parent="Margin/MainHBox/ContentVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RobButton" type="Button" parent="Margin/MainHBox/ContentVBox/ActionRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 54)
 text = "Rob the shop"
 
-[node name="LeaveButton" type="Button" parent="Margin/VBox/ActionRow"]
+[node name="LeaveButton" type="Button" parent="Margin/MainHBox/ContentVBox/ActionRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

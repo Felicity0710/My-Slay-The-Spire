@@ -27,6 +27,15 @@ public partial class ShopScene : Control
     private Label _goldLabel = null!;
     private Label _statusLabel = null!;
     private VBoxContainer _itemsVBox = null!;
+    private GridContainer _cardGrid = null!;
+    private GridContainer _relicGrid = null!;
+    private GridContainer _potionGrid = null!;
+    private Label _cardSectionLabel = null!;
+    private Label _relicSectionLabel = null!;
+    private Label _potionSectionLabel = null!;
+    private Control _cardSection = null!;
+    private Control _relicSection = null!;
+    private Control _potionSection = null!;
     private Button _removeCardButton = null!;
     private Button _robButton = null!;
     private Button _leaveButton = null!;
@@ -53,6 +62,15 @@ public partial class ShopScene : Control
         _goldLabel = GetNode<Label>("%GoldLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _itemsVBox = GetNode<VBoxContainer>("%ItemsVBox");
+        _cardGrid = GetNode<GridContainer>("%CardGrid");
+        _relicGrid = GetNode<GridContainer>("%RelicGrid");
+        _potionGrid = GetNode<GridContainer>("%PotionGrid");
+        _cardSectionLabel = GetNode<Label>("%CardSectionLabel");
+        _relicSectionLabel = GetNode<Label>("%RelicSectionLabel");
+        _potionSectionLabel = GetNode<Label>("%PotionSectionLabel");
+        _cardSection = GetNode<Control>("%CardSection");
+        _relicSection = GetNode<Control>("%RelicSection");
+        _potionSection = GetNode<Control>("%PotionSection");
         _removeCardButton = GetNode<Button>("%RemoveCardButton");
         _robButton = GetNode<Button>("%RobButton");
         _leaveButton = GetNode<Button>("%LeaveButton");
@@ -201,64 +219,267 @@ public partial class ShopScene : Control
 
     private void RenderItems()
     {
-        foreach (Node child in _itemsVBox.GetChildren())
-        {
-            child.QueueFree();
-        }
+        ClearGrid(_cardGrid);
+        ClearGrid(_relicGrid);
+        ClearGrid(_potionGrid);
+
+        _cardSectionLabel.Text = LocalizationService.Get("ui.shop.section_cards", "Cards");
+        _relicSectionLabel.Text = LocalizationService.Get("ui.shop.section_relics", "Relics");
+        _potionSectionLabel.Text = LocalizationService.Get("ui.shop.section_potions", "Potions");
+
+        var hasCards = false;
+        var hasRelics = false;
+        var hasPotions = false;
 
         foreach (var item in _items)
         {
-            var row = new HBoxContainer();
-            row.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            row.AddThemeConstantOverride("separation", 12);
-
-            var label = new Label
+            var tile = BuildItemTile(item);
+            switch (item.Kind)
             {
-                Text = DescribeItem(item),
-                AutowrapMode = TextServer.AutowrapMode.WordSmart
-            };
-            label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            label.CustomMinimumSize = new Vector2(0, 56);
-            row.AddChild(label);
+                case ShopItemKind.Card:
+                    _cardGrid.AddChild(tile);
+                    hasCards = true;
+                    break;
+                case ShopItemKind.Relic:
+                    _relicGrid.AddChild(tile);
+                    hasRelics = true;
+                    break;
+                case ShopItemKind.Potion:
+                    _potionGrid.AddChild(tile);
+                    hasPotions = true;
+                    break;
+            }
+        }
 
-            var button = new Button
-            {
-                Text = FormatPrice(item.Price),
-                CustomMinimumSize = new Vector2(150, 48)
-            };
-            var captured = item;
-            button.Pressed += () => OnBuyPressed(captured);
-            row.AddChild(button);
+        _cardSection.Visible = hasCards;
+        _relicSection.Visible = hasRelics;
+        _potionSection.Visible = hasPotions;
+    }
 
-            item.NameLabel = label;
-            item.BuyButton = button;
-            _itemsVBox.AddChild(row);
+    private static void ClearGrid(GridContainer grid)
+    {
+        foreach (Node child in grid.GetChildren())
+        {
+            child.QueueFree();
         }
     }
 
-    private string DescribeItem(ShopItem item)
+    private Control BuildItemTile(ShopItem item)
     {
+        var tile = new PanelContainer();
+        var tileStyle = new StyleBoxFlat
+        {
+            BgColor = new Color(0.10f, 0.13f, 0.18f, 0.95f),
+            BorderColor = TileBorderColor(item.Kind),
+            BorderWidthLeft = 2,
+            BorderWidthTop = 2,
+            BorderWidthRight = 2,
+            BorderWidthBottom = 2,
+            CornerRadiusTopLeft = 10,
+            CornerRadiusTopRight = 10,
+            CornerRadiusBottomLeft = 10,
+            CornerRadiusBottomRight = 10,
+            ContentMarginLeft = 10,
+            ContentMarginTop = 10,
+            ContentMarginRight = 10,
+            ContentMarginBottom = 10,
+            ShadowColor = new Color(0, 0, 0, 0.4f),
+            ShadowSize = 4
+        };
+        tile.AddThemeStyleboxOverride("panel", tileStyle);
+        tile.CustomMinimumSize = item.Kind == ShopItemKind.Card
+            ? new Vector2(200, 260)
+            : new Vector2(160, 200);
+
+        var vbox = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 6);
+        tile.AddChild(vbox);
+
+        var nameLabel = new Label
+        {
+            HorizontalAlignment = HorizontalAlignment.Center,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart
+        };
+        nameLabel.AddThemeFontSizeOverride("font_size", 14);
+        nameLabel.AddThemeColorOverride("font_color", new Color(0.98f, 0.92f, 0.78f, 1));
+
         switch (item.Kind)
         {
             case ShopItemKind.Card:
             {
                 var card = CardData.CreateById(item.Id);
-                var cost = LocalizationService.Format("ui.shop.card_cost", "Cost {0}", card.Cost);
-                return $"[{LocalizationService.Get("ui.shop.label_card", "Card")}] {card.GetLocalizedName()}\n{cost} · {card.GetLocalizedDescription()}";
+                nameLabel.Text = card.GetLocalizedName();
+                vbox.AddChild(nameLabel);
+
+                var kindLabel = new Label
+                {
+                    Text = card.Kind switch
+                    {
+                        CardKind.Attack => LocalizationService.Get("ui.card_kind.attack", "Attack"),
+                        CardKind.Skill => LocalizationService.Get("ui.card_kind.skill", "Skill"),
+                        _ => card.Kind.ToString()
+                    },
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                kindLabel.AddThemeFontSizeOverride("font_size", 11);
+                kindLabel.AddThemeColorOverride("font_color", card.Kind == CardKind.Attack
+                    ? new Color("fca5a5")
+                    : new Color("93c5fd"));
+                vbox.AddChild(kindLabel);
+
+                var art = new TextureRect
+                {
+                    StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                    ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+                    CustomMinimumSize = new Vector2(0, 92),
+                    Texture = TryLoadTexture(card.ArtPath)
+                };
+                vbox.AddChild(art);
+
+                var costLabel = new Label
+                {
+                    Text = LocalizationService.Format("ui.shop.card_cost", "Cost {0}", card.Cost),
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                costLabel.AddThemeFontSizeOverride("font_size", 13);
+                costLabel.AddThemeColorOverride("font_color", new Color("7dd3fc"));
+                vbox.AddChild(costLabel);
+
+                var descLabel = new Label
+                {
+                    Text = card.GetLocalizedDescription(),
+                    AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                descLabel.AddThemeFontSizeOverride("font_size", 11);
+                descLabel.AddThemeColorOverride("font_color", new Color("cbd5e1"));
+                vbox.AddChild(descLabel);
+                break;
             }
             case ShopItemKind.Relic:
             {
                 var relic = RelicData.CreateById(item.Id);
-                return $"[{LocalizationService.Get("ui.shop.label_relic", "Relic")}] {relic.LocalizedName}\n{relic.LocalizedDescription}";
+                nameLabel.Text = relic.LocalizedName;
+
+                var icon = new TextureRect
+                {
+                    StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                    ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
+                    CustomMinimumSize = new Vector2(0, 80),
+                    Texture = TryLoadTexture(CombatVisualCatalog.GetRelicIconPath(item.Id))
+                };
+                vbox.AddChild(icon);
+                vbox.AddChild(nameLabel);
+
+                var descLabel = new Label
+                {
+                    Text = relic.LocalizedDescription,
+                    AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                descLabel.AddThemeFontSizeOverride("font_size", 11);
+                descLabel.AddThemeColorOverride("font_color", new Color("cbd5e1"));
+                vbox.AddChild(descLabel);
+                break;
             }
             case ShopItemKind.Potion:
             {
                 var potion = PotionData.CreateById(item.Id);
-                return $"[{LocalizationService.Get("ui.shop.label_potion", "Potion")}] {potion.Name}\n{potion.Description}";
+                var potionName = LocalizationService.Get($"potion.{potion.Id}.name", potion.Name);
+                var potionDesc = LocalizationService.Get($"potion.{potion.Id}.description", potion.Description);
+                nameLabel.Text = potionName;
+
+                var swatch = new PanelContainer();
+                var swatchStyle = new StyleBoxFlat
+                {
+                    BgColor = PotionSwatchColor(item.Id),
+                    BorderColor = new Color(1, 1, 1, 0.35f),
+                    BorderWidthLeft = 1,
+                    BorderWidthTop = 1,
+                    BorderWidthRight = 1,
+                    BorderWidthBottom = 1,
+                    CornerRadiusTopLeft = 40,
+                    CornerRadiusTopRight = 40,
+                    CornerRadiusBottomLeft = 40,
+                    CornerRadiusBottomRight = 40
+                };
+                swatch.AddThemeStyleboxOverride("panel", swatchStyle);
+                swatch.CustomMinimumSize = new Vector2(0, 70);
+                var swatchIcon = new Label
+                {
+                    Text = "🧪",
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                swatchIcon.AddThemeFontSizeOverride("font_size", 36);
+                swatch.AddChild(swatchIcon);
+                vbox.AddChild(swatch);
+
+                vbox.AddChild(nameLabel);
+
+                var descLabel = new Label
+                {
+                    Text = potionDesc,
+                    AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+                descLabel.AddThemeFontSizeOverride("font_size", 11);
+                descLabel.AddThemeColorOverride("font_color", new Color("cbd5e1"));
+                vbox.AddChild(descLabel);
+                break;
             }
         }
 
-        return string.Empty;
+        var spacer = new Control();
+        spacer.SizeFlagsVertical = SizeFlags.ExpandFill;
+        vbox.AddChild(spacer);
+
+        var priceButton = new Button
+        {
+            Text = FormatPrice(item.Price),
+            CustomMinimumSize = new Vector2(0, 38)
+        };
+        priceButton.AddThemeFontSizeOverride("font_size", 14);
+        var captured = item;
+        priceButton.Pressed += () => OnBuyPressed(captured);
+        vbox.AddChild(priceButton);
+
+        item.NameLabel = nameLabel;
+        item.BuyButton = priceButton;
+        return tile;
+    }
+
+    private static Color TileBorderColor(ShopItemKind kind) => kind switch
+    {
+        ShopItemKind.Card => new Color(0.49f, 0.68f, 0.82f, 0.7f),
+        ShopItemKind.Relic => new Color(0.95f, 0.65f, 0.30f, 0.8f),
+        ShopItemKind.Potion => new Color(0.55f, 0.85f, 0.60f, 0.7f),
+        _ => new Color(0.6f, 0.6f, 0.6f, 0.6f)
+    };
+
+    private static Color PotionSwatchColor(string potionId) => potionId switch
+    {
+        "healing_potion" => new Color(0.85f, 0.30f, 0.30f, 0.85f),
+        "strength_potion" => new Color(0.92f, 0.55f, 0.20f, 0.85f),
+        "swift_potion" => new Color(0.45f, 0.85f, 0.55f, 0.85f),
+        "guard_potion" => new Color(0.40f, 0.65f, 0.95f, 0.85f),
+        "fury_potion" => new Color(0.75f, 0.30f, 0.85f, 0.85f),
+        _ => new Color(0.6f, 0.6f, 0.6f, 0.85f)
+    };
+
+    private static Texture2D TryLoadTexture(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return null!;
+        }
+
+        if (ResourceLoader.Exists(path))
+        {
+            return GD.Load<Texture2D>(path);
+        }
+
+        return null!;
     }
 
     private string FormatPrice(int price)
@@ -268,7 +489,7 @@ public partial class ShopScene : Control
             return LocalizationService.Get("ui.shop.free", "Free");
         }
 
-        return LocalizationService.Format("ui.shop.buy_price", "Buy {0}g", price);
+        return LocalizationService.Format("ui.shop.buy_price", "💰 {0}", price);
     }
 
     private void OnBuyPressed(ShopItem item)
@@ -448,7 +669,7 @@ public partial class ShopScene : Control
     private void RefreshUi(string status)
     {
         var state = GetNode<GameState>("/root/GameState");
-        _goldLabel.Text = LocalizationService.Format("ui.shop.gold_label", "Gold: {0}", state.Gold);
+        _goldLabel.Text = state.Gold.ToString();
         if (!string.IsNullOrWhiteSpace(status))
         {
             _statusLabel.Text = status;
@@ -458,14 +679,14 @@ public partial class ShopScene : Control
         if (_removeServiceUsed)
         {
             _removeCardButton.Disabled = true;
-            _removeCardButton.Text = LocalizationService.Get("ui.shop.remove_done", "Remove service used");
+            _removeCardButton.Text = LocalizationService.Get("ui.shop.remove_done", "🗡 Remove service used");
         }
         else
         {
             _removeCardButton.Disabled = false;
             _removeCardButton.Text = removePrice <= 0
-                ? LocalizationService.Get("ui.shop.remove_free", "Remove a card: Free")
-                : LocalizationService.Format("ui.shop.remove_price", "Remove a card: {0}g", removePrice);
+                ? LocalizationService.Get("ui.shop.remove_free", "🗡 Remove a card\nFree")
+                : LocalizationService.Format("ui.shop.remove_price", "🗡 Remove a card\n💰 {0}", removePrice);
         }
 
         if (_robbed)
