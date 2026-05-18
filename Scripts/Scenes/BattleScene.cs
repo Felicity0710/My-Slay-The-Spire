@@ -964,6 +964,7 @@ public partial class BattleScene : Control
                 _playerHp = 0;
                 _battleEnded = true;
                     Log(LocalizationService.Get("log.battle.defeat", "Defeat"), "#ef4444");
+                SaveSystem.Delete();
                 GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
                 return;
             }

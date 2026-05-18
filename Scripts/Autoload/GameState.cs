@@ -96,6 +96,7 @@ public partial class GameState : Node
 
     public void StartNewRun()
     {
+        SaveSystem.Delete();
         SetUiPhase("map");
         MaxHp = 80;
         PlayerHp = 80;
@@ -673,6 +674,8 @@ public partial class GameState : Node
         snap.PendingRelicOptions.AddRange(PendingRelicOptions);
 
         _nodeEntrySnapshot = snap;
+
+        TryWriteSave(sceneFilePath);
     }
 
     public bool RestoreNodeEntrySnapshot()

@@ -11,6 +11,7 @@ public partial class VictoryScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("victory");
+        SaveSystem.Delete();
 
         _titleLabel = GetNode<Label>("%TitleLabel");
         _subtitleLabel = GetNode<Label>("%SubtitleLabel");

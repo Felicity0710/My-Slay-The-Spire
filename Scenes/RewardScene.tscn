@@ -1,6 +1,216 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/RewardScene.cs" id="1_j2x8e"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_banner"]
+bg_color = Color(0.10, 0.08, 0.05, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.65, 0.32, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 10
+content_margin_left = 22.0
+content_margin_top = 14.0
+content_margin_right = 22.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_summary"]
+bg_color = Color(0.07, 0.06, 0.04, 0.80)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.42, 0.22, 0.55)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_section_header"]
+bg_color = Color(0.10, 0.08, 0.05, 0.85)
+border_width_bottom = 2
+border_color = Color(0.55, 0.42, 0.22, 0.65)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_section_body"]
+bg_color = Color(0.09, 0.07, 0.05, 0.55)
+border_width_left = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.45, 0.36, 0.20, 0.55)
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_category_normal"]
+bg_color = Color(0.13, 0.18, 0.25, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.65, 0.32, 0.90)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 6
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_category_hover"]
+bg_color = Color(0.22, 0.30, 0.40, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.92, 0.55, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 8
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_category_disabled"]
+bg_color = Color(0.10, 0.10, 0.10, 0.78)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.40, 0.35, 0.25, 0.55)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_primary_normal"]
+bg_color = Color(0.13, 0.18, 0.25, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.65, 0.32, 0.90)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_primary_hover"]
+bg_color = Color(0.20, 0.27, 0.36, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.92, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_secondary_normal"]
+bg_color = Color(0.16, 0.14, 0.10, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.45, 0.30, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_secondary_hover"]
+bg_color = Color(0.22, 0.20, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.92, 0.78, 0.50, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_normal"]
+bg_color = Color(0.10, 0.20, 0.12, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.85, 0.45, 0.90)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 6
+content_margin_left = 22.0
+content_margin_top = 12.0
+content_margin_right = 22.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_continue_hover"]
+bg_color = Color(0.18, 0.32, 0.20, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 1, 0.65, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 8
+content_margin_left = 22.0
+content_margin_top = 12.0
+content_margin_right = 22.0
+content_margin_bottom = 12.0
 
 [node name="RewardScene" type="Control"]
 layout_mode = 3
@@ -18,7 +228,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.015, 0.03, 0.045, 1)
+color = Color(0.04, 0.03, 0.02, 1)
 
 [node name="BgMid" type="ColorRect" parent="."]
 layout_mode = 1
@@ -27,7 +237,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.04, 0.06, 0.08, 0.82)
+color = Color(0.07, 0.05, 0.03, 0.65)
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -36,10 +246,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 26
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 28
 
 [node name="Scroll" type="ScrollContainer" parent="Margin"]
 layout_mode = 2
@@ -55,107 +265,133 @@ layout_mode = 2
 
 [node name="BannerPanel" type="PanelContainer" parent="Margin/Scroll/RootVBox/BannerWrap"]
 layout_mode = 2
-custom_minimum_size = Vector2(540, 86)
+custom_minimum_size = Vector2(620, 88)
+theme_override_styles/panel = SubResource("StyleBoxFlat_banner")
 
-[node name="BannerMargin" type="MarginContainer" parent="Margin/Scroll/RootVBox/BannerWrap/BannerPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 14
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 14
-
-[node name="Title" type="Label" parent="Margin/Scroll/RootVBox/BannerWrap/BannerPanel/BannerMargin"]
+[node name="Title" type="Label" parent="Margin/Scroll/RootVBox/BannerWrap/BannerPanel"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(500, 0)
+custom_minimum_size = Vector2(560, 0)
 layout_mode = 2
-text = "Battle Reward"
+text = "🏆 Battle Reward"
 horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
 
-[node name="SummaryLabel" type="Label" parent="Margin/Scroll/RootVBox"]
+[node name="SummaryWrap" type="CenterContainer" parent="Margin/Scroll/RootVBox"]
+layout_mode = 2
+
+[node name="SummaryPanel" type="PanelContainer" parent="Margin/Scroll/RootVBox/SummaryWrap"]
+layout_mode = 2
+custom_minimum_size = Vector2(620, 0)
+theme_override_styles/panel = SubResource("StyleBoxFlat_summary")
+
+[node name="SummaryLabel" type="Label" parent="Margin/Scroll/RootVBox/SummaryWrap/SummaryPanel"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 text = "Gold +0"
 horizontal_alignment = 1
 autowrap_mode = 3
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.95, 0.85, 0.55, 1)
 
-[node name="CardSection" type="VBoxContainer" parent="Margin/Scroll/RootVBox"]
+[node name="CategoryView" type="VBoxContainer" parent="Margin/Scroll/RootVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 0
 
-[node name="CardSectionLabel" type="Label" parent="Margin/Scroll/RootVBox/CardSection"]
+[node name="CategoryHeader" type="PanelContainer" parent="Margin/Scroll/RootVBox/CategoryView"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_header")
+
+[node name="CategoryHeaderLabel" type="Label" parent="Margin/Scroll/RootVBox/CategoryView/CategoryHeader"]
 unique_name_in_owner = true
 layout_mode = 2
+text = "Select a reward category"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+
+[node name="CategoryBody" type="PanelContainer" parent="Margin/Scroll/RootVBox/CategoryView"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_body")
+
+[node name="CategoryGridWrap" type="CenterContainer" parent="Margin/Scroll/RootVBox/CategoryView/CategoryBody"]
+layout_mode = 2
+
+[node name="CategoryGrid" type="GridContainer" parent="Margin/Scroll/RootVBox/CategoryView/CategoryBody/CategoryGridWrap"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 3
+theme_override_constants/h_separation = 18
+theme_override_constants/v_separation = 18
+
+[node name="DetailView" type="VBoxContainer" parent="Margin/Scroll/RootVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="DetailHeader" type="PanelContainer" parent="Margin/Scroll/RootVBox/DetailView"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_header")
+
+[node name="DetailHeaderRow" type="HBoxContainer" parent="Margin/Scroll/RootVBox/DetailView/DetailHeader"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Margin/Scroll/RootVBox/DetailView/DetailHeader/DetailHeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(120, 36)
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.95, 0.92, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_secondary_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_secondary_hover")
+text = "← Back"
+
+[node name="DetailHeaderLabel" type="Label" parent="Margin/Scroll/RootVBox/DetailView/DetailHeader/DetailHeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Pick 1 card or skip"
 horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
 
-[node name="CardOptionsRow" type="HBoxContainer" parent="Margin/Scroll/RootVBox/CardSection"]
+[node name="HeaderSpacer" type="Control" parent="Margin/Scroll/RootVBox/DetailView/DetailHeader/DetailHeaderRow"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+
+[node name="DetailBody" type="PanelContainer" parent="Margin/Scroll/RootVBox/DetailView"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_body")
+
+[node name="DetailBodyVBox" type="VBoxContainer" parent="Margin/Scroll/RootVBox/DetailView/DetailBody"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="DetailOptionsRow" type="HBoxContainer" parent="Margin/Scroll/RootVBox/DetailView/DetailBody/DetailBodyVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 14
+theme_override_constants/separation = 16
 
-[node name="CardSkipRow" type="CenterContainer" parent="Margin/Scroll/RootVBox/CardSection"]
+[node name="DetailSkipRow" type="CenterContainer" parent="Margin/Scroll/RootVBox/DetailView/DetailBody/DetailBodyVBox"]
 layout_mode = 2
 
-[node name="CardSkipButton" type="Button" parent="Margin/Scroll/RootVBox/CardSection/CardSkipRow"]
+[node name="DetailSkipButton" type="Button" parent="Margin/Scroll/RootVBox/DetailView/DetailBody/DetailBodyVBox/DetailSkipRow"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(200, 40)
-text = "Skip cards"
-
-[node name="PotionSection" type="VBoxContainer" parent="Margin/Scroll/RootVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="PotionSectionLabel" type="Label" parent="Margin/Scroll/RootVBox/PotionSection"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Pick 1 potion or skip"
-horizontal_alignment = 1
-
-[node name="PotionOptionsRow" type="HBoxContainer" parent="Margin/Scroll/RootVBox/PotionSection"]
-unique_name_in_owner = true
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 14
-
-[node name="PotionSkipRow" type="CenterContainer" parent="Margin/Scroll/RootVBox/PotionSection"]
-layout_mode = 2
-
-[node name="PotionSkipButton" type="Button" parent="Margin/Scroll/RootVBox/PotionSection/PotionSkipRow"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(200, 40)
-text = "Skip potions"
-
-[node name="RelicSection" type="VBoxContainer" parent="Margin/Scroll/RootVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="RelicSectionLabel" type="Label" parent="Margin/Scroll/RootVBox/RelicSection"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Pick 1 relic or skip"
-horizontal_alignment = 1
-
-[node name="RelicOptionsRow" type="HBoxContainer" parent="Margin/Scroll/RootVBox/RelicSection"]
-unique_name_in_owner = true
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 14
-
-[node name="RelicSkipRow" type="CenterContainer" parent="Margin/Scroll/RootVBox/RelicSection"]
-layout_mode = 2
-
-[node name="RelicSkipButton" type="Button" parent="Margin/Scroll/RootVBox/RelicSection/RelicSkipRow"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(200, 40)
-text = "Skip relic"
+custom_minimum_size = Vector2(220, 44)
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.95, 0.92, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_secondary_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_secondary_hover")
+text = "Skip"
 
 [node name="BottomRow" type="CenterContainer" parent="Margin/Scroll/RootVBox"]
 layout_mode = 2
@@ -163,5 +399,10 @@ layout_mode = 2
 [node name="ContinueButton" type="Button" parent="Margin/Scroll/RootVBox/BottomRow"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(220, 54)
-text = "Continue"
+custom_minimum_size = Vector2(260, 58)
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.85, 1, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_continue_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_continue_hover")
+text = "✓ Continue"

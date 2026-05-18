@@ -10,6 +10,7 @@ public partial class MainMenu : Control
     private Button _startButton = null!;
     private Button _battleTestButton = null!;
     private Button _continueButton = null!;
+    private Button _abandonRunButton = null!;
     private Button _quitButton = null!;
     private Button _languageButton = null!;
     private MenuButton _toolsButton = null!;
@@ -52,7 +53,8 @@ public partial class MainMenu : Control
         GetNode<GameState>("/root/GameState").SetUiPhase("main_menu");
         _startButton = GetNode<Button>("%StartButton");
         _battleTestButton = GetNode<Button>("%BattleTestButton");
-        _continueButton = GetNode<Button>("LeftMenu/Panel/Content/ContinueButton");
+        _continueButton = GetNode<Button>("%ContinueButton");
+        _abandonRunButton = GetNode<Button>("%AbandonRunButton");
         _quitButton = GetNode<Button>("%QuitButton");
         _languageButton = GetNode<Button>("%LanguageButton");
         _toolsButton = GetNode<MenuButton>("%ToolsButton");
@@ -79,6 +81,8 @@ public partial class MainMenu : Control
 
         _startButton.Pressed += OnStartPressed;
         _battleTestButton.Pressed += OnBattleTestPressed;
+        _continueButton.Pressed += OnContinuePressed;
+        _abandonRunButton.Pressed += OnAbandonRunPressed;
         _quitButton.Pressed += OnQuitPressed;
         _languageButton.Pressed += OnLanguagePressed;
         _deckPresetOption.ItemSelected += OnDeckPresetSelected;
@@ -92,6 +96,7 @@ public partial class MainMenu : Control
         RefreshUiText();
         RefreshSettingsText();
         PopulateDeckPresets();
+        RefreshSaveSlotState();
     }
 
     public override void _ExitTree()
@@ -101,9 +106,52 @@ public partial class MainMenu : Control
 
     private void OnStartPressed()
     {
+        // Start is disabled when a save exists; this guard keeps autoplay/test
+        // tooling honest even if it triggers Pressed by other means.
+        if (SaveSystem.HasSave())
+        {
+            return;
+        }
+
         var state = GetNode<GameState>("/root/GameState");
         state.StartNewRun();
         GetTree().ChangeSceneToFile("res://Scenes/MapScene.tscn");
+    }
+
+    private void OnContinuePressed()
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        if (!state.TryLoadSaveAndApply(out var scenePath))
+        {
+            RefreshSaveSlotState();
+            return;
+        }
+
+        state.SetUiPhase("map");
+        GetTree().ChangeSceneToFile(
+            string.IsNullOrWhiteSpace(scenePath) ? "res://Scenes/MapScene.tscn" : scenePath);
+    }
+
+    private void OnAbandonRunPressed()
+    {
+        SaveSystem.Delete();
+        RefreshSaveSlotState();
+    }
+
+    private void RefreshSaveSlotState()
+    {
+        var hasSave = SaveSystem.HasSave();
+        _continueButton.Disabled = !hasSave;
+        _startButton.Disabled = hasSave;
+        _abandonRunButton.Visible = hasSave;
+
+        _continueButton.Text = hasSave
+            ? LocalizationService.Get("ui.main_menu.continue", "Continue")
+            : LocalizationService.Get("ui.main_menu.continue_none", "Continue (no save)");
+        _startButton.Text = hasSave
+            ? LocalizationService.Get("ui.main_menu.start_run_blocked", "Start (save in slot)")
+            : LocalizationService.Get("ui.main_menu.start_run", "Start Run (Map)");
+        _abandonRunButton.Text = LocalizationService.Get("ui.main_menu.abandon_save", "Abandon save");
     }
 
     private void OnCardBrowserPressed()
@@ -184,6 +232,7 @@ public partial class MainMenu : Control
         RefreshUiText();
         PopulateDeckPresets();
         RefreshSettingsText();
+        RefreshSaveSlotState();
     }
 
     private void OnDeckPresetSelected(long index)
@@ -215,9 +264,7 @@ public partial class MainMenu : Control
         _taglineLabel.Text = LocalizationService.Get("ui.main_menu.tagline", "Pixel deckbuilder roguelike adventure");
         _languageButton.Text = LocalizationSettings.LanguageButtonText();
         _deckPresetLabel.Text = LocalizationService.Get("ui.main_menu.deck_preset", "Deck Preset");
-        _startButton.Text = LocalizationService.Get("ui.main_menu.start_run", "Start Run (Map)");
         _battleTestButton.Text = LocalizationService.Get("ui.main_menu.battle_test", "Battle Test");
-        _continueButton.Text = LocalizationService.Get("ui.main_menu.continue", "Continue (Coming Soon)");
         _toolsButton.Text = LocalizationService.Get("ui.main_menu.tools", "Tools");
         _optionsButton.Text = LocalizationService.Get("ui.main_menu.settings", "Settings");
         _quitButton.Text = LocalizationService.Get("ui.main_menu.quit", "Quit");

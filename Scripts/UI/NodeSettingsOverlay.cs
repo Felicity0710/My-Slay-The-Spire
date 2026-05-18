@@ -100,24 +100,24 @@ public partial class NodeSettingsOverlay : CanvasLayer
     {
         _gearButton.Text = LocalizationService.Get("ui.node_settings.gear", "⚙ Settings");
         _titleLabel.Text = LocalizationService.Get("ui.node_settings.title", "Settings");
-        _sectionNodeLabel.Text = LocalizationService.Get("ui.node_settings.section_node", "Current node");
+        _sectionNodeLabel.Text = "📍 " + LocalizationService.Get("ui.node_settings.section_node", "Current node");
         _hintLabel.Text = LocalizationService.Get(
             "ui.node_settings.hint",
             "Rewind to the moment you stepped onto this node.");
-        _reenterButton.Text = LocalizationService.Get(
+        _reenterButton.Text = "↺ " + LocalizationService.Get(
             "ui.node_settings.reenter",
             "Re-enter current node");
-        _sectionDisplayLabel.Text = LocalizationService.Get("ui.node_settings.section_display", "Display");
+        _sectionDisplayLabel.Text = "🖥 " + LocalizationService.Get("ui.node_settings.section_display", "Display");
         _resolutionLabel.Text = LocalizationService.Get("ui.battle.settings_resolution", "Resolution");
         _maxFpsLabel.Text = LocalizationService.Get("ui.battle.settings_max_fps", "Max FPS");
         _vsyncLabel.Text = LocalizationService.Get("ui.battle.settings_vsync", "VSync");
         _fpsCounterLabel.Text = LocalizationService.Get("ui.battle.settings_fps_counter", "Show FPS");
-        _sectionAudioLabel.Text = LocalizationService.Get("ui.node_settings.section_audio", "Audio");
+        _sectionAudioLabel.Text = "🔊 " + LocalizationService.Get("ui.node_settings.section_audio", "Audio");
         _masterVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_master_volume", "Master Volume");
         _musicVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_music_volume", "Music Volume");
-        _sectionRunLabel.Text = LocalizationService.Get("ui.node_settings.section_run", "Run");
-        _menuExitButton.Text = LocalizationService.Get("ui.node_settings.menu_exit", "← Return to main menu");
-        _closeButton.Text = LocalizationService.Get("ui.node_settings.close", "Close");
+        _sectionRunLabel.Text = "🏃 " + LocalizationService.Get("ui.node_settings.section_run", "Run");
+        _menuExitButton.Text = "← " + LocalizationService.Get("ui.node_settings.menu_exit", "Return to main menu");
+        _closeButton.Text = "✕ " + LocalizationService.Get("ui.node_settings.close", "Close");
 
         if (_maxFpsOption.ItemCount > 0)
         {

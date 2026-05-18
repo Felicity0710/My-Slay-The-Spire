@@ -44,6 +44,14 @@ public partial class MapScene : Control
 
         _titleLabel = GetNode<Label>("Margin/VBox/TopBar/TitlePanel/TitleVBox/Title");
         stateAtEntry.SetUiPhase("map");
+
+        // Re-save whenever we land back on the map (after StartNewRun, after a
+        // battle/event/etc resolves, after Re-enter). Without this, the save
+        // remains pinned to "right before the last node click", so picking
+        // node A and quitting after winning would restore the player BEFORE A
+        // instead of after.
+        stateAtEntry.TryWriteSave("res://Scenes/MapScene.tscn");
+
         AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");

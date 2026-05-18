@@ -165,12 +165,23 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 text = "直接战斗测试"
 
 [node name="ContinueButton" type="Button" parent="LeftMenu/Panel/Content"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 62)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 disabled = true
-text = "继续游戏（即将开放）"
+text = "继续游戏"
+
+[node name="AbandonRunButton" type="Button" parent="LeftMenu/Panel/Content"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.78, 0.7, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+text = "放弃存档"
 
 [node name="OptionsButton" type="Button" parent="LeftMenu/Panel/Content"]
 unique_name_in_owner = true

@@ -4,24 +4,23 @@ using System.Text;
 
 public partial class RewardScene : Control
 {
+    private enum RewardCategory { None, Cards, Potions, Relics }
+
     private Label _titleLabel = null!;
     private Label _summaryLabel = null!;
     private Button _continueButton = null!;
 
-    private VBoxContainer _cardSection = null!;
-    private Label _cardSectionLabel = null!;
-    private HBoxContainer _cardOptionsRow = null!;
-    private Button _cardSkipButton = null!;
+    private VBoxContainer _categoryView = null!;
+    private Label _categoryHeaderLabel = null!;
+    private GridContainer _categoryGrid = null!;
 
-    private VBoxContainer _potionSection = null!;
-    private Label _potionSectionLabel = null!;
-    private HBoxContainer _potionOptionsRow = null!;
-    private Button _potionSkipButton = null!;
+    private VBoxContainer _detailView = null!;
+    private Button _backButton = null!;
+    private Label _detailHeaderLabel = null!;
+    private HBoxContainer _detailOptionsRow = null!;
+    private Button _detailSkipButton = null!;
 
-    private VBoxContainer _relicSection = null!;
-    private Label _relicSectionLabel = null!;
-    private HBoxContainer _relicOptionsRow = null!;
-    private Button _relicSkipButton = null!;
+    private RewardCategory _currentCategory = RewardCategory.None;
 
     public override void _Ready()
     {
@@ -32,27 +31,22 @@ public partial class RewardScene : Control
         _summaryLabel = GetNode<Label>("%SummaryLabel");
         _continueButton = GetNode<Button>("%ContinueButton");
 
-        _cardSection = GetNode<VBoxContainer>("%CardSection");
-        _cardSectionLabel = GetNode<Label>("%CardSectionLabel");
-        _cardOptionsRow = GetNode<HBoxContainer>("%CardOptionsRow");
-        _cardSkipButton = GetNode<Button>("%CardSkipButton");
+        _categoryView = GetNode<VBoxContainer>("%CategoryView");
+        _categoryHeaderLabel = GetNode<Label>("%CategoryHeaderLabel");
+        _categoryGrid = GetNode<GridContainer>("%CategoryGrid");
 
-        _potionSection = GetNode<VBoxContainer>("%PotionSection");
-        _potionSectionLabel = GetNode<Label>("%PotionSectionLabel");
-        _potionOptionsRow = GetNode<HBoxContainer>("%PotionOptionsRow");
-        _potionSkipButton = GetNode<Button>("%PotionSkipButton");
-
-        _relicSection = GetNode<VBoxContainer>("%RelicSection");
-        _relicSectionLabel = GetNode<Label>("%RelicSectionLabel");
-        _relicOptionsRow = GetNode<HBoxContainer>("%RelicOptionsRow");
-        _relicSkipButton = GetNode<Button>("%RelicSkipButton");
+        _detailView = GetNode<VBoxContainer>("%DetailView");
+        _backButton = GetNode<Button>("%BackButton");
+        _detailHeaderLabel = GetNode<Label>("%DetailHeaderLabel");
+        _detailOptionsRow = GetNode<HBoxContainer>("%DetailOptionsRow");
+        _detailSkipButton = GetNode<Button>("%DetailSkipButton");
 
         _continueButton.Pressed += OnContinuePressed;
-        _cardSkipButton.Pressed += OnSkipCardsPressed;
-        _potionSkipButton.Pressed += OnSkipPotionsPressed;
-        _relicSkipButton.Pressed += OnSkipRelicsPressed;
+        _backButton.Pressed += OnBackPressed;
+        _detailSkipButton.Pressed += OnDetailSkipPressed;
 
         LocalizationSettings.LanguageChanged += RebuildAll;
+        ShowCategoryView();
         RebuildAll();
     }
 
@@ -64,9 +58,29 @@ public partial class RewardScene : Control
     private void RebuildAll()
     {
         RefreshHeaderText();
-        RebuildCardSection();
-        RebuildPotionSection();
-        RebuildRelicSection();
+        if (_currentCategory == RewardCategory.None)
+        {
+            RebuildCategoryGrid();
+        }
+        else
+        {
+            RebuildDetailView();
+        }
+    }
+
+    private void ShowCategoryView()
+    {
+        _currentCategory = RewardCategory.None;
+        _categoryView.Visible = true;
+        _detailView.Visible = false;
+    }
+
+    private void ShowDetailView(RewardCategory category)
+    {
+        _currentCategory = category;
+        _categoryView.Visible = false;
+        _detailView.Visible = true;
+        RebuildDetailView();
     }
 
     private void RefreshHeaderText()
@@ -74,18 +88,23 @@ public partial class RewardScene : Control
         var state = GetNode<GameState>("/root/GameState");
         var reward = state.LastBattleReward;
 
-        _titleLabel.Text = reward.IsEliteTier
+        var rawTitle = reward.IsEliteTier
             ? LocalizationService.Get("ui.reward.title_elite", "Elite Reward")
             : LocalizationService.Get("ui.reward.title_normal", "Battle Reward");
+        _titleLabel.Text = "🏆 " + rawTitle;
 
-        _continueButton.Text = LocalizationService.Get("ui.reward.continue", "Continue");
+        _continueButton.Text = "✓ " + LocalizationService.Get("ui.reward.continue", "Continue");
+        _backButton.Text = "← " + LocalizationService.Get("ui.reward.back", "Back");
 
         var sb = new StringBuilder();
-        sb.AppendLine(LocalizationService.Format("ui.reward.gold_line", "Gold +{0}", reward.GoldGained));
+        sb.Append("💰 ");
+        sb.Append(LocalizationService.Format("ui.reward.gold_line", "Gold +{0}", reward.GoldGained));
 
         if (reward.HealedFromCharm > 0)
         {
-            sb.AppendLine(LocalizationService.Format(
+            sb.AppendLine();
+            sb.Append("❤ ");
+            sb.Append(LocalizationService.Format(
                 "ui.reward.charm_heal",
                 "Lucky Charm healed {0} HP.",
                 reward.HealedFromCharm));
@@ -93,135 +112,276 @@ public partial class RewardScene : Control
 
         if (reward.HealedFromBloodVial > 0)
         {
-            sb.AppendLine(LocalizationService.Format(
+            sb.AppendLine();
+            sb.Append("❤ ");
+            sb.Append(LocalizationService.Format(
                 "ui.reward.blood_vial_heal",
                 "Blood Vial healed {0} HP.",
                 reward.HealedFromBloodVial));
         }
 
-        _summaryLabel.Text = sb.ToString().TrimEnd();
+        _summaryLabel.Text = sb.ToString();
     }
 
-    private void RebuildCardSection()
+    private void RebuildCategoryGrid()
     {
-        ClearChildren(_cardOptionsRow);
+        ClearChildren(_categoryGrid);
 
+        var state = GetNode<GameState>("/root/GameState");
+        var cardCount = state.PendingRewardOptions.Count;
+        var potionCount = state.PendingPotionRewardOptions.Count;
+        var relicCount = state.PendingRelicOptions.Count;
+
+        _categoryHeaderLabel.Text = LocalizationService.Get(
+            "ui.reward.category_header",
+            "Select a reward category");
+
+        _categoryGrid.AddChild(BuildCategoryTile(
+            "🎴",
+            LocalizationService.Get("ui.reward.category_cards", "Cards"),
+            cardCount,
+            RewardCategory.Cards));
+
+        _categoryGrid.AddChild(BuildCategoryTile(
+            "🧪",
+            LocalizationService.Get("ui.reward.category_potions", "Potions"),
+            potionCount,
+            RewardCategory.Potions));
+
+        if (relicCount > 0)
+        {
+            _categoryGrid.AddChild(BuildCategoryTile(
+                "💎",
+                LocalizationService.Get("ui.reward.category_relics", "Relics"),
+                relicCount,
+                RewardCategory.Relics));
+        }
+    }
+
+    private Button BuildCategoryTile(string icon, string label, int count, RewardCategory category)
+    {
+        var available = count > 0;
+        var btn = new Button
+        {
+            CustomMinimumSize = new Vector2(200, 168),
+            Disabled = !available,
+            ClipText = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart
+        };
+        btn.AddThemeFontSizeOverride("font_size", 18);
+        btn.AddThemeColorOverride("font_color", new Color(1f, 0.94f, 0.78f, 1f));
+        btn.AddThemeColorOverride("font_hover_color", new Color(1f, 1f, 1f, 1f));
+        btn.AddThemeColorOverride("font_disabled_color", new Color(0.55f, 0.55f, 0.55f, 0.85f));
+        btn.AddThemeStyleboxOverride("normal", BuildStyle(0.13f, 0.18f, 0.25f, 0.85f, 0.65f, 0.32f, available));
+        btn.AddThemeStyleboxOverride("hover", BuildStyle(0.22f, 0.30f, 0.40f, 1f, 0.92f, 0.55f, available));
+        btn.AddThemeStyleboxOverride("pressed", BuildStyle(0.10f, 0.14f, 0.20f, 0.85f, 0.65f, 0.32f, available));
+        btn.AddThemeStyleboxOverride("disabled", BuildStyle(0.10f, 0.10f, 0.10f, 0.40f, 0.35f, 0.25f, false));
+
+        var stateText = available
+            ? LocalizationService.Format("ui.reward.category_count", "{0} available", count)
+            : LocalizationService.Get("ui.reward.category_none", "—");
+        btn.Text = $"{icon}\n{label}\n{stateText}";
+
+        if (available)
+        {
+            btn.Pressed += () => ShowDetailView(category);
+        }
+        return btn;
+    }
+
+    private static StyleBoxFlat BuildStyle(float r, float g, float b, float br, float bg, float bb, bool active)
+    {
+        var alpha = active ? 0.96f : 0.78f;
+        var borderAlpha = active ? 0.90f : 0.55f;
+        return new StyleBoxFlat
+        {
+            BgColor = new Color(r, g, b, alpha),
+            BorderColor = new Color(br, bg, bb, borderAlpha),
+            BorderWidthLeft = 2,
+            BorderWidthTop = 2,
+            BorderWidthRight = 2,
+            BorderWidthBottom = 2,
+            CornerRadiusTopLeft = 14,
+            CornerRadiusTopRight = 14,
+            CornerRadiusBottomLeft = 14,
+            CornerRadiusBottomRight = 14,
+            ShadowColor = new Color(0, 0, 0, active ? 0.45f : 0.20f),
+            ShadowSize = active ? 6 : 2,
+            ContentMarginLeft = 18,
+            ContentMarginTop = 18,
+            ContentMarginRight = 18,
+            ContentMarginBottom = 18
+        };
+    }
+
+    private void RebuildDetailView()
+    {
+        ClearChildren(_detailOptionsRow);
+
+        switch (_currentCategory)
+        {
+            case RewardCategory.Cards: BuildCardDetail(); break;
+            case RewardCategory.Potions: BuildPotionDetail(); break;
+            case RewardCategory.Relics: BuildRelicDetail(); break;
+        }
+    }
+
+    private void BuildCardDetail()
+    {
         var state = GetNode<GameState>("/root/GameState");
         var options = state.PendingRewardOptions;
 
-        if (options.Count == 0)
-        {
-            _cardSection.Visible = false;
-            return;
-        }
-
-        _cardSection.Visible = true;
-        _cardSectionLabel.Text = LocalizationService.Get(
+        _detailHeaderLabel.Text = "🎴 " + LocalizationService.Get(
             "ui.reward.card_section_label",
             "Pick 1 card or skip");
-        _cardSkipButton.Text = LocalizationService.Get(
-            "ui.reward.skip_cards",
-            "Skip cards");
+        _detailSkipButton.Text = "✕ " + LocalizationService.Get("ui.reward.skip_cards", "Skip cards");
+
+        if (options.Count == 0)
+        {
+            ShowCategoryView();
+            return;
+        }
 
         for (var i = 0; i < options.Count; i++)
         {
-            var capture = i;
+            var captureIdx = i;
             var card = CardData.CreateById(options[i]);
-            var button = new Button
-            {
-                CustomMinimumSize = new Vector2(220, 110),
-                Text = $"{card.GetLocalizedName()}\n{LocalizationSettings.CostLabel()}: {card.Cost}\n\n{card.GetLocalizedDescription()}",
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                ClipText = false
-            };
-            button.AddThemeFontSizeOverride("font_size", 14);
-            button.Pressed += () => OnTakeCard(capture);
-            _cardOptionsRow.AddChild(button);
+            _detailOptionsRow.AddChild(BuildCardTile(card, () => OnTakeCard(captureIdx)));
         }
     }
 
-    private void RebuildPotionSection()
+    private Control BuildCardTile(CardData card, System.Action onPick)
     {
-        ClearChildren(_potionOptionsRow);
+        var frame = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(220, 300),
+            MouseFilter = MouseFilterEnum.Pass
+        };
+        frame.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        {
+            BgColor = new Color(0.10f, 0.13f, 0.16f, 0.95f),
+            BorderColor = new Color(0.55f, 0.42f, 0.22f, 0.85f),
+            BorderWidthLeft = 2,
+            BorderWidthTop = 2,
+            BorderWidthRight = 2,
+            BorderWidthBottom = 2,
+            CornerRadiusTopLeft = 12,
+            CornerRadiusTopRight = 12,
+            CornerRadiusBottomLeft = 12,
+            CornerRadiusBottomRight = 12,
+            ContentMarginLeft = 4,
+            ContentMarginTop = 4,
+            ContentMarginRight = 4,
+            ContentMarginBottom = 4
+        });
 
+        var view = new CardView();
+        view.SetUseTopLevel(false);
+        view.SetDragEnabled(false);
+        view.Setup(card);
+        view.Clicked = _ => onPick();
+        frame.AddChild(view);
+        return frame;
+    }
+
+    private void BuildPotionDetail()
+    {
         var state = GetNode<GameState>("/root/GameState");
         var options = state.PendingPotionRewardOptions;
-
-        if (options.Count == 0)
-        {
-            _potionSection.Visible = false;
-            return;
-        }
-
         var fullInventory = state.PotionIds.Count >= GameState.PotionInventoryCapacity;
-        _potionSection.Visible = true;
-        _potionSectionLabel.Text = fullInventory
+
+        _detailHeaderLabel.Text = "🧪 " + (fullInventory
             ? LocalizationService.Get(
                 "ui.reward.potion_section_label_full",
                 "Potion belt is full — skip or replace nothing")
             : LocalizationService.Get(
                 "ui.reward.potion_section_label",
-                "Pick 1 potion or skip");
-        _potionSkipButton.Text = LocalizationService.Get(
-            "ui.reward.skip_potions",
-            "Skip potions");
-
-        for (var i = 0; i < options.Count; i++)
-        {
-            var capture = i;
-            var potion = PotionData.CreateById(options[i]);
-            var potionName = LocalizationService.Get($"potion.{potion.Id}.name", potion.Name);
-            var potionDesc = LocalizationService.Get($"potion.{potion.Id}.description", potion.Description);
-            var button = new Button
-            {
-                CustomMinimumSize = new Vector2(220, 110),
-                Text = $"{potionName}\n\n{potionDesc}",
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                ClipText = false,
-                Disabled = fullInventory
-            };
-            button.AddThemeFontSizeOverride("font_size", 14);
-            button.Pressed += () => OnTakePotion(capture);
-            _potionOptionsRow.AddChild(button);
-        }
-    }
-
-    private void RebuildRelicSection()
-    {
-        ClearChildren(_relicOptionsRow);
-
-        var state = GetNode<GameState>("/root/GameState");
-        var options = state.PendingRelicOptions;
+                "Pick 1 potion or skip"));
+        _detailSkipButton.Text = "✕ " + LocalizationService.Get("ui.reward.skip_potions", "Skip potions");
 
         if (options.Count == 0)
         {
-            _relicSection.Visible = false;
+            ShowCategoryView();
             return;
         }
 
-        _relicSection.Visible = true;
-        _relicSectionLabel.Text = LocalizationService.Get(
+        for (var i = 0; i < options.Count; i++)
+        {
+            var captureIdx = i;
+            var potion = PotionData.CreateById(options[i]);
+            _detailOptionsRow.AddChild(BuildPotionTile(potion, fullInventory, () => OnTakePotion(captureIdx)));
+        }
+    }
+
+    private Control BuildPotionTile(PotionData potion, bool disabled, System.Action onPick)
+    {
+        var btn = new Button
+        {
+            CustomMinimumSize = new Vector2(240, 160),
+            ClipText = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            Disabled = disabled
+        };
+        btn.AddThemeFontSizeOverride("font_size", 14);
+        btn.AddThemeColorOverride("font_color", new Color(0.95f, 1f, 0.92f, 1));
+        btn.AddThemeColorOverride("font_hover_color", new Color(1, 1, 1, 1));
+        btn.AddThemeStyleboxOverride("normal", BuildStyle(0.10f, 0.20f, 0.16f, 0.65f, 0.95f, 0.65f, !disabled));
+        btn.AddThemeStyleboxOverride("hover", BuildStyle(0.16f, 0.28f, 0.22f, 0.85f, 1f, 0.78f, !disabled));
+        btn.AddThemeStyleboxOverride("pressed", BuildStyle(0.08f, 0.16f, 0.12f, 0.65f, 0.95f, 0.65f, !disabled));
+        btn.AddThemeStyleboxOverride("disabled", BuildStyle(0.10f, 0.10f, 0.10f, 0.40f, 0.40f, 0.35f, false));
+
+        var name = LocalizationService.Get($"potion.{potion.Id}.name", potion.Name);
+        var desc = LocalizationService.Get($"potion.{potion.Id}.description", potion.Description);
+        btn.Text = $"🧪 {name}\n\n{desc}";
+        if (!disabled)
+        {
+            btn.Pressed += () => onPick();
+        }
+        return btn;
+    }
+
+    private void BuildRelicDetail()
+    {
+        var state = GetNode<GameState>("/root/GameState");
+        var options = state.PendingRelicOptions;
+
+        _detailHeaderLabel.Text = "💎 " + LocalizationService.Get(
             "ui.reward.relic_section_label",
             "Pick 1 relic or skip");
-        _relicSkipButton.Text = LocalizationService.Get(
-            "ui.reward.skip_relics",
-            "Skip relic");
+        _detailSkipButton.Text = "✕ " + LocalizationService.Get("ui.reward.skip_relics", "Skip relic");
+
+        if (options.Count == 0)
+        {
+            ShowCategoryView();
+            return;
+        }
 
         for (var i = 0; i < options.Count; i++)
         {
-            var capture = i;
+            var captureIdx = i;
             var relic = RelicData.CreateById(options[i]);
-            var button = new Button
-            {
-                CustomMinimumSize = new Vector2(240, 110),
-                Text = $"{relic.LocalizedName}\n\n{relic.LocalizedDescription}",
-                AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                ClipText = false
-            };
-            button.AddThemeFontSizeOverride("font_size", 14);
-            button.Pressed += () => OnTakeRelic(capture);
-            _relicOptionsRow.AddChild(button);
+            _detailOptionsRow.AddChild(BuildRelicTile(relic, () => OnTakeRelic(captureIdx)));
         }
+    }
+
+    private Control BuildRelicTile(RelicData relic, System.Action onPick)
+    {
+        var btn = new Button
+        {
+            CustomMinimumSize = new Vector2(260, 160),
+            ClipText = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart
+        };
+        btn.AddThemeFontSizeOverride("font_size", 14);
+        btn.AddThemeColorOverride("font_color", new Color(1f, 0.95f, 0.80f, 1));
+        btn.AddThemeColorOverride("font_hover_color", new Color(1, 1, 1, 1));
+        btn.AddThemeStyleboxOverride("normal", BuildStyle(0.18f, 0.14f, 0.08f, 0.95f, 0.78f, 0.40f, true));
+        btn.AddThemeStyleboxOverride("hover", BuildStyle(0.26f, 0.20f, 0.12f, 1f, 0.92f, 0.55f, true));
+        btn.AddThemeStyleboxOverride("pressed", BuildStyle(0.14f, 0.10f, 0.06f, 0.95f, 0.78f, 0.40f, true));
+
+        btn.Text = $"💎 {relic.LocalizedName}\n\n{relic.LocalizedDescription}";
+        btn.Pressed += () => onPick();
+        return btn;
     }
 
     private static void ClearChildren(Node parent)
@@ -236,42 +396,43 @@ public partial class RewardScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         state.TakeRewardCardOption(idx);
-        RebuildCardSection();
+        ShowCategoryView();
+        RebuildCategoryGrid();
     }
 
     private void OnTakePotion(int idx)
     {
         var state = GetNode<GameState>("/root/GameState");
         state.TakeRewardPotionOption(idx);
-        RebuildPotionSection();
+        ShowCategoryView();
+        RebuildCategoryGrid();
     }
 
     private void OnTakeRelic(int idx)
     {
         var state = GetNode<GameState>("/root/GameState");
         state.TakeRewardRelicOption(idx);
-        RebuildRelicSection();
+        ShowCategoryView();
+        RebuildCategoryGrid();
     }
 
-    private void OnSkipCardsPressed()
+    private void OnDetailSkipPressed()
     {
         var state = GetNode<GameState>("/root/GameState");
-        state.SkipRewardCards();
-        RebuildCardSection();
+        switch (_currentCategory)
+        {
+            case RewardCategory.Cards: state.SkipRewardCards(); break;
+            case RewardCategory.Potions: state.SkipRewardPotions(); break;
+            case RewardCategory.Relics: state.SkipRewardRelics(); break;
+        }
+        ShowCategoryView();
+        RebuildCategoryGrid();
     }
 
-    private void OnSkipPotionsPressed()
+    private void OnBackPressed()
     {
-        var state = GetNode<GameState>("/root/GameState");
-        state.SkipRewardPotions();
-        RebuildPotionSection();
-    }
-
-    private void OnSkipRelicsPressed()
-    {
-        var state = GetNode<GameState>("/root/GameState");
-        state.SkipRewardRelics();
-        RebuildRelicSection();
+        ShowCategoryView();
+        RebuildCategoryGrid();
     }
 
     private void OnContinuePressed()
@@ -286,7 +447,6 @@ public partial class RewardScene : Control
 
     public string TryChooseRewardTypeExternally(string rewardType)
     {
-        // No-op: with the new flow all categories are visible at once.
         return "OK (multi-category picker; no type switch needed).";
     }
 
@@ -305,7 +465,8 @@ public partial class RewardScene : Control
             return "Invalid card option index.";
         }
 
-        RebuildCardSection();
+        ShowCategoryView();
+        RebuildCategoryGrid();
         return "OK";
     }
 
