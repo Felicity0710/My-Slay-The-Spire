@@ -7,8 +7,8 @@ public partial class MapScene
     private Control _deckViewerModal = null!;
     private Label _deckViewerTitleLabel = null!;
     private Label _deckViewerCountLabel = null!;
-    private ItemList _deckViewerItemList = null!;
-    private RichTextLabel _deckViewerDetailText = null!;
+    private GridContainer _deckViewerCardGrid = null!;
+    private Label _deckViewerEmptyLabel = null!;
     private Button _deckViewerCloseButton = null!;
     private readonly List<CardData> _deckViewerCards = new();
 
@@ -18,16 +18,14 @@ public partial class MapScene
         _deckViewerModal = GetNode<Control>("%DeckViewerModal");
         _deckViewerTitleLabel = GetNode<Label>("%DeckViewerTitleLabel");
         _deckViewerCountLabel = GetNode<Label>("%DeckViewerCountLabel");
-        _deckViewerItemList = GetNode<ItemList>("%DeckViewerItemList");
-        _deckViewerDetailText = GetNode<RichTextLabel>("%DeckViewerDetailText");
+        _deckViewerCardGrid = GetNode<GridContainer>("%DeckViewerCardGrid");
+        _deckViewerEmptyLabel = GetNode<Label>("%DeckViewerEmptyLabel");
         _deckViewerCloseButton = GetNode<Button>("%DeckViewerCloseButton");
 
         _viewDeckButton.Pressed += OnViewDeckPressed;
         _deckViewerCloseButton.Pressed += CloseDeckViewer;
-        _deckViewerItemList.ItemSelected += OnDeckViewerItemSelected;
 
         _deckViewerModal.Visible = false;
-        _deckViewerDetailText.Text = string.Empty;
     }
 
     private void TearDownDeckViewerUi()
@@ -41,23 +39,18 @@ public partial class MapScene
         {
             _deckViewerCloseButton.Pressed -= CloseDeckViewer;
         }
-
-        if (IsInstanceValid(_deckViewerItemList))
-        {
-            _deckViewerItemList.ItemSelected -= OnDeckViewerItemSelected;
-        }
     }
 
     private void RefreshDeckViewerUi(GameState state)
     {
-        if (!IsInstanceValid(_viewDeckButton) || !IsInstanceValid(_deckViewerItemList))
+        if (!IsInstanceValid(_viewDeckButton) || !IsInstanceValid(_deckViewerCardGrid))
         {
             return;
         }
 
         _viewDeckButton.Text = LocalizationService.Format(
             "ui.map.view_deck",
-            "View Deck ({0})",
+            "🎴 View Deck ({0})",
             state.DeckCardIds.Count);
 
         _deckViewerTitleLabel.Text = LocalizationService.Get("ui.map.deck_viewer.title", "Deck Viewer");
@@ -66,61 +59,74 @@ public partial class MapScene
             "Cards: {0}",
             state.DeckCardIds.Count);
         _deckViewerCloseButton.Text = LocalizationService.Get("ui.common.close", "Close");
+        _deckViewerEmptyLabel.Text = LocalizationService.Get("ui.map.deck_viewer.empty", "(Empty)");
+
+        // Rebuild the card grid every refresh — deck contents may have changed
+        // (shop, smith, events, etc).
+        foreach (var child in _deckViewerCardGrid.GetChildren())
+        {
+            child.QueueFree();
+        }
 
         _deckViewerCards.Clear();
-        _deckViewerItemList.Clear();
-        _deckViewerDetailText.Text = LocalizationService.Get(
-            "ui.map.deck_viewer.detail_empty",
-            "Select a card to view details.");
 
         if (state.DeckCardIds.Count <= 0)
         {
-            _deckViewerItemList.AddItem(LocalizationService.Get("ui.map.deck_viewer.empty", "(Empty)"));
-            _deckViewerItemList.SetItemDisabled(0, true);
+            _deckViewerEmptyLabel.Visible = true;
+            _deckViewerCardGrid.Visible = false;
             return;
         }
 
-        for (var i = 0; i < state.DeckCardIds.Count; i++)
-        {
-            var card = CardData.CreateById(state.DeckCardIds[i]);
-            _deckViewerCards.Add(card);
+        _deckViewerEmptyLabel.Visible = false;
+        _deckViewerCardGrid.Visible = true;
 
-            var itemText = LocalizationService.Format(
-                "ui.map.deck_viewer.item",
-                "#{0:00} {1} · Cost {2}",
-                i + 1,
-                card.GetLocalizedName(),
-                card.Cost);
-            _deckViewerItemList.AddItem(itemText);
+        foreach (var cardId in state.DeckCardIds)
+        {
+            var card = CardData.CreateById(cardId);
+            _deckViewerCards.Add(card);
+            _deckViewerCardGrid.AddChild(BuildDeckViewerTile(card));
         }
+    }
+
+    private Control BuildDeckViewerTile(CardData card)
+    {
+        var frame = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(210, 290),
+            MouseFilter = MouseFilterEnum.Pass
+        };
+        var style = new StyleBoxFlat
+        {
+            BgColor = new Color(0.10f, 0.13f, 0.16f, 0.95f),
+            BorderColor = new Color(0.55f, 0.42f, 0.22f, 0.85f),
+            BorderWidthLeft = 2,
+            BorderWidthTop = 2,
+            BorderWidthRight = 2,
+            BorderWidthBottom = 2,
+            CornerRadiusTopLeft = 12,
+            CornerRadiusTopRight = 12,
+            CornerRadiusBottomLeft = 12,
+            CornerRadiusBottomRight = 12,
+            ContentMarginLeft = 4,
+            ContentMarginTop = 4,
+            ContentMarginRight = 4,
+            ContentMarginBottom = 4
+        };
+        frame.AddThemeStyleboxOverride("panel", style);
+
+        var view = new CardView();
+        view.SetUseTopLevel(false);
+        view.SetDragEnabled(false);
+        view.Setup(card);
+        frame.AddChild(view);
+        return frame;
     }
 
     private void OnViewDeckPressed()
     {
         var state = GetNode<GameState>("/root/GameState");
         RefreshDeckViewerUi(state);
-
         _deckViewerModal.Visible = true;
-        if (_deckViewerCards.Count > 0)
-        {
-            _deckViewerItemList.Select(0);
-            OnDeckViewerItemSelected(0);
-        }
-    }
-
-    private void OnDeckViewerItemSelected(long index)
-    {
-        if (index < 0 || index >= _deckViewerCards.Count)
-        {
-            return;
-        }
-
-        var card = _deckViewerCards[(int)index];
-        var costLine = LocalizationService.Format("ui.map.deck_viewer.cost", "Cost: {0}", card.Cost);
-        var description = LocalizationSettings.HighlightCardDescription(card.GetLocalizedDescription());
-
-        _deckViewerDetailText.Text =
-            $"[b]{card.GetLocalizedName()}[/b]\n{costLine}\n{description}";
     }
 
     private void CloseDeckViewer()

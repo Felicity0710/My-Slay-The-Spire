@@ -246,6 +246,22 @@ min_value = 0.0
 max_value = 100.0
 step = 1.0
 
+[node name="DividerC" type="HSeparator" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+
+[node name="SectionRunLabel" type="Label" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Run"
+
+[node name="MenuExitButton" type="Button" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1, 0.85, 0.78, 1)
+text = "← Return to main menu"
+
 [node name="CloseButton" type="Button" parent="Root/Modal/Dialog/DialogMargin/DialogVBox"]
 unique_name_in_owner = true
 layout_mode = 2

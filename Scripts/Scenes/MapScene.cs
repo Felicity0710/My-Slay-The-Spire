@@ -42,8 +42,9 @@ public partial class MapScene : Control
             return;
         }
 
-        _titleLabel = GetNode<Label>("Margin/VBox/Title");
+        _titleLabel = GetNode<Label>("Margin/VBox/TopBar/TitlePanel/TitleVBox/Title");
         stateAtEntry.SetUiPhase("map");
+        AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
@@ -263,20 +264,22 @@ public partial class MapScene : Control
             ? LocalizationService.Get("ui.map.potion_none", "None")
             : string.Join(", ", state.PotionIds.ConvertAll(id => PotionData.CreateById(id).Name));
 
+        // Each stat is prefixed with a Unicode icon so the row scans like a
+        // dashboard rather than a wall of text.
         _runInfoLabel.Text = string.Join("    ", new[]
         {
-            LocalizationService.Format("ui.map.act", "Act {0}/{1}", state.Act, MapProgressionRules.MaxActs),
-            LocalizationService.Format("ui.map.floor", "Floor {0}", state.Floor),
-            LocalizationService.Format("ui.map.hp", "HP {0}/{1}", state.PlayerHp, state.MaxHp),
-            LocalizationService.Format("ui.map.gold", "Gold {0}", state.Gold),
-            LocalizationService.Format("ui.map.deck", "Deck {0}", state.DeckCardIds.Count),
-            LocalizationService.Format("ui.map.potions", "Potions {0} ({1})", state.PotionCharges, potionSummary),
-            LocalizationService.Format("ui.map.wins", "Wins {0}", state.BattlesWon)
+            "🗺 " + LocalizationService.Format("ui.map.act", "Act {0}/{1}", state.Act, MapProgressionRules.MaxActs),
+            "🪜 " + LocalizationService.Format("ui.map.floor", "Floor {0}", state.Floor),
+            "❤ " + LocalizationService.Format("ui.map.hp", "HP {0}/{1}", state.PlayerHp, state.MaxHp),
+            "💰 " + LocalizationService.Format("ui.map.gold", "Gold {0}", state.Gold),
+            "🎴 " + LocalizationService.Format("ui.map.deck", "Deck {0}", state.DeckCardIds.Count),
+            "🧪 " + LocalizationService.Format("ui.map.potions", "Potions {0} ({1})", state.PotionCharges, potionSummary),
+            "🏆 " + LocalizationService.Format("ui.map.wins", "Wins {0}", state.BattlesWon)
         });
 
         _statusLabel.Text = status;
 
-        _relicLabel.Text = LocalizationService.Get("ui.map.relics_prefix", "Relics:");
+        _relicLabel.Text = LocalizationService.Get("ui.map.relics_prefix", "💠 Relics:");
         RefreshRelicIcons(state);
 
         UpdateMapCanvasWidth();

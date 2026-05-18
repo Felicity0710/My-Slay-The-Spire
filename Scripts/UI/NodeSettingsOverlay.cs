@@ -32,6 +32,8 @@ public partial class NodeSettingsOverlay : CanvasLayer
     private HSlider _masterVolumeSlider = null!;
     private Label _musicVolumeLabel = null!;
     private HSlider _musicVolumeSlider = null!;
+    private Label _sectionRunLabel = null!;
+    private Button _menuExitButton = null!;
     private Button _closeButton = null!;
 
     private List<Vector2I> _windowSizes = new();
@@ -58,12 +60,15 @@ public partial class NodeSettingsOverlay : CanvasLayer
         _masterVolumeSlider = GetNode<HSlider>("%MasterVolumeSlider");
         _musicVolumeLabel = GetNode<Label>("%MusicVolumeLabel");
         _musicVolumeSlider = GetNode<HSlider>("%MusicVolumeSlider");
+        _sectionRunLabel = GetNode<Label>("%SectionRunLabel");
+        _menuExitButton = GetNode<Button>("%MenuExitButton");
         _closeButton = GetNode<Button>("%CloseButton");
 
         _modal.Visible = false;
 
         _gearButton.Pressed += OnGearPressed;
         _reenterButton.Pressed += OnReenterPressed;
+        _menuExitButton.Pressed += OnMenuExitPressed;
         _closeButton.Pressed += OnClosePressed;
 
         PopulateResolutionOptions();
@@ -110,6 +115,8 @@ public partial class NodeSettingsOverlay : CanvasLayer
         _sectionAudioLabel.Text = LocalizationService.Get("ui.node_settings.section_audio", "Audio");
         _masterVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_master_volume", "Master Volume");
         _musicVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_music_volume", "Music Volume");
+        _sectionRunLabel.Text = LocalizationService.Get("ui.node_settings.section_run", "Run");
+        _menuExitButton.Text = LocalizationService.Get("ui.node_settings.menu_exit", "← Return to main menu");
         _closeButton.Text = LocalizationService.Get("ui.node_settings.close", "Close");
 
         if (_maxFpsOption.ItemCount > 0)
@@ -132,6 +139,17 @@ public partial class NodeSettingsOverlay : CanvasLayer
     private void OnClosePressed()
     {
         _modal.Visible = false;
+    }
+
+    private void OnMenuExitPressed()
+    {
+        // Clear the node-entry snapshot — once we leave to the main menu the
+        // current run's "re-enter" target is no longer meaningful.
+        var state = GetNodeOrNull<GameState>("/root/GameState");
+        state?.SetUiPhase("main_menu");
+        state?.ClearNodeEntrySnapshot();
+        _modal.Visible = false;
+        GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
     }
 
     private void OnReenterPressed()
