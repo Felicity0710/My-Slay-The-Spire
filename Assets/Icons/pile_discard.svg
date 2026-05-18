@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stack of discarded cards -->
+  <rect x="14" y="20" width="32" height="40" rx="3" fill="#2a3a2a" stroke="#86c099" stroke-width="1.5"/>
+  <rect x="10" y="16" width="32" height="40" rx="3" fill="#3a4d3a" stroke="#86c099" stroke-width="1.5"/>
+  <rect x="6" y="12" width="32" height="40" rx="3" fill="#4a614f" stroke="#a3dab6" stroke-width="2"/>
+  <!-- Outgoing curved arrow -->
+  <path d="M40 18 Q56 18 56 34 Q56 50 40 50 L40 56 L28 47 L40 38 L40 44 Q48 44 48 34 Q48 26 40 26 Z"
+        fill="#a3dab6" stroke="#5a8a6a" stroke-width="1.5"/>
+</svg>

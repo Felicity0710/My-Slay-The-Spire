@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Single card consumed -->
+  <rect x="14" y="10" width="32" height="44" rx="3" fill="#3a2435" stroke="#c39ce0" stroke-width="2"/>
+  <!-- Wispy smoke trails escaping the card -->
+  <path d="M50 14 Q56 18 50 22 Q44 26 50 30" stroke="#ff9a9a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M44 6 Q50 10 44 14" stroke="#ff9a9a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M56 24 Q60 28 56 32" stroke="#ff9a9a" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Big red X overlay -->
+  <path d="M18 18 L42 46 M42 18 L18 46" stroke="#ff5252" stroke-width="4" stroke-linecap="round"/>
+</svg>

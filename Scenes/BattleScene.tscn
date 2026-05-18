@@ -1,7 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://dhl63infi0nua"]
+[gd_scene load_steps=16 format=3 uid="uid://dhl63infi0nua"]
 
 [ext_resource type="Script" uid="uid://p8rbtdgwkm3l" path="res://Scripts/Scenes/BattleScene.cs" id="1_fh80r"]
 [ext_resource type="PackedScene" path="res://Scenes/PlayerCardView.tscn" id="2_84p6t"]
+[ext_resource type="Texture2D" path="res://Assets/Icons/pile_draw.svg" id="3_pile_draw"]
+[ext_resource type="Texture2D" path="res://Assets/Icons/pile_discard.svg" id="4_pile_discard"]
+[ext_resource type="Texture2D" path="res://Assets/Icons/pile_exhaust.svg" id="5_pile_exhaust"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.09, 0.12, 0.16, 0.88)
@@ -603,60 +606,75 @@ theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
 
 [node name="DrawPileButton" type="Button" parent="MainMargin/MainHBox/MainVBox/HandArea"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 80)
+custom_minimum_size = Vector2(104, 92)
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = -96.0
-offset_right = 112.0
+offset_top = -108.0
+offset_right = 120.0
 offset_bottom = -16.0
 grow_vertical = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_pile")
 theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
-text = "🂠
-Draw"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+icon = ExtResource("3_pile_draw")
+expand_icon = false
+icon_alignment = 1
+vertical_icon_alignment = 0
+text = "Draw 0"
 
 [node name="DiscardPileButton" type="Button" parent="MainMargin/MainHBox/MainVBox/HandArea"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 80)
+custom_minimum_size = Vector2(104, 92)
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -224.0
-offset_top = -96.0
-offset_right = -128.0
+offset_left = -240.0
+offset_top = -108.0
+offset_right = -136.0
 offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_pile")
 theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
-text = "♻
-Discard"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.86, 1, 0.88, 1)
+icon = ExtResource("4_pile_discard")
+expand_icon = false
+icon_alignment = 1
+vertical_icon_alignment = 0
+text = "Discard 0"
 
 [node name="ExhaustPileButton" type="Button" parent="MainMargin/MainHBox/MainVBox/HandArea"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(96, 80)
+custom_minimum_size = Vector2(104, 92)
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -112.0
-offset_top = -96.0
+offset_left = -120.0
+offset_top = -108.0
 offset_right = -16.0
 offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
 theme_override_styles/normal = SubResource("StyleBoxFlat_pile")
 theme_override_styles/hover = SubResource("StyleBoxFlat_chip")
-text = "✕
-Exhaust"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.85, 0.85, 1)
+icon = ExtResource("5_pile_exhaust")
+expand_icon = false
+icon_alignment = 1
+vertical_icon_alignment = 0
+text = "Exhaust 0"
 
 [node name="EndTurnButton" type="Button" parent="MainMargin/MainHBox/MainVBox/HandArea"]
 unique_name_in_owner = true
@@ -837,24 +855,29 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="PileViewerList" type="ItemList" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+[node name="PileViewerCardScroll" type="ScrollContainer" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 220)
+custom_minimum_size = Vector2(0, 380)
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="PileViewerDetailTitle" type="Label" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+[node name="PileViewerCardGrid" type="GridContainer" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent/PileViewerCardScroll"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Card Details"
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 4
 
-[node name="PileViewerDetailText" type="RichTextLabel" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
+[node name="PileViewerEmptyLabel" type="Label" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 110)
+visible = false
 layout_mode = 2
-bbcode_enabled = false
-fit_content = false
-scroll_active = true
+text = "(empty)"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.7, 0.7, 0.75, 1)
 
 [node name="PileViewerCloseButton" type="Button" parent="PileViewerModal/PileViewerDialog/PileViewerMargin/PileViewerContent"]
 unique_name_in_owner = true

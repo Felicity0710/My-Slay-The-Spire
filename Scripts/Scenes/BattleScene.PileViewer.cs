@@ -28,9 +28,8 @@ public partial class BattleScene
     private Label _pileViewerCountLabel = null!;
     private Label _pileViewerSortLabel = null!;
     private OptionButton _pileViewerSortOption = null!;
-    private ItemList _pileViewerList = null!;
-    private Label _pileViewerDetailTitle = null!;
-    private RichTextLabel _pileViewerDetailText = null!;
+    private GridContainer _pileViewerCardGrid = null!;
+    private Label _pileViewerEmptyLabel = null!;
     private Button _pileViewerCloseButton = null!;
 
     private PileViewerTarget _pileViewerTarget = PileViewerTarget.Draw;
@@ -48,16 +47,14 @@ public partial class BattleScene
         _pileViewerCountLabel = GetNode<Label>("%PileViewerCountLabel");
         _pileViewerSortLabel = GetNode<Label>("%PileViewerSortLabel");
         _pileViewerSortOption = GetNode<OptionButton>("%PileViewerSortOption");
-        _pileViewerList = GetNode<ItemList>("%PileViewerList");
-        _pileViewerDetailTitle = GetNode<Label>("%PileViewerDetailTitle");
-        _pileViewerDetailText = GetNode<RichTextLabel>("%PileViewerDetailText");
+        _pileViewerCardGrid = GetNode<GridContainer>("%PileViewerCardGrid");
+        _pileViewerEmptyLabel = GetNode<Label>("%PileViewerEmptyLabel");
         _pileViewerCloseButton = GetNode<Button>("%PileViewerCloseButton");
 
         _drawPileButton.Pressed += OnOpenDrawPilePressed;
         _discardPileButton.Pressed += OnOpenDiscardPilePressed;
         _exhaustPileButton.Pressed += OnOpenExhaustPilePressed;
         _pileViewerSortOption.ItemSelected += OnPileSortSelected;
-        _pileViewerList.ItemSelected += OnPileCardSelected;
         _pileViewerCloseButton.Pressed += OnClosePileViewerPressed;
 
         // Keep pile viewer above top-level hand cards and VFX.
@@ -67,8 +64,6 @@ public partial class BattleScene
         _pileViewerModal.MouseFilter = Control.MouseFilterEnum.Stop;
         SetProcessUnhandledInput(true);
 
-        _pileViewerList.AllowReselect = true;
-        _pileViewerDetailText.BbcodeEnabled = false;
         _pileViewerModal.Visible = false;
         _pileViewerInputLockHeld = false;
 
@@ -82,18 +77,30 @@ public partial class BattleScene
             return;
         }
 
+        // With the icon already on the button, keep the text compact (label + count).
         _drawPileButton.Text = LocalizationService.Format(
-            "ui.battle.view_draw_pile",
-            "Draw Pile ({0})",
+            "ui.battle.view_draw_pile_short",
+            "Draw {0}",
             _drawPile.Count);
+        _drawPileButton.TooltipText = LocalizationService.Get(
+            "ui.battle.pile_viewer_draw_title",
+            "Draw Pile");
+
         _discardPileButton.Text = LocalizationService.Format(
-            "ui.battle.view_discard_pile",
-            "Discard Pile ({0})",
+            "ui.battle.view_discard_pile_short",
+            "Discard {0}",
             _discardPile.Count);
+        _discardPileButton.TooltipText = LocalizationService.Get(
+            "ui.battle.pile_viewer_discard_title",
+            "Discard Pile");
+
         _exhaustPileButton.Text = LocalizationService.Format(
-            "ui.battle.view_exhaust_pile",
-            "Exhaust Pile ({0})",
+            "ui.battle.view_exhaust_pile_short",
+            "Exhaust {0}",
             _exhaustPile.Count);
+        _exhaustPileButton.TooltipText = LocalizationService.Get(
+            "ui.battle.pile_viewer_exhaust_title",
+            "Exhaust Pile");
 
         var lockForOpen = IsInputLocked() && !_pileViewerModal.Visible;
         _drawPileButton.Disabled = lockForOpen;
@@ -101,7 +108,6 @@ public partial class BattleScene
         _exhaustPileButton.Disabled = lockForOpen;
 
         RefreshPileSortUiText();
-        _pileViewerDetailTitle.Text = LocalizationService.Get("ui.battle.pile_viewer_detail_title", "Card Details");
         _pileViewerCloseButton.Text = LocalizationService.Get("ui.common.close", "Close");
 
         if (_battleEnded && _pileViewerModal.Visible)
@@ -148,11 +154,6 @@ public partial class BattleScene
         {
             RefreshPileViewerModalContent();
         }
-    }
-
-    private void OnPileCardSelected(long selectedIndex)
-    {
-        ShowPileCardDetail((int)selectedIndex);
     }
 
     private void OpenPileViewer(PileViewerTarget target)
@@ -237,23 +238,61 @@ public partial class BattleScene
         };
 
         _pileViewerCountLabel.Text = LocalizationService.Format("ui.battle.pile_viewer_count", "Cards: {0}", pile.Count);
-        _pileViewerList.Clear();
+
+        foreach (var child in _pileViewerCardGrid.GetChildren())
+        {
+            child.QueueFree();
+        }
 
         if (ordered.Count == 0)
         {
-            _pileViewerList.AddItem(LocalizationService.Get("ui.battle.pile_viewer_empty", "(empty)"));
-            _pileViewerList.SetItemDisabled(0, true);
-            _pileViewerDetailText.Text = LocalizationService.Get("ui.battle.pile_viewer_detail_empty", "Select a card to view details.");
+            _pileViewerEmptyLabel.Text = LocalizationService.Get("ui.battle.pile_viewer_empty", "(empty)");
+            _pileViewerEmptyLabel.Visible = true;
+            _pileViewerCardGrid.Visible = false;
             return;
         }
 
-        for (var i = 0; i < ordered.Count; i++)
-        {
-            _pileViewerList.AddItem(BuildPileCardLine(i + 1, ordered[i]));
-        }
+        _pileViewerEmptyLabel.Visible = false;
+        _pileViewerCardGrid.Visible = true;
 
-        _pileViewerList.Select(0);
-        ShowPileCardDetail(0);
+        foreach (var card in ordered)
+        {
+            _pileViewerCardGrid.AddChild(BuildPileCardTile(card));
+        }
+    }
+
+    private Control BuildPileCardTile(CardData card)
+    {
+        var frame = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(210, 290),
+            MouseFilter = Control.MouseFilterEnum.Pass
+        };
+        var style = new StyleBoxFlat
+        {
+            BgColor = new Color(0.10f, 0.13f, 0.16f, 0.95f),
+            BorderColor = new Color(0.49f, 0.68f, 0.82f, 0.7f),
+            BorderWidthLeft = 2,
+            BorderWidthTop = 2,
+            BorderWidthRight = 2,
+            BorderWidthBottom = 2,
+            CornerRadiusTopLeft = 12,
+            CornerRadiusTopRight = 12,
+            CornerRadiusBottomLeft = 12,
+            CornerRadiusBottomRight = 12,
+            ContentMarginLeft = 4,
+            ContentMarginTop = 4,
+            ContentMarginRight = 4,
+            ContentMarginBottom = 4
+        };
+        frame.AddThemeStyleboxOverride("panel", style);
+
+        var view = new CardView();
+        view.SetUseTopLevel(false);
+        view.SetDragEnabled(false);
+        view.Setup(card);
+        frame.AddChild(view);
+        return frame;
     }
 
     private List<CardData> BuildOrderedPileCards(IReadOnlyList<CardData> pile)
@@ -309,34 +348,6 @@ public partial class BattleScene
         }
 
         return string.Compare(left.GetLocalizedName(), right.GetLocalizedName(), StringComparison.CurrentCultureIgnoreCase);
-    }
-
-    private string BuildPileCardLine(int rank, CardData card)
-    {
-        var costText = LocalizationService.Format("ui.battle.pile_viewer_cost", "Cost {0}", card.Cost);
-        return $"{rank}. {card.GetLocalizedName()} ({costText})";
-    }
-
-    private void ShowPileCardDetail(int selectedIndex)
-    {
-        if (selectedIndex < 0 || selectedIndex >= _pileViewerDisplayCards.Count)
-        {
-            _pileViewerDetailText.Text = LocalizationService.Get("ui.battle.pile_viewer_detail_empty", "Select a card to view details.");
-            return;
-        }
-
-        var card = _pileViewerDisplayCards[selectedIndex];
-        var cardTypeKey = card.Kind == CardKind.Attack ? "ui.card_browser.filters.type_attack" : "ui.card_browser.filters.type_skill";
-        var cardTypeText = LocalizationService.Get(cardTypeKey, card.Kind.ToString());
-        var sb = new StringBuilder();
-        sb.AppendLine(card.GetLocalizedName());
-        sb.Append(LocalizationService.Format("ui.battle.pile_viewer_cost", "Cost {0}", card.Cost));
-        sb.Append(" | ");
-        sb.AppendLine(cardTypeText);
-        sb.AppendLine();
-        sb.Append(card.GetLocalizedDescription());
-        _pileViewerDetailText.Text = sb.ToString();
-        _pileViewerDetailText.ScrollToLine(0);
     }
 
     private void RefreshPileSortUiText()

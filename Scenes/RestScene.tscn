@@ -1,6 +1,84 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/RestScene.cs" id="1_rest"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tile_normal"]
+bg_color = Color(0.10, 0.13, 0.10, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.55, 0.78, 0.50, 0.85)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tile_hover"]
+bg_color = Color(0.15, 0.20, 0.14, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.80, 1, 0.65, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0.50, 1, 0.50, 0.55)
+shadow_size = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_normal"]
+bg_color = Color(0.18, 0.36, 0.20, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.92, 0.55, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.65, 0.90, 0.45, 0.65)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_hover"]
+bg_color = Color(0.25, 0.50, 0.27, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 0.72, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_disabled"]
+bg_color = Color(0.10, 0.14, 0.10, 0.7)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.40, 0.40, 0.30, 0.6)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cancel"]
+bg_color = Color(0.18, 0.18, 0.24, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.75, 0.85, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="RestScene" type="Control"]
 layout_mode = 3
@@ -18,76 +96,170 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.07, 0.09, 0.07, 1)
+color = Color(0.05, 0.07, 0.05, 1)
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="MainView" type="Control" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 32
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="MainMargin" type="MarginContainer" parent="MainView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 36
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 36
+
+[node name="MainVBox" type="VBoxContainer" parent="MainView/MainMargin"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 14
 
-[node name="TitleLabel" type="Label" parent="Margin/VBox"]
+[node name="TitleLabel" type="Label" parent="MainView/MainMargin/MainVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Campfire"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 44
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
 
-[node name="StatusLabel" type="Label" parent="Margin/VBox"]
+[node name="StatusLabel" type="Label" parent="MainView/MainMargin/MainVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Take a moment to recover or improve your deck."
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="HpLabel" type="Label" parent="Margin/VBox"]
+[node name="HpLabel" type="Label" parent="MainView/MainMargin/MainVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "HP 80/80"
 horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20
 
-[node name="Spacer" type="Control" parent="Margin/VBox"]
+[node name="TopSpacer" type="Control" parent="MainView/MainMargin/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ActionsRow" type="HBoxContainer" parent="Margin/VBox"]
+[node name="TilesRow" type="HBoxContainer" parent="MainView/MainMargin/MainVBox"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 40
 alignment = 1
 
-[node name="RestButton" type="Button" parent="Margin/VBox/ActionsRow"]
+[node name="RestTile" type="PanelContainer" parent="MainView/MainMargin/MainVBox/TilesRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 360)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tile_normal")
+
+[node name="RestMargin" type="MarginContainer" parent="MainView/MainMargin/MainVBox/TilesRow/RestTile"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 22
+
+[node name="RestVBox" type="VBoxContainer" parent="MainView/MainMargin/MainVBox/TilesRow/RestTile/RestMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="RestIconLabel" type="Label" parent="MainView/MainMargin/MainVBox/TilesRow/RestTile/RestMargin/RestVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(260, 96)
-text = "Rest (Heal)"
+size_flags_vertical = 3
+text = "🔥"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 140
 
-[node name="SmithButton" type="Button" parent="Margin/VBox/ActionsRow"]
+[node name="RestNameLabel" type="Label" parent="MainView/MainMargin/MainVBox/TilesRow/RestTile/RestMargin/RestVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(260, 96)
-text = "Smith (Upgrade a card)"
+text = "Rest"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
 
-[node name="SkipButton" type="Button" parent="Margin/VBox/ActionsRow"]
+[node name="RestDescLabel" type="Label" parent="MainView/MainMargin/MainVBox/TilesRow/RestTile/RestMargin/RestVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(180, 96)
-text = "Skip"
+text = "Heal 24 HP"
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.85, 0.92, 0.85, 1)
 
-[node name="BottomSpacer" type="Control" parent="Margin/VBox"]
+[node name="SmithTile" type="PanelContainer" parent="MainView/MainMargin/MainVBox/TilesRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 360)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tile_normal")
+
+[node name="SmithMargin" type="MarginContainer" parent="MainView/MainMargin/MainVBox/TilesRow/SmithTile"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 22
+
+[node name="SmithVBox" type="VBoxContainer" parent="MainView/MainMargin/MainVBox/TilesRow/SmithTile/SmithMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SmithIconLabel" type="Label" parent="MainView/MainMargin/MainVBox/TilesRow/SmithTile/SmithMargin/SmithVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "⚒"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 140
+
+[node name="SmithNameLabel" type="Label" parent="MainView/MainMargin/MainVBox/TilesRow/SmithTile/SmithMargin/SmithVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Smith"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+
+[node name="SmithDescLabel" type="Label" parent="MainView/MainMargin/MainVBox/TilesRow/SmithTile/SmithMargin/SmithVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Upgrade a card"
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+
+[node name="BottomSpacer" type="Control" parent="MainView/MainMargin/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="UpgradeOverlay" type="Control" parent="."]
+[node name="SkipRow" type="HBoxContainer" parent="MainView/MainMargin/MainVBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="SkipButton" type="Button" parent="MainView/MainMargin/MainVBox/SkipRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 44)
+layout_mode = 2
+flat = true
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Skip"
+
+[node name="UpgradeView" type="Control" parent="."]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -97,7 +269,110 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Backdrop" type="ColorRect" parent="UpgradeOverlay"]
+[node name="UpgradeBackdrop" type="ColorRect" parent="UpgradeView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.05, 0.04, 0.96)
+
+[node name="UpgradeMargin" type="MarginContainer" parent="UpgradeView"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 32
+
+[node name="UpgradeVBox" type="VBoxContainer" parent="UpgradeView/UpgradeMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="UpgradeTitleLabel" type="Label" parent="UpgradeView/UpgradeMargin/UpgradeVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose a card to upgrade"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
+
+[node name="UpgradeHintLabel" type="Label" parent="UpgradeView/UpgradeMargin/UpgradeVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Left-click a card to select. Hold right-click on a card to preview the upgraded version."
+horizontal_alignment = 1
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.8, 0.85, 0.8, 1)
+
+[node name="CardScroll" type="ScrollContainer" parent="UpgradeView/UpgradeMargin/UpgradeVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CardGrid" type="GridContainer" parent="UpgradeView/UpgradeMargin/UpgradeVBox/CardScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 5
+
+[node name="EmptyHintLabel" type="Label" parent="UpgradeView/UpgradeMargin/UpgradeVBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "(No cards eligible for upgrade.)"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.7, 0.65, 0.55, 1)
+
+[node name="UpgradeButtonsRow" type="HBoxContainer" parent="UpgradeView/UpgradeMargin/UpgradeVBox"]
+layout_mode = 2
+
+[node name="CancelUpgradeButton" type="Button" parent="UpgradeView/UpgradeMargin/UpgradeVBox/UpgradeButtonsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.92, 0.92, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_cancel")
+text = "← Cancel"
+
+[node name="UpgradeRowSpacer" type="Control" parent="UpgradeView/UpgradeMargin/UpgradeVBox/UpgradeButtonsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ConfirmUpgradeButton" type="Button" parent="UpgradeView/UpgradeMargin/UpgradeVBox/UpgradeButtonsRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.98, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 0.88, 1)
+theme_override_colors/font_disabled_color = Color(0.6, 0.6, 0.55, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_confirm_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_confirm_hover")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_confirm_disabled")
+text = "✦ Confirm Upgrade"
+
+[node name="PreviewModal" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PreviewBackdrop" type="ColorRect" parent="PreviewModal"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -105,65 +380,54 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
-color = Color(0, 0, 0, 0.62)
+color = Color(0, 0, 0, 0.72)
 
-[node name="Dialog" type="PanelContainer" parent="UpgradeOverlay"]
+[node name="PreviewPanel" type="PanelContainer" parent="PreviewModal"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -360.0
-offset_top = -290.0
-offset_right = 360.0
-offset_bottom = 290.0
+offset_left = -240.0
+offset_top = -340.0
+offset_right = 240.0
+offset_bottom = 340.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_confirm_normal")
 
-[node name="DialogMargin" type="MarginContainer" parent="UpgradeOverlay/Dialog"]
+[node name="PreviewMargin" type="MarginContainer" parent="PreviewModal/PreviewPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 22
+theme_override_constants/margin_left = 18
 theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 22
+theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 18
 
-[node name="DialogVBox" type="VBoxContainer" parent="UpgradeOverlay/Dialog/DialogMargin"]
+[node name="PreviewVBox" type="VBoxContainer" parent="PreviewModal/PreviewPanel/PreviewMargin"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 14
 
-[node name="UpgradeTitleLabel" type="Label" parent="UpgradeOverlay/Dialog/DialogMargin/DialogVBox"]
+[node name="PreviewHeader" type="HBoxContainer" parent="PreviewModal/PreviewPanel/PreviewMargin/PreviewVBox"]
+layout_mode = 2
+
+[node name="PreviewTitleLabel" type="Label" parent="PreviewModal/PreviewPanel/PreviewMargin/PreviewVBox/PreviewHeader"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Choose a card to upgrade"
+size_flags_horizontal = 3
+text = "Upgrade Preview"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 0.98, 0.78, 1)
+
+[node name="PreviewCloseButton" type="Button" parent="PreviewModal/PreviewPanel/PreviewMargin/PreviewVBox/PreviewHeader"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
 theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.95, 0.95, 1)
+text = "✕"
 
-[node name="UpgradeHintLabel" type="Label" parent="UpgradeOverlay/Dialog/DialogMargin/DialogVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Already-upgraded and unupgradable cards are hidden."
-autowrap_mode = 3
-
-[node name="UpgradeList" type="ItemList" parent="UpgradeOverlay/Dialog/DialogMargin/DialogVBox"]
+[node name="PreviewCenter" type="CenterContainer" parent="PreviewModal/PreviewPanel/PreviewMargin/PreviewVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 380)
-
-[node name="ButtonsRow" type="HBoxContainer" parent="UpgradeOverlay/Dialog/DialogMargin/DialogVBox"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="ConfirmUpgradeButton" type="Button" parent="UpgradeOverlay/Dialog/DialogMargin/DialogVBox/ButtonsRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 44)
-text = "Confirm"
-
-[node name="CancelUpgradeButton" type="Button" parent="UpgradeOverlay/Dialog/DialogMargin/DialogVBox/ButtonsRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 44)
-text = "Cancel"

@@ -43,6 +43,7 @@ public partial class CardView : PanelContainer
 
     public Action<CardView, Vector2> DropAttempted = (_, _) => { };
     public Action<CardView> Clicked = _ => { };
+    public Action<CardView> RightClicked = _ => { };
     public Action<CardView, Vector2> DragMoved = (_, _) => { };
     public Action<CardView> DragStarted = _ => { };
     public Action<CardView> DragEnded = _ => { };
@@ -222,31 +223,48 @@ public partial class CardView : PanelContainer
 
     public override void _GuiInput(InputEvent @event)
     {
-        if (@event is InputEventMouseButton mb && mb.ButtonIndex == MouseButton.Left)
+        if (@event is not InputEventMouseButton mb)
         {
-            if (!_dragEnabled)
-            {
-                if (mb.Pressed)
-                {
-                    Clicked(this);
-                    AcceptEvent();
-                }
+            return;
+        }
 
-                return;
-            }
+        // Right-click forwards to RightClicked regardless of drag mode. Useful
+        // for static usage (upgrade picker / pile viewer) where right-click
+        // brings up an enlarged preview.
+        if (mb.ButtonIndex == MouseButton.Right && mb.Pressed)
+        {
+            RightClicked(this);
+            AcceptEvent();
+            return;
+        }
 
+        if (mb.ButtonIndex != MouseButton.Left)
+        {
+            return;
+        }
+
+        if (!_dragEnabled)
+        {
             if (mb.Pressed)
             {
-                _pressStartMouse = GetGlobalMousePosition();
-                _dragging = true;
-                _dragResolvedThisPress = false;
-                _dragOffset = GetGlobalMousePosition() - GlobalPosition;
-                RotationDegrees = 0;
-                Scale = Vector2.One;
-                ZIndex = 100;
-                DragStarted(this);
+                Clicked(this);
                 AcceptEvent();
             }
+
+            return;
+        }
+
+        if (mb.Pressed)
+        {
+            _pressStartMouse = GetGlobalMousePosition();
+            _dragging = true;
+            _dragResolvedThisPress = false;
+            _dragOffset = GetGlobalMousePosition() - GlobalPosition;
+            RotationDegrees = 0;
+            Scale = Vector2.One;
+            ZIndex = 100;
+            DragStarted(this);
+            AcceptEvent();
         }
     }
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Stack background cards -->
+  <rect x="18" y="16" width="36" height="44" rx="4" fill="#1c2a3a" stroke="#7aa8cf" stroke-width="1.5"/>
+  <rect x="14" y="12" width="36" height="44" rx="4" fill="#26384e" stroke="#7aa8cf" stroke-width="1.5"/>
+  <!-- Top card face (slightly highlighted) -->
+  <rect x="10" y="8" width="36" height="44" rx="4" fill="#324c6a" stroke="#9fcfff" stroke-width="2"/>
+  <!-- Card back diamond pattern -->
+  <path d="M16 14 L40 38 M40 14 L16 38 M28 11 L28 49 M13 30 L43 30"
+        stroke="#9fcfff" stroke-width="1" opacity="0.55"/>
+  <circle cx="28" cy="30" r="7" fill="none" stroke="#fdd835" stroke-width="2"/>
+  <!-- Downward draw arrow on right -->
+  <path d="M52 22 L52 44 L48 44 L54 52 L60 44 L56 44 L56 22 Z"
+        fill="#fdd835" stroke="#a08018" stroke-width="1"/>
+</svg>
