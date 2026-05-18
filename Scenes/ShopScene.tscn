@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/ShopScene.cs" id="1_shop"]
 
@@ -69,6 +69,72 @@ corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rob_normal"]
+bg_color = Color(0.42, 0.08, 0.08, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.30, 0.22, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.9, 0.20, 0.15, 0.55)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rob_hover"]
+bg_color = Color(0.58, 0.12, 0.10, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.55, 0.45, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(1, 0.30, 0.20, 0.75)
+shadow_size = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rob_disabled"]
+bg_color = Color(0.18, 0.10, 0.09, 0.7)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.20, 0.18, 0.6)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_normal"]
+bg_color = Color(0.10, 0.18, 0.24, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.78, 0.85, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_hover"]
+bg_color = Color(0.16, 0.28, 0.36, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.72, 0.92, 1, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="ShopScene" type="Control"]
 layout_mode = 3
@@ -191,6 +257,22 @@ text = "🗡 Remove a card
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="MerchantSep3" type="HSeparator" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+layout_mode = 2
+
+[node name="RobButton" type="Button" parent="Margin/MainHBox/MerchantPanel/MerchantMargin/MerchantVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 78)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.85, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 0.98, 0.92, 1)
+theme_override_colors/font_disabled_color = Color(0.55, 0.40, 0.38, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_rob_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_rob_hover")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_rob_disabled")
+text = "🗡 Rob the shop"
+
 [node name="ContentVBox" type="VBoxContainer" parent="Margin/MainHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -299,19 +381,20 @@ layout_mode = 2
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="RobButton" type="Button" parent="Margin/MainHBox/ContentVBox/ActionRow"]
-unique_name_in_owner = true
+[node name="ActionSpacer" type="Control" parent="Margin/MainHBox/ContentVBox/ActionRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 54)
-text = "Rob the shop"
 
 [node name="LeaveButton" type="Button" parent="Margin/MainHBox/ContentVBox/ActionRow"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 64)
 layout_mode = 2
-size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 54)
-text = "Leave"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.88, 0.96, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_leave_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_leave_hover")
+text = "Leave →"
 
 [node name="RemoveOverlay" type="Control" parent="."]
 unique_name_in_owner = true
