@@ -1,44 +1,114 @@
-[gd_scene load_steps=5 format=3 uid="uid://b53v4hnkxer8c"]
+[gd_scene load_steps=10 format=3 uid="uid://b53v4hnkxer8c"]
 
 [ext_resource type="Script" uid="uid://ch5ih6mu2x57c" path="res://Scripts/Scenes/MainMenu.cs" id="1_3plf2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu"]
-bg_color = Color(0.05, 0.06, 0.09, 0.66)
+bg_color = Color(0.06, 0.05, 0.04, 0.92)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.65, 0.32, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0, 0, 0, 0.7)
+shadow_size = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_logo_panel"]
+bg_color = Color(0.05, 0.04, 0.03, 0.85)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.65, 0.32, 0.75)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.7)
+shadow_size = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary"]
+bg_color = Color(0.13, 0.20, 0.13, 0.96)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(1, 1, 1, 0.08)
+border_color = Color(0.55, 0.85, 0.45, 0.90)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary_hover"]
+bg_color = Color(0.18, 0.32, 0.20, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 1, 0.65, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_ghost"]
+bg_color = Color(0.13, 0.18, 0.25, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.65, 0.32, 0.80)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
-shadow_color = Color(0, 0, 0, 0.35)
-shadow_size = 14
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary"]
-bg_color = Color(0.66, 0.25, 0.18, 0.95)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_ghost_hover"]
+bg_color = Color(0.22, 0.30, 0.40, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(1, 0.74, 0.58, 0.5)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+border_color = Color(1, 0.92, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_ghost"]
-bg_color = Color(0.13, 0.16, 0.22, 0.9)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 1, 1, 0.2)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_danger"]
+bg_color = Color(0.18, 0.10, 0.08, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.45, 0.40, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -49,33 +119,14 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_3plf2")
 
-[node name="BackgroundImage" type="TextureRect" parent="."]
+[node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-expand_mode = 1
-stretch_mode = 6
-
-[node name="BackgroundTint" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.03, 0.04, 0.06, 0.88)
-
-[node name="Vignette" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.2)
+color = Color(0.04, 0.03, 0.02, 1)
 
 [node name="FpsCounterLabel" type="Label" parent="."]
 unique_name_in_owner = true
@@ -85,322 +136,195 @@ offset_left = 16.0
 offset_top = 16.0
 offset_right = 176.0
 offset_bottom = 56.0
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 text = "FPS: 0"
 
-[node name="LeftMenu" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -248.0
-offset_top = -1042.0
-offset_right = 248.0
-offset_bottom = 160.0
 grow_horizontal = 2
-grow_vertical = 0
-pivot_offset = Vector2(248, 0)
-scale = Vector2(0.8, 0.8)
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 24
+grow_vertical = 2
+theme_override_constants/margin_left = 60
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 60
+theme_override_constants/margin_bottom = 50
 
-[node name="Panel" type="PanelContainer" parent="LeftMenu"]
-custom_minimum_size = Vector2(420, 0)
+[node name="MainHBox" type="HBoxContainer" parent="Margin"]
 layout_mode = 2
-size_flags_vertical = 3
+theme_override_constants/separation = 50
+
+[node name="LeftColumn" type="PanelContainer" parent="Margin/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.42
 theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
 
-[node name="Content" type="VBoxContainer" parent="LeftMenu/Panel"]
+[node name="LeftMargin" type="MarginContainer" parent="Margin/MainHBox/LeftColumn"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 18
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 36
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 36
 
-[node name="GameName" type="Label" parent="LeftMenu/Panel/Content"]
+[node name="LeftVBox" type="VBoxContainer" parent="Margin/MainHBox/LeftColumn/LeftMargin"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 56
+theme_override_constants/separation = 14
+
+[node name="GameName" type="Label" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+layout_mode = 2
 text = "SLAY THE HS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 48
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
 
-[node name="Tagline" type="Label" parent="LeftMenu/Panel/Content"]
-modulate = Color(1, 1, 1, 0.82)
+[node name="Tagline" type="Label" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+modulate = Color(0.92, 0.85, 0.65, 1)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 text = "像素卡牌肉鸽冒险"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
 
-[node name="Spacer" type="Control" parent="LeftMenu/Panel/Content"]
-custom_minimum_size = Vector2(0, 26)
+[node name="HeaderSpacer" type="Control" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+custom_minimum_size = Vector2(0, 18)
 layout_mode = 2
 
-[node name="StartButton" type="Button" parent="LeftMenu/Panel/Content"]
+[node name="StartButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.85, 1, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
-text = "开始游戏"
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_primary_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_primary")
+text = "▶ 开始游戏"
 
-[node name="DeckPresetLabel" type="Label" parent="LeftMenu/Panel/Content"]
-unique_name_in_owner = true
-modulate = Color(1, 1, 1, 0.86)
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "测试卡组预设"
-
-[node name="DeckPresetOption" type="OptionButton" parent="LeftMenu/Panel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-
-[node name="BattleTestButton" type="Button" parent="LeftMenu/Panel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 62)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-text = "直接战斗测试"
-
-[node name="ContinueButton" type="Button" parent="LeftMenu/Panel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 62)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-disabled = true
-text = "继续游戏"
-
-[node name="AbandonRunButton" type="Button" parent="LeftMenu/Panel/Content"]
+[node name="AbandonRunButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1, 0.78, 0.7, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_danger")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_danger")
+text = "✕ 放弃存档"
+
+[node name="AchievementsButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
+text = "🏆 成就"
+
+[node name="BestiaryButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
+text = "🐉 敌人图鉴"
+
+[node name="RelicCompendiumButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
+text = "💎 遗物图鉴"
+
+[node name="CardBrowserButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
+text = "🎴 卡牌图鉴"
+
+[node name="OptionsButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
+text = "⚙ 设置"
+
+[node name="FooterSpacer" type="Control" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="QuitButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
 theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.78, 0.7, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-text = "放弃存档"
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_danger")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_danger")
+text = "✕ 退出游戏"
 
-[node name="OptionsButton" type="Button" parent="LeftMenu/Panel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 62)
+[node name="RightColumn" type="PanelContainer" parent="Margin/MainHBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-text = "设置"
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.58
+theme_override_styles/panel = SubResource("StyleBoxFlat_logo_panel")
 
-[node name="LanguageButton" type="Button" parent="LeftMenu/Panel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 62)
+[node name="LogoCenter" type="CenterContainer" parent="Margin/MainHBox/RightColumn"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-text = "Language: English"
 
-[node name="ToolsButton" type="MenuButton" parent="LeftMenu/Panel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 62)
+[node name="LogoStack" type="VBoxContainer" parent="Margin/MainHBox/RightColumn/LogoCenter"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-text = "卡牌图鉴"
+theme_override_constants/separation = 24
 
-[node name="CardEditorButton" type="Button" parent="LeftMenu/Panel/Content"]
-visible = false
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 62)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-text = "卡牌编辑器"
-
-[node name="RelicCompendiumButton" type="Button" parent="LeftMenu/Panel/Content"]
-visible = false
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 62)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-text = "遗物图鉴"
-
-[node name="DeckEditorButton" type="Button" parent="LeftMenu/Panel/Content"]
-visible = false
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 62)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
-text = "流派卡组编辑器"
-
-[node name="QuitButton" type="Button" parent="LeftMenu/Panel/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
-text = "退出游戏"
-
-[node name="Hint" type="Label" parent="LeftMenu/Panel/Content"]
-modulate = Color(1, 1, 1, 0.55)
-layout_mode = 2
-size_flags_vertical = 10
-text = "提示：你后续可把 BackgroundImage 换成自己的全屏背景图。"
-vertical_alignment = 2
-
-[node name="SettingsModal" type="Control" parent="."]
+[node name="LogoImage" type="TextureRect" parent="Margin/MainHBox/RightColumn/LogoCenter/LogoStack"]
 unique_name_in_owner = true
 visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Backdrop" type="ColorRect" parent="SettingsModal"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.55)
-
-[node name="Dialog" type="PanelContainer" parent="SettingsModal"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -300.0
-offset_right = 280.0
-offset_bottom = 300.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
-
-[node name="Content" type="VBoxContainer" parent="SettingsModal/Dialog"]
 layout_mode = 2
-theme_override_constants/separation = 16
+custom_minimum_size = Vector2(480, 480)
+expand_mode = 1
+stretch_mode = 5
 
-[node name="SettingsTitle" type="Label" parent="SettingsModal/Dialog/Content"]
+[node name="LogoEmoji" type="Label" parent="Margin/MainHBox/RightColumn/LogoCenter/LogoStack"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 42
-text = "设置"
+text = "⚔"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 320
+theme_override_colors/font_color = Color(0.85, 0.65, 0.32, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
 
-[node name="ResolutionRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="ResolutionLabel" type="Label" parent="SettingsModal/Dialog/Content/ResolutionRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "分辨率"
-
-[node name="ResolutionOption" type="OptionButton" parent="SettingsModal/Dialog/Content/ResolutionRow"]
+[node name="LogoSubtitle" type="Label" parent="Margin/MainHBox/RightColumn/LogoCenter/LogoStack"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-
-[node name="MasterVolumeRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="MasterVolumeLabel" type="Label" parent="SettingsModal/Dialog/Content/MasterVolumeRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "主音量"
-
-[node name="MasterVolumeSlider" type="HSlider" parent="SettingsModal/Dialog/Content/MasterVolumeRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-value = 70.0
-
-[node name="MusicVolumeRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="MusicVolumeLabel" type="Label" parent="SettingsModal/Dialog/Content/MusicVolumeRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "音乐音量"
-
-[node name="MusicVolumeSlider" type="HSlider" parent="SettingsModal/Dialog/Content/MusicVolumeRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-value = 70.0
-
-[node name="MaxFpsRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="MaxFpsLabel" type="Label" parent="SettingsModal/Dialog/Content/MaxFpsRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "最大帧率"
-
-[node name="MaxFpsOption" type="OptionButton" parent="SettingsModal/Dialog/Content/MaxFpsRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 24
-
-[node name="VsyncRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="VsyncLabel" type="Label" parent="SettingsModal/Dialog/Content/VsyncRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "垂直同步"
-
-[node name="VsyncCheckBox" type="CheckBox" parent="SettingsModal/Dialog/Content/VsyncRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="FpsCounterRow" type="HBoxContainer" parent="SettingsModal/Dialog/Content"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="FpsCounterLabelText" type="Label" parent="SettingsModal/Dialog/Content/FpsCounterRow"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "显示帧率"
-
-[node name="FpsCounterCheckBox" type="CheckBox" parent="SettingsModal/Dialog/Content/FpsCounterRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="BottomSpacer" type="Control" parent="SettingsModal/Dialog/Content"]
-custom_minimum_size = Vector2(0, 8)
-layout_mode = 2
-
-[node name="SettingsCloseButton" type="Button" parent="SettingsModal/Dialog/Content"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
-text = "关闭"
+text = "Slay the Tower"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(0.85, 0.65, 0.32, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4

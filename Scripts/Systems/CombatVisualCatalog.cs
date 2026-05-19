@@ -84,6 +84,11 @@ public static class CombatVisualCatalog
         return EnemyProfiles["cultist"];
     }
 
+    public static IEnumerable<string> AllEnemyIds()
+    {
+        return EnemyProfiles.Keys;
+    }
+
     public static string GetEnemyTraitSummary(string archetypeId)
     {
         if (EnemyTraitSummaryKey.TryGetValue(archetypeId, out var key))

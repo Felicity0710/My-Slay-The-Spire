@@ -277,24 +277,30 @@ public partial class BattleScene
             return;
         }
 
+        // Big art-style title centered over the arena. The label scales up
+        // from 0.4× with a Back ease (overshoot), holds briefly, then fades
+        // out while scaling down slightly — reads as a stage announcement.
         _turnBannerLabel.Text = text;
-        _turnBanner.Modulate = new Color(tint, 0f);
+        _turnBannerLabel.AddThemeColorOverride("font_color", tint);
         _turnBanner.Visible = true;
-        _turnBanner.Position = new Vector2(_turnBanner.Position.X, 20);
+        _turnBanner.Modulate = new Color(1f, 1f, 1f, 0f);
+        _turnBanner.PivotOffset = _turnBanner.Size * 0.5f;
+        _turnBanner.Scale = new Vector2(0.4f, 0.4f);
 
         var tweenIn = CreateTween();
         tweenIn.SetEase(Tween.EaseType.Out);
-        tweenIn.SetTrans(Tween.TransitionType.Cubic);
-        tweenIn.TweenProperty(_turnBanner, "position:y", 34f, 0.15f);
-        tweenIn.Parallel().TweenProperty(_turnBanner, "modulate:a", 1f, 0.15f);
+        tweenIn.SetTrans(Tween.TransitionType.Back);
+        tweenIn.TweenProperty(_turnBanner, "scale", new Vector2(1.0f, 1.0f), 0.32f);
+        tweenIn.Parallel().TweenProperty(_turnBanner, "modulate:a", 1f, 0.22f);
         await ToSignal(tweenIn, Tween.SignalName.Finished);
 
-        await ToSignal(GetTree().CreateTimer(0.18f), SceneTreeTimer.SignalName.Timeout);
+        await ToSignal(GetTree().CreateTimer(0.55f), SceneTreeTimer.SignalName.Timeout);
 
         var tweenOut = CreateTween();
-        tweenOut.SetEase(Tween.EaseType.Out);
+        tweenOut.SetEase(Tween.EaseType.In);
         tweenOut.SetTrans(Tween.TransitionType.Cubic);
-        tweenOut.TweenProperty(_turnBanner, "modulate:a", 0f, 0.2f);
+        tweenOut.TweenProperty(_turnBanner, "modulate:a", 0f, 0.28f);
+        tweenOut.Parallel().TweenProperty(_turnBanner, "scale", new Vector2(0.92f, 0.92f), 0.28f);
         await ToSignal(tweenOut, Tween.SignalName.Finished);
         _turnBanner.Visible = false;
     }

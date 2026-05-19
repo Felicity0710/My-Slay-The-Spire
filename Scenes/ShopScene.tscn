@@ -1,6 +1,68 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/ShopScene.cs" id="1_shop"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialog"]
+bg_color = Color(0.06, 0.05, 0.04, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.65, 0.32, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0, 0, 0, 0.75)
+shadow_size = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_normal"]
+bg_color = Color(0.18, 0.12, 0.10, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.45, 0.40, 0.90)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_confirm_hover"]
+bg_color = Color(0.32, 0.18, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.70, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cancel_normal"]
+bg_color = Color(0.16, 0.14, 0.10, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.75, 0.85, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.13, 0.10, 0.07, 0.95)
@@ -414,7 +476,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
-color = Color(0, 0, 0, 0.6)
+color = Color(0.02, 0.02, 0.03, 1)
 
 [node name="Dialog" type="PanelContainer" parent="RemoveOverlay"]
 layout_mode = 1
@@ -429,6 +491,7 @@ offset_right = 560.0
 offset_bottom = 360.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialog")
 
 [node name="DialogMargin" type="MarginContainer" parent="RemoveOverlay/Dialog"]
 layout_mode = 2
@@ -477,11 +540,21 @@ alignment = 1
 [node name="CancelRemoveButton" type="Button" parent="RemoveOverlay/Dialog/DialogMargin/DialogVBox/RemoveButtonRow"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(180, 48)
-text = "Cancel"
+custom_minimum_size = Vector2(200, 52)
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.92, 0.92, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_cancel_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_cancel_normal")
+text = "✕ Cancel"
 
 [node name="ConfirmRemoveButton" type="Button" parent="RemoveOverlay/Dialog/DialogMargin/DialogVBox/RemoveButtonRow"]
 unique_name_in_owner = true
 layout_mode = 2
-custom_minimum_size = Vector2(220, 48)
-text = "Confirm"
+custom_minimum_size = Vector2(240, 52)
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.85, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_confirm_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_confirm_hover")
+text = "✓ Confirm"

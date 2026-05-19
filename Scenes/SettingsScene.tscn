@@ -1,0 +1,315 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Scenes/SettingsScene.cs" id="1_settings"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialog"]
+bg_color = Color(0.06, 0.05, 0.04, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.65, 0.32, 0.95)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.75)
+shadow_size = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_section_header"]
+bg_color = Color(0.10, 0.08, 0.05, 0.85)
+border_width_bottom = 2
+border_color = Color(0.55, 0.42, 0.22, 0.65)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+content_margin_left = 12.0
+content_margin_top = 6.0
+content_margin_right = 12.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_section_body"]
+bg_color = Color(0.09, 0.07, 0.05, 0.5)
+border_width_left = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.45, 0.36, 0.20, 0.55)
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary"]
+bg_color = Color(0.13, 0.18, 0.25, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.65, 0.32, 0.90)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary_hover"]
+bg_color = Color(0.22, 0.30, 0.40, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.92, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_close"]
+bg_color = Color(0.18, 0.18, 0.24, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.75, 0.85, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+
+[node name="SettingsScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.03, 0.02, 1)
+
+[node name="DialogCenter" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dialog" type="PanelContainer" parent="DialogCenter"]
+custom_minimum_size = Vector2(640, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialog")
+
+[node name="DialogMargin" type="MarginContainer" parent="DialogCenter/Dialog"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="DialogVBox" type="VBoxContainer" parent="DialogCenter/Dialog/DialogMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Settings"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
+
+[node name="LanguageSection" type="VBoxContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="LanguageHeader" type="PanelContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/LanguageSection"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_header")
+
+[node name="SectionLanguageLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/LanguageSection/LanguageHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🌐 Language"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+
+[node name="LanguageBody" type="PanelContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/LanguageSection"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_body")
+
+[node name="LanguageButton" type="Button" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/LanguageSection/LanguageBody"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_primary_hover")
+text = "Language: English"
+
+[node name="DisplaySection" type="VBoxContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="DisplayHeader" type="PanelContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_header")
+
+[node name="SectionDisplayLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🖥 Display"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+
+[node name="DisplayBody" type="PanelContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_body")
+
+[node name="DisplayGrid" type="GridContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 10
+
+[node name="ResolutionLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Resolution"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
+
+[node name="ResolutionOption" type="OptionButton" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+theme_override_font_sizes/font_size = 14
+
+[node name="MaxFpsLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Max FPS"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
+
+[node name="MaxFpsOption" type="OptionButton" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 34)
+theme_override_font_sizes/font_size = 14
+
+[node name="VsyncLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "VSync"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
+
+[node name="VsyncCheckBox" type="CheckBox" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="FpsCounterLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Show FPS"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
+
+[node name="FpsCounterCheckBox" type="CheckBox" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/DisplaySection/DisplayBody/DisplayGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AudioSection" type="VBoxContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="AudioHeader" type="PanelContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/AudioSection"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_header")
+
+[node name="SectionAudioLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/AudioSection/AudioHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🔊 Audio"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+
+[node name="AudioBody" type="PanelContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/AudioSection"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_section_body")
+
+[node name="AudioGrid" type="GridContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/AudioSection/AudioBody"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 10
+
+[node name="MasterVolumeLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/AudioSection/AudioBody/AudioGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Master Volume"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
+
+[node name="MasterVolumeSlider" type="HSlider" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/AudioSection/AudioBody/AudioGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 28)
+min_value = 0.0
+max_value = 100.0
+step = 1.0
+
+[node name="MusicVolumeLabel" type="Label" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/AudioSection/AudioBody/AudioGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Music Volume"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
+
+[node name="MusicVolumeSlider" type="HSlider" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/AudioSection/AudioBody/AudioGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 28)
+min_value = 0.0
+max_value = 100.0
+step = 1.0
+
+[node name="CloseRow" type="CenterContainer" parent="DialogCenter/Dialog/DialogMargin/DialogVBox"]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="DialogCenter/Dialog/DialogMargin/DialogVBox/CloseRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.92, 0.92, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_close")
+theme_override_styles/hover = SubResource("StyleBoxFlat_close")
+text = "← Back"
