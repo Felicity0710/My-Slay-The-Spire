@@ -1030,9 +1030,11 @@ public partial class BattleScene : Control
             {
                 _playerHp = 0;
                 _battleEnded = true;
-                    Log(LocalizationService.Get("log.battle.defeat", "Defeat"), "#ef4444");
-                SaveSystem.Delete();
-                GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+                Log(LocalizationService.Get("log.battle.defeat", "Defeat"), "#ef4444");
+                // DefeatScene handles SaveSystem.Delete() + presents the
+                // Try Again / Back to Main Menu choice.
+                _state.PlayerHp = 0;
+                GetTree().ChangeSceneToFile("res://Scenes/DefeatScene.tscn");
                 return;
             }
         }

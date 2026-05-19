@@ -1,0 +1,262 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Scenes/CharacterSelectScene.cs" id="1_charsel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_banner"]
+bg_color = Color(0.10, 0.08, 0.05, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.65, 0.32, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 10
+content_margin_left = 28.0
+content_margin_top = 14.0
+content_margin_right = 28.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info_panel"]
+bg_color = Color(0.07, 0.06, 0.04, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.42, 0.22, 0.75)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 28.0
+content_margin_top = 22.0
+content_margin_right = 28.0
+content_margin_bottom = 22.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_portrait_panel"]
+bg_color = Color(0.05, 0.04, 0.03, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.42, 0.22, 0.75)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_avatar_row"]
+bg_color = Color(0.08, 0.06, 0.04, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.45, 0.36, 0.20, 0.55)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_primary_normal"]
+bg_color = Color(0.13, 0.20, 0.13, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.85, 0.45, 0.90)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_secondary_normal"]
+bg_color = Color(0.13, 0.13, 0.18, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.75, 0.85, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 24.0
+content_margin_top = 14.0
+content_margin_right = 24.0
+content_margin_bottom = 14.0
+
+[node name="CharacterSelectScene" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_charsel")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.04, 0.03, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 28
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="BannerWrap" type="CenterContainer" parent="Margin/VBox"]
+layout_mode = 2
+
+[node name="BannerPanel" type="PanelContainer" parent="Margin/VBox/BannerWrap"]
+layout_mode = 2
+custom_minimum_size = Vector2(520, 70)
+theme_override_styles/panel = SubResource("StyleBoxFlat_banner")
+
+[node name="TitleLabel" type="Label" parent="Margin/VBox/BannerWrap/BannerPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Choose Your Character"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
+
+[node name="MainHBox" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="InfoPanel" type="PanelContainer" parent="Margin/VBox/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.55
+theme_override_styles/panel = SubResource("StyleBoxFlat_info_panel")
+
+[node name="InfoVBox" type="VBoxContainer" parent="Margin/VBox/MainHBox/InfoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="CharacterNameLabel" type="Label" parent="Margin/VBox/MainHBox/InfoPanel/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Balanced Starter"
+theme_override_font_sizes/font_size = 36
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
+
+[node name="StatsRow" type="HBoxContainer" parent="Margin/VBox/MainHBox/InfoPanel/InfoVBox"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="HpLabel" type="Label" parent="Margin/VBox/MainHBox/InfoPanel/InfoVBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "❤ Max HP: 80"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.85, 0.55, 1)
+
+[node name="DeckSizeLabel" type="Label" parent="Margin/VBox/MainHBox/InfoPanel/InfoVBox/StatsRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🎴 Deck: 11 cards"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.85, 0.55, 1)
+
+[node name="Divider" type="HSeparator" parent="Margin/VBox/MainHBox/InfoPanel/InfoVBox"]
+layout_mode = 2
+
+[node name="AbilityHeader" type="Label" parent="Margin/VBox/MainHBox/InfoPanel/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "✦ Ability"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+
+[node name="DescriptionLabel" type="Label" parent="Margin/VBox/MainHBox/InfoPanel/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "Stable attack + block with simple scaling."
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
+
+[node name="PortraitPanel" type="PanelContainer" parent="Margin/VBox/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.45
+theme_override_styles/panel = SubResource("StyleBoxFlat_portrait_panel")
+
+[node name="PortraitCenter" type="CenterContainer" parent="Margin/VBox/MainHBox/PortraitPanel"]
+layout_mode = 2
+
+[node name="PortraitGlyph" type="Label" parent="Margin/VBox/MainHBox/PortraitPanel/PortraitCenter"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🧙"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 240
+
+[node name="AvatarRowPanel" type="PanelContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_avatar_row")
+
+[node name="AvatarRowCenter" type="CenterContainer" parent="Margin/VBox/AvatarRowPanel"]
+layout_mode = 2
+
+[node name="AvatarRow" type="HBoxContainer" parent="Margin/VBox/AvatarRowPanel/AvatarRowCenter"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ButtonRow" type="HBoxContainer" parent="Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="BackButton" type="Button" parent="Margin/VBox/ButtonRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(260, 56)
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.92, 0.92, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_secondary_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_secondary_normal")
+text = "← Back"
+
+[node name="StartButton" type="Button" parent="Margin/VBox/ButtonRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(320, 56)
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.85, 1, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_primary_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_primary_normal")
+text = "▶ Begin Adventure"

@@ -1,6 +1,38 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/RestScene.cs" id="1_rest"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skip_normal"]
+bg_color = Color(0.16, 0.14, 0.10, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.45, 0.30, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skip_hover"]
+bg_color = Color(0.22, 0.20, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.92, 0.78, 0.50, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tile_normal"]
 bg_color = Color(0.10, 0.13, 0.10, 0.95)
@@ -252,12 +284,15 @@ alignment = 1
 
 [node name="SkipButton" type="Button" parent="MainView/MainMargin/MainVBox/SkipRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 44)
+custom_minimum_size = Vector2(240, 52)
 layout_mode = 2
-flat = true
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-text = "Skip"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.92, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_skip_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_skip_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_skip_normal")
+text = "✕ Skip"
 
 [node name="UpgradeView" type="Control" parent="."]
 unique_name_in_owner = true

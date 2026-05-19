@@ -107,7 +107,7 @@ public partial class RestScene : Control
             "ui.rest.tile_smith_desc",
             "Upgrade a card");
 
-        _skipButton.Text = LocalizationService.Get("ui.rest.skip_button", "Skip");
+        _skipButton.Text = "✕ " + LocalizationService.Get("ui.rest.skip_button", "Skip");
 
         _upgradeTitleLabel.Text = LocalizationService.Get(
             "ui.rest.upgrade_title",

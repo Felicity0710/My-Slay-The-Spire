@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Godot;
 
 public sealed class DeckPresetData
 {
@@ -10,6 +11,10 @@ public sealed class DeckPresetData
     public string NameKey { get; }
     public string DescriptionKey { get; }
     public IReadOnlyList<string> CardIds { get; }
+    // Character-select visuals — large emoji portrait + accent color used for
+    // the avatar tile border and the portrait backdrop.
+    public string Glyph { get; }
+    public Color Accent { get; }
 
     public DeckPresetData(
         string id,
@@ -17,7 +22,9 @@ public sealed class DeckPresetData
         string description,
         string nameKey,
         string descriptionKey,
-        IReadOnlyList<string> cardIds)
+        IReadOnlyList<string> cardIds,
+        string glyph,
+        Color accent)
     {
         Id = id;
         Name = name;
@@ -25,6 +32,8 @@ public sealed class DeckPresetData
         NameKey = nameKey;
         DescriptionKey = descriptionKey;
         CardIds = cardIds;
+        Glyph = glyph;
+        Accent = accent;
     }
 
     public string LocalizedName => LocalizationService.Get(NameKey, Name);
@@ -42,7 +51,9 @@ public static class DeckPresetCatalog
             description: "Stable attack + block with simple scaling.",
             nameKey: "deck_preset.starter.name",
             descriptionKey: "deck_preset.starter.description",
-            cardIds: CardData.StarterDeckIds()),
+            cardIds: CardData.StarterDeckIds(),
+            glyph: "🧙",
+            accent: new Color(0.54f, 0.80f, 1f)),
 
         new DeckPresetData(
             id: "infinite_cycle",
@@ -57,7 +68,9 @@ public static class DeckPresetCatalog
                 "hand_overflow", "hand_overflow",
                 "mana_turbine", "overclock",
                 "arcane_barrage", "quick_slash"
-            }),
+            },
+            glyph: "♾",
+            accent: new Color(0.72f, 0.63f, 0.95f)),
 
         new DeckPresetData(
             id: "infinite_fireball",
@@ -72,7 +85,9 @@ public static class DeckPresetCatalog
                 "arcane_barrage", "arcane_barrage",
                 "spark_loop", "arcane_recycle",
                 "mana_turbine", "battle_focus", "war_cry"
-            }),
+            },
+            glyph: "🔥",
+            accent: new Color(1f, 0.55f, 0.30f)),
 
         new DeckPresetData(
             id: "death_legion",
@@ -87,7 +102,9 @@ public static class DeckPresetCatalog
                 "death_chorus", "soul_siphon",
                 "rending_wave", "meteor_shower",
                 "phoenix_cycle", "fortify", "reaper_touch"
-            }),
+            },
+            glyph: "💀",
+            accent: new Color(0.78f, 0.55f, 0.85f)),
 
         new DeckPresetData(
             id: "berserker_slam",
@@ -102,7 +119,9 @@ public static class DeckPresetCatalog
                 "adrenaline_rush", "adrenaline_rush",
                 "heavy_slash", "crushing_blow",
                 "twin_strike", "bash", "reaper_touch"
-            }),
+            },
+            glyph: "⚔",
+            accent: new Color(1f, 0.40f, 0.40f)),
 
         new DeckPresetData(
             id: "fortress_control",
@@ -117,7 +136,9 @@ public static class DeckPresetCatalog
                 "fortify", "fortify",
                 "shield_bash", "shield_bash",
                 "second_wind", "shrug", "meteor_shower"
-            }),
+            },
+            glyph: "🛡",
+            accent: new Color(0.55f, 0.78f, 0.90f)),
 
         new DeckPresetData(
             id: "storm_engine",
@@ -132,7 +153,9 @@ public static class DeckPresetCatalog
                 "spark_loop", "spark_loop",
                 "arcane_recycle", "hand_overflow",
                 "mana_turbine", "meditate", "overclock"
-            })
+            },
+            glyph: "⚡",
+            accent: new Color(0.95f, 0.95f, 0.45f))
     };
 
     public static IReadOnlyList<DeckPresetData> All()

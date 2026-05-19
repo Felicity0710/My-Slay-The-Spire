@@ -42,9 +42,12 @@ public partial class ShopScene : Control
 
     private Control _removeOverlay = null!;
     private Label _removeTitleLabel = null!;
-    private ItemList _removeDeckList = null!;
+    private Label _removeHintLabel = null!;
+    private GridContainer _removeCardGrid = null!;
     private Button _confirmRemoveButton = null!;
     private Button _cancelRemoveButton = null!;
+    private int _removeSelectedIndex = -1;
+    private readonly List<PanelContainer> _removeCardFrames = new();
 
     private Random _rng = null!;
     private readonly List<ShopItem> _items = new();
@@ -77,7 +80,8 @@ public partial class ShopScene : Control
 
         _removeOverlay = GetNode<Control>("%RemoveOverlay");
         _removeTitleLabel = GetNode<Label>("%RemoveTitleLabel");
-        _removeDeckList = GetNode<ItemList>("%RemoveDeckList");
+        _removeHintLabel = GetNode<Label>("%RemoveHint");
+        _removeCardGrid = GetNode<GridContainer>("%RemoveCardGrid");
         _confirmRemoveButton = GetNode<Button>("%ConfirmRemoveButton");
         _cancelRemoveButton = GetNode<Button>("%CancelRemoveButton");
 
@@ -568,39 +572,88 @@ public partial class ShopScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         _removeTitleLabel.Text = LocalizationService.Get("ui.shop.remove_title", "Choose a card to remove");
+        _removeHintLabel.Text = LocalizationService.Get("ui.shop.remove_hint", "Click a card to select. Click Confirm to delete it from your deck.");
         _confirmRemoveButton.Text = LocalizationService.Get("ui.shop.remove_confirm", "Confirm");
         _cancelRemoveButton.Text = LocalizationService.Get("ui.shop.remove_cancel", "Cancel");
 
-        _removeDeckList.Clear();
+        // Tear down old grid contents and rebuild fresh — deck contents may
+        // have shifted since last open.
+        foreach (var child in _removeCardGrid.GetChildren())
+        {
+            child.QueueFree();
+        }
+        _removeCardFrames.Clear();
+        _removeSelectedIndex = -1;
+
         for (var i = 0; i < state.DeckCardIds.Count; i++)
         {
+            var capturedIndex = i;
             var card = CardData.CreateById(state.DeckCardIds[i]);
-            _removeDeckList.AddItem(LocalizationService.Format(
-                "ui.shop.remove_entry",
-                "#{0:00} {1} · Cost {2}",
-                i + 1,
-                card.GetLocalizedName(),
-                card.Cost));
+            var frame = BuildRemoveCardTile(card, capturedIndex);
+            _removeCardGrid.AddChild(frame);
+            _removeCardFrames.Add(frame);
         }
 
-        if (state.DeckCardIds.Count > 0)
-        {
-            _removeDeckList.Select(0);
-        }
-
+        _confirmRemoveButton.Disabled = true;
         _removeOverlay.Visible = true;
+    }
+
+    private PanelContainer BuildRemoveCardTile(CardData card, int deckIndex)
+    {
+        var frame = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(210, 290),
+            MouseFilter = MouseFilterEnum.Pass
+        };
+        frame.AddThemeStyleboxOverride("panel", BuildRemoveTileStyle(selected: false));
+
+        var view = new CardView();
+        view.SetUseTopLevel(false);
+        view.SetDragEnabled(false);
+        view.Setup(card);
+        view.Clicked = _ => SelectRemoveCard(deckIndex);
+        frame.AddChild(view);
+        return frame;
+    }
+
+    private static StyleBoxFlat BuildRemoveTileStyle(bool selected) => new()
+    {
+        BgColor = selected ? new Color(0.30f, 0.10f, 0.10f, 0.95f) : new Color(0.10f, 0.13f, 0.16f, 0.95f),
+        BorderColor = selected ? new Color(1f, 0.50f, 0.50f, 1f) : new Color(0.55f, 0.42f, 0.22f, 0.85f),
+        BorderWidthLeft = selected ? 4 : 2,
+        BorderWidthTop = selected ? 4 : 2,
+        BorderWidthRight = selected ? 4 : 2,
+        BorderWidthBottom = selected ? 4 : 2,
+        CornerRadiusTopLeft = 12,
+        CornerRadiusTopRight = 12,
+        CornerRadiusBottomLeft = 12,
+        CornerRadiusBottomRight = 12,
+        ContentMarginLeft = 4,
+        ContentMarginTop = 4,
+        ContentMarginRight = 4,
+        ContentMarginBottom = 4,
+        ShadowColor = selected ? new Color(0.85f, 0.30f, 0.30f, 0.55f) : new Color(0, 0, 0, 0.3f),
+        ShadowSize = selected ? 10 : 4
+    };
+
+    private void SelectRemoveCard(int deckIndex)
+    {
+        _removeSelectedIndex = deckIndex;
+        for (var i = 0; i < _removeCardFrames.Count; i++)
+        {
+            if (!IsInstanceValid(_removeCardFrames[i]))
+            {
+                continue;
+            }
+            _removeCardFrames[i].AddThemeStyleboxOverride("panel", BuildRemoveTileStyle(i == deckIndex));
+        }
+        _confirmRemoveButton.Disabled = false;
     }
 
     private void OnConfirmRemovePressed()
     {
         var state = GetNode<GameState>("/root/GameState");
-        var selected = _removeDeckList.GetSelectedItems();
-        if (selected.Length == 0)
-        {
-            return;
-        }
-
-        var index = selected[0];
+        var index = _removeSelectedIndex;
         if (index < 0 || index >= state.DeckCardIds.Count)
         {
             return;
@@ -618,6 +671,7 @@ public partial class ShopScene : Control
 
         _removeServiceUsed = true;
         _removeOverlay.Visible = false;
+        _removeSelectedIndex = -1;
 
         var card = CardData.CreateById(removedId);
         RefreshUi(LocalizationService.Format(

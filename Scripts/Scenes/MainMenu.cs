@@ -113,9 +113,11 @@ public partial class MainMenu : Control
             return;
         }
 
+        // The character-select scene takes care of SetDeckPreset + StartNewRun
+        // before the player enters the map.
         var state = GetNode<GameState>("/root/GameState");
-        state.StartNewRun();
-        GetTree().ChangeSceneToFile("res://Scenes/MapScene.tscn");
+        state.SetUiPhase("character_select");
+        GetTree().ChangeSceneToFile("res://Scenes/CharacterSelectScene.tscn");
     }
 
     private void OnContinuePressed()
