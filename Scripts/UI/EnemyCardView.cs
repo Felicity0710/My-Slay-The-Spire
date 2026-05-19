@@ -23,6 +23,14 @@ public partial class EnemyCardView : Button
         ClipText = true;
 
         CacheNodes();
+
+        // Configure() sets PivotOffset = Size * 0.5f, but on the FIRST call
+        // (right after AddChild) the grid layout hasn't run yet and Size is
+        // still (0,0). That leaves the pivot at the top-left corner, so any
+        // selected/hovered scale-up visibly drifts the card right + down
+        // instead of pulsing in place. Sync the pivot whenever the layout
+        // resizes us — keeps scale-around-center stable forever after.
+        Resized += () => PivotOffset = Size * 0.5f;
     }
 
     private void CacheNodes()

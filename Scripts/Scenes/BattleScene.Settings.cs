@@ -14,7 +14,6 @@ public partial class BattleScene
         _endTurnButton.Text = LocalizationService.Get("ui.battle.end_turn", "End Turn");
         _backButton.Text = LocalizationService.Get("ui.battle.back_to_map", "Back To Map");
         _testVictoryButton.Text = LocalizationService.Get("ui.battle.test_victory_button", "Test Victory");
-        _logTitleLabel.Text = LocalizationService.Get("ui.battle.log_title", "Action Log");
         _turnBannerLabel.Text = LocalizationService.Get("ui.battle.turn_player", "Player Turn");
     }
 

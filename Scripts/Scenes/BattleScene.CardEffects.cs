@@ -302,14 +302,8 @@ public partial class BattleScene
 
         UpdateEnemySelectionUi();
 
-        if (_selectedEnemyIndex < 0 || _selectedEnemyIndex >= _enemies.Count)
-        {
-            return;
-        }
-
-        var enemy = _enemies[_selectedEnemyIndex];
-        _enemyHpLabel.Text = LocalizationService.Format("ui.battle.enemy_hp", "Enemy HP: {0}", enemy.Hp);
-        _enemyBlockLabel.Text = LocalizationService.Format("ui.battle.enemy_block", "Enemy Block: {0}", enemy.Block);
-        _enemyStatusLabel.Text = LocalizationService.Format("ui.battle.enemy_status", "Enemy Status: STR {0}, VUL {1}", enemy.Strength, enemy.Vulnerable);
+        // The legacy single-enemy detail labels (HP/Block/Status) are gone —
+        // each EnemyCardView surfaces its own HP bar + status chips via
+        // Configure(), refreshed by UpdateEnemySelectionUi().
     }
 }

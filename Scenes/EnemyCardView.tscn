@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/UI/EnemyCardView.cs" id="1_2yhir"]
 
 [node name="EnemyCardView" type="Button"]
-custom_minimum_size = Vector2(156, 218)
+custom_minimum_size = Vector2(132, 188)
 size_flags_horizontal = 4
 script = ExtResource("1_2yhir")
 
@@ -69,7 +69,7 @@ vertical_alignment = 1
 theme_override_font_sizes/font_size = 12
 
 [node name="PortraitBg" type="ColorRect" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 78)
 layout_mode = 2
 size_flags_vertical = 3
 

@@ -123,18 +123,12 @@ public partial class BattleScene : Control
     private readonly Dictionary<CardData, CardView> _handViews = new();
     private readonly Stack<CardView> _cardViewPool = new();
 
-    private Label _enemyHpLabel = null!;
-    private Label _enemyBlockLabel = null!;
-    private Label _enemyStatusLabel = null!;
-    private Label _enemyIntentLabel = null!;
-    private Label _enemyNameLabel = null!;
     private Label _turnLabel = null!;
     private Label _energyLabel = null!;
     private Label _energyValueLabel = null!;
     private Label _topHpLabel = null!;
     private Label _handCountLabel = null!;
     private Label _relicBarLabel = null!;
-    private RichTextLabel _logText = null!;
     private BoxContainer _relicIcons = null!;
 
     private Control _mainMargin = null!;
@@ -142,14 +136,12 @@ public partial class BattleScene : Control
     private Control _enemyDropArea = null!;
     private Label _dropHintLabel = null!;
     private GridContainer _enemyRosterGrid = null!;
-    private Label _enemyIntentListLabel = null!;
     private readonly Dictionary<int, Control> _enemyCardTargetByIndex = new();
-    private readonly Dictionary<int, Button> _enemyCardButtonByIndex = new();
+    private readonly Dictionary<int, EnemyCardView> _enemyCardButtonByIndex = new();
     private readonly PackedScene _enemyCardScene = GD.Load<PackedScene>("res://Scenes/EnemyCardView.tscn");
     private int _hoverEnemyIndex = -1;
     private Control _playerPanel = null!;
     private PlayerCardView _playerCardView = null!;
-    private Control _enemyPanel = null!;
     private Control _turnBanner = null!;
     private Label _turnBannerLabel = null!;
     private Control _drawAnchor = null!;
@@ -163,7 +155,6 @@ public partial class BattleScene : Control
     private Button _endTurnButton = null!;
     private Button _backButton = null!;
     private Button _testVictoryButton = null!;
-    private Label _logTitleLabel = null!;
 
     private readonly StyleBoxFlat _dropNormalStyle = new();
     private readonly StyleBoxFlat _dropHotStyle = new();
@@ -237,11 +228,6 @@ public partial class BattleScene : Control
         }
 
         GetNode<GameState>("/root/GameState").SetUiPhase("battle");
-        _enemyNameLabel = GetNode<Label>("%EnemyNameLabel");
-        _enemyHpLabel = GetNode<Label>("%EnemyHpLabel");
-        _enemyBlockLabel = GetNode<Label>("%EnemyBlockLabel");
-        _enemyStatusLabel = GetNode<Label>("%EnemyStatusLabel");
-        _enemyIntentLabel = GetNode<Label>("%EnemyIntentLabel");
         _turnLabel = GetNode<Label>("%TurnLabel");
         _energyLabel = GetNode<Label>("%EnergyLabel");
         _energyValueLabel = GetNodeOrNull<Label>("%EnergyValueLabel") ?? _energyLabel;
@@ -250,7 +236,6 @@ public partial class BattleScene : Control
         _relicBarLabel = GetNode<Label>("%RelicBarLabel");
         _relicBarLabel.Visible = false;
         _relicIcons = GetNode<BoxContainer>("%RelicIcons");
-        _logText = GetNode<RichTextLabel>("%LogText");
 
         _mainMargin = GetNode<Control>("%MainMargin");
         _handContainer = GetNode<Control>("%HandContainer");
@@ -258,7 +243,6 @@ public partial class BattleScene : Control
         _dropHintLabel = GetNode<Label>("%DropHintLabel");
         _playerPanel = GetNode<Control>("%PlayerPanel");
         _playerCardView = GetNode<PlayerCardView>("%PlayerCardView");
-        _enemyPanel = GetNode<Control>("%EnemyPanel");
         _turnBanner = GetNode<Control>("%TurnBanner");
         _turnBannerLabel = GetNode<Label>("%TurnBannerLabel");
         _drawAnchor = GetNode<Control>("%DrawAnchor");
@@ -285,8 +269,6 @@ public partial class BattleScene : Control
         if (legacySettingsButton != null) legacySettingsButton.Visible = false;
         var legacySettingsModal = GetNodeOrNull<Control>("%SettingsModal");
         if (legacySettingsModal != null) legacySettingsModal.Visible = false;
-
-        _logTitleLabel = GetNode<Label>("LogOverlay/LogMargin/LogVBox/LogTitle");
 
         SetupDragGuide();
         SetupEnemyQuickUi();
@@ -585,6 +567,9 @@ public partial class BattleScene : Control
 
     private void SetupEnemyQuickUi()
     {
+        // Resolve the grid that the .tscn already provides. The .tscn configures
+        // h_separation/v_separation/size_flags — DO NOT override here, or the
+        // multi-enemy two-row layout collapses into a tight strip.
         var dropVBox = _enemyDropArea.GetNodeOrNull<VBoxContainer>("DropVBox");
         if (dropVBox != null)
         {
@@ -595,33 +580,16 @@ public partial class BattleScene : Control
                 {
                     Name = "EnemyRosterGrid",
                     Columns = 2,
-                    SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
+                    SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter
                 };
+                _enemyRosterGrid.AddThemeConstantOverride("h_separation", 28);
+                _enemyRosterGrid.AddThemeConstantOverride("v_separation", 20);
                 dropVBox.AddChild(_enemyRosterGrid);
                 dropVBox.MoveChild(_enemyRosterGrid, 1);
             }
-            _enemyRosterGrid.AddThemeConstantOverride("h_separation", 6);
-            _enemyRosterGrid.AddThemeConstantOverride("v_separation", 6);
         }
 
-        _enemyPanel.Visible = false;
         _dropHintLabel.Visible = false;
-
-        var enemyInfo = _enemyPanel.GetNodeOrNull<VBoxContainer>("EnemyInfo");
-        if (enemyInfo == null)
-        {
-            return;
-        }
-
-        _enemyIntentListLabel = new Label
-        {
-            Name = "EnemyIntentListLabel",
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            Modulate = new Color("a5b4fc"),
-            Text = $"{LocalizationService.Get("ui.battle.intents", "Intents")}: -",
-            Visible = false
-        };
-        enemyInfo.AddChild(_enemyIntentListLabel);
     }
 
     private void SetupFromGameState()
@@ -756,28 +724,64 @@ public partial class BattleScene : Control
             return;
         }
 
-        // 1-3 enemies → single row; 4+ → two-row grid so individual cards stay
-        // readable rather than getting squeezed into a single wide strip.
-        _enemyRosterGrid.Columns = _enemies.Count switch
+        // Full rebuild only when the roster shape actually changed (enemy
+        // added/removed, or a card was freed externally). For HP / status
+        // tweaks, call Configure on the existing card in place — this avoids
+        // destroying Controls that might be captured by in-flight tweens
+        // (e.g. the player attack lunge callback) and is far cheaper.
+        var needsRebuild = _enemyCardButtonByIndex.Count != _enemies.Count;
+        if (!needsRebuild)
         {
-            <= 1 => 1,
-            2 => 2,
-            3 => 3,
-            4 => 2,
-            5 => 3,
-            _ => 3
-        };
+            foreach (var kv in _enemyCardButtonByIndex)
+            {
+                if (!IsInstanceValid(kv.Value))
+                {
+                    needsRebuild = true;
+                    break;
+                }
+            }
+        }
 
-        // Per-card visual scale shrinks as the roster grows so the layout never
-        // overflows the arena. Two-row layouts can stay closer to full size.
-        var cardScale = _enemies.Count switch
+        if (needsRebuild)
         {
-            <= 2 => 1.00f,
-            3 => 0.92f,
-            4 => 0.88f,
-            5 => 0.82f,
-            _ => 0.76f
-        };
+            RebuildEnemyCards();
+        }
+        else
+        {
+            UpdateEnemyCardsInPlace();
+        }
+    }
+
+    // Per-card visual scale shrinks as ALIVE enemies grow so the layout never
+    // overflows the arena. Two-row layouts can stay closer to full size. Dead
+    // enemies are removed from the grid (Visible=false), so the surviving
+    // roster gets resized accordingly.
+    private float ComputeEnemyCardScale(int aliveCount) => aliveCount switch
+    {
+        <= 2 => 1.00f,
+        3 => 0.92f,
+        4 => 0.88f,
+        5 => 0.82f,
+        _ => 0.76f
+    };
+
+    private int ComputeEnemyColumns(int aliveCount) => aliveCount switch
+    {
+        <= 1 => 1,
+        2 => 2,
+        3 => 3,
+        4 => 2,
+        5 => 3,
+        _ => 3
+    };
+
+    private void RebuildEnemyCards()
+    {
+        var aliveCount = AliveEnemyCount();
+        _enemyRosterGrid.Columns = ComputeEnemyColumns(aliveCount);
+        _enemyRosterGrid.QueueSort();
+        var cardScale = ComputeEnemyCardScale(aliveCount);
+        GD.Print($"[EnemyGrid] Rebuild alive={aliveCount} total={_enemies.Count} columns={_enemyRosterGrid.Columns} scale={cardScale} gridSize={_enemyRosterGrid.Size}");
 
         _enemyCardTargetByIndex.Clear();
         _enemyCardButtonByIndex.Clear();
@@ -789,28 +793,9 @@ public partial class BattleScene : Control
 
         for (var i = 0; i < _enemies.Count; i++)
         {
-            var enemy = _enemies[i];
             var enemyIndex = i;
-            var targetMode = IsInstanceValid(_draggingCard) && CardRequiresEnemyTarget(_draggingCard.Card);
-            var isHoveredTarget = targetMode && _hoverEnemyIndex == i;
-            var isSelectedTarget = i == _selectedEnemyIndex;
-            var selectableTarget = enemy.IsAlive && targetMode;
-
             var cardButton = _enemyCardScene.Instantiate<EnemyCardView>();
-            var visual = CombatVisualCatalog.GetEnemyVisual(enemy.VisualId);
             _enemyRosterGrid.AddChild(cardButton);
-            cardButton.Configure(
-                enemy,
-                IntentCompactText(enemy),
-                IntentText(enemy),
-                IntentTint(enemy.IntentType),
-                LoadTextureCached(visual.PortraitPath),
-                visual.StageTint,
-                isSelectedTarget,
-                isHoveredTarget,
-                selectableTarget,
-                IsInputLocked(),
-                cardScale);
 
             cardButton.Pressed += () =>
             {
@@ -819,9 +804,65 @@ public partial class BattleScene : Control
                 RefreshUi();
             };
 
-            _enemyCardTargetByIndex[enemyIndex] = cardButton.EffectTarget();
             _enemyCardButtonByIndex[enemyIndex] = cardButton;
+            _enemyCardTargetByIndex[enemyIndex] = cardButton.EffectTarget();
+
+            ConfigureEnemyCard(i, cardButton, cardScale);
         }
+    }
+
+    private void UpdateEnemyCardsInPlace()
+    {
+        // Recompute columns + scale from the live count — when an enemy dies,
+        // the surviving cards rebalance into the new layout (e.g. 3-of-3 →
+        // 2-of-2 at 1.0× scale instead of staying squeezed at 0.92×).
+        var aliveCount = AliveEnemyCount();
+        _enemyRosterGrid.Columns = ComputeEnemyColumns(aliveCount);
+        _enemyRosterGrid.QueueSort();
+        var cardScale = ComputeEnemyCardScale(aliveCount);
+
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            if (!_enemyCardButtonByIndex.TryGetValue(i, out var card) || !IsInstanceValid(card))
+            {
+                continue;
+            }
+            ConfigureEnemyCard(i, card, cardScale);
+        }
+    }
+
+    private void ConfigureEnemyCard(int enemyIndex, EnemyCardView card, float cardScale)
+    {
+        var enemy = _enemies[enemyIndex];
+
+        // Dead enemies vanish from the battlefield. GridContainer skips
+        // Visible=false children when laying out, so the live cards reflow
+        // into the gap automatically.
+        if (!enemy.IsAlive)
+        {
+            card.Visible = false;
+            return;
+        }
+        card.Visible = true;
+
+        var targetMode = IsInstanceValid(_draggingCard) && CardRequiresEnemyTarget(_draggingCard.Card);
+        var isHoveredTarget = targetMode && _hoverEnemyIndex == enemyIndex;
+        var isSelectedTarget = enemyIndex == _selectedEnemyIndex;
+        var selectableTarget = enemy.IsAlive && targetMode;
+        var visual = CombatVisualCatalog.GetEnemyVisual(enemy.VisualId);
+
+        card.Configure(
+            enemy,
+            IntentCompactText(enemy),
+            IntentText(enemy),
+            IntentTint(enemy.IntentType),
+            LoadTextureCached(visual.PortraitPath),
+            visual.StageTint,
+            isSelectedTarget,
+            isHoveredTarget,
+            selectableTarget,
+            IsInputLocked(),
+            cardScale);
     }
 
     private void SyncEnemyVisualFromSelection()
@@ -1990,7 +2031,6 @@ public partial class BattleScene : Control
 
         SelectNextAliveEnemy();
         SyncEnemyVisualFromSelection();
-        var enemy = CurrentEnemy;
 
         _player.Hp = _playerHp;
         _player.MaxHp = _playerMaxHp;
@@ -1999,28 +2039,6 @@ public partial class BattleScene : Control
         _player.Vulnerable = _playerVulnerable;
         _playerCardView.Configure(_player, IsInputLocked());
 
-        var localizedEnemyName = CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name);
-        _enemyNameLabel.Text = $"{localizedEnemyName} ({_selectedEnemyIndex + 1}/{_enemies.Count})";
-        _enemyHpLabel.Text = LocalizationService.Format("ui.battle.enemy_hp", "Enemy HP: {0}", enemy.Hp);
-        _enemyBlockLabel.Text = LocalizationService.Format("ui.battle.enemy_block", "Enemy Block: {0}", enemy.Block);
-        _enemyStatusLabel.Text = LocalizationService.Format("ui.battle.enemy_status", "Enemy Status: STR {0}, VUL {1}", enemy.Strength, enemy.Vulnerable);
-        var intentLabel = LocalizationService.Get("ui.battle.intent_label", "Intent");
-        _enemyIntentLabel.Text = _battleEnded || !enemy.IsAlive
-            ? $"{intentLabel}: -"
-            : $"{intentLabel}: {IntentText(enemy)}";
-        if (IsInstanceValid(_enemyIntentListLabel))
-        {
-            var intentParts = new List<string>();
-            for (var i = 0; i < _enemies.Count; i++)
-            {
-                var e = _enemies[i];
-                var status = e.IsAlive ? IntentText(e) : LocalizationService.Get("ui.status.defeated", "Defeated");
-                var enemyName = CombatVisualCatalog.GetLocalizedEnemyName(e.ArchetypeId, e.Name);
-                intentParts.Add($"{i + 1}.{enemyName}: {status}");
-            }
-
-            _enemyIntentListLabel.Text = $"{LocalizationService.Get("ui.battle.intents", "Intents")}: {string.Join(" | ", intentParts)}";
-        }
         _topHpLabel.Text = LocalizationService.Format("ui.player_status.hp", "HP {0}/{1}", _playerHp, _playerMaxHp);
         _turnLabel.Text = LocalizationService.Format("ui.battle.turn", "Turn {0}", _turn);
         _energyLabel.Text = LocalizationService.Format("ui.battle.energy", "Energy {0}/{1}", _energy, MaxEnergy);
@@ -2235,10 +2253,14 @@ public partial class BattleScene : Control
         return GD.Load<Texture2D>("res://icon.svg");
     }
 
+    // Routes battle events to the godot debug console. The old action-log UI
+    // is gone, but keep this entry point so call sites stay untouched and we
+    // still get a transcript for debugging / external tools.
+    // The colorHex argument is preserved for call-site signature parity.
     private void Log(string line, string colorHex = "#cbd5e1")
     {
-        _logText.AppendText($"[color={colorHex}]{line}[/color]\n");
-        _logText.ScrollToLine(Math.Max(_logText.GetLineCount() - 1, 0));
+        _ = colorHex;
+        GD.Print($"[battle] {line}");
     }
 
     private bool IsInputLocked()
