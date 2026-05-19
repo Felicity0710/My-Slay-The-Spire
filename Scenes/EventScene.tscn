@@ -1,6 +1,100 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/EventScene.cs" id="1_aa1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.08, 0.06, 0.04, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.42, 0.22, 0.85)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_image_frame"]
+bg_color = Color(0.05, 0.04, 0.03, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.42, 0.22, 0.85)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_option_normal"]
+bg_color = Color(0.13, 0.18, 0.25, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.65, 0.32, 0.90)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_option_hover"]
+bg_color = Color(0.22, 0.30, 0.40, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.92, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_normal"]
+bg_color = Color(0.18, 0.12, 0.10, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.45, 0.40, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_leave_hover"]
+bg_color = Color(0.30, 0.18, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.70, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
 
 [node name="EventScene" type="Control"]
 layout_mode = 3
@@ -18,7 +112,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.09, 0.14, 1)
+color = Color(0.06, 0.05, 0.04, 1)
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -27,32 +121,99 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 32
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="MainHBox" type="HBoxContainer" parent="Margin"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 28
 
-[node name="TitleLabel" type="Label" parent="Margin/VBox"]
+[node name="LeftColumn" type="VBoxContainer" parent="Margin/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.45
+
+[node name="ImageFrame" type="PanelContainer" parent="Margin/MainHBox/LeftColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_image_frame")
+
+[node name="ImageCenter" type="CenterContainer" parent="Margin/MainHBox/LeftColumn/ImageFrame"]
+layout_mode = 2
+
+[node name="ImageStack" type="VBoxContainer" parent="Margin/MainHBox/LeftColumn/ImageFrame/ImageCenter"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EventTexture" type="TextureRect" parent="Margin/MainHBox/LeftColumn/ImageFrame/ImageCenter/ImageStack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+custom_minimum_size = Vector2(320, 320)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlaceholderIcon" type="Label" parent="Margin/MainHBox/LeftColumn/ImageFrame/ImageCenter/ImageStack"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "❓"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 160
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+
+[node name="RightColumn" type="VBoxContainer" parent="Margin/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.55
+theme_override_constants/separation = 16
+
+[node name="HeaderPanel" type="PanelContainer" parent="Margin/MainHBox/RightColumn"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="HeaderMargin" type="MarginContainer" parent="Margin/MainHBox/RightColumn/HeaderPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="HeaderVBox" type="VBoxContainer" parent="Margin/MainHBox/RightColumn/HeaderPanel/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Margin/MainHBox/RightColumn/HeaderPanel/HeaderMargin/HeaderVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Event"
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
 
-[node name="DescLabel" type="Label" parent="Margin/VBox"]
+[node name="DescLabel" type="Label" parent="Margin/MainHBox/RightColumn/HeaderPanel/HeaderMargin/HeaderVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Event description"
 autowrap_mode = 3
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
 
-[node name="Option1Button" type="Button" parent="Margin/VBox"]
+[node name="BreadcrumbLabel" type="Label" parent="Margin/MainHBox/RightColumn"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = ""
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.78, 0.74, 0.60, 1)
+
+[node name="OptionsScroll" type="ScrollContainer" parent="Margin/MainHBox/RightColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="OptionsVBox" type="VBoxContainer" parent="Margin/MainHBox/RightColumn/OptionsScroll"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Option 1"
-
-[node name="Option2Button" type="Button" parent="Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Option 2"
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
