@@ -141,7 +141,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 18
+theme_override_constants/margin_top = 168
 theme_override_constants/margin_right = 22
 theme_override_constants/margin_bottom = 18
 
@@ -153,34 +153,20 @@ theme_override_constants/separation = 10
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TitlePanel" type="PanelContainer" parent="Margin/VBox/TopBar"]
+[node name="TopSpacer" type="Control" parent="Margin/VBox/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_title")
 
-[node name="TitleVBox" type="VBoxContainer" parent="Margin/VBox/TopBar/TitlePanel"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Title" type="Label" parent="Margin/VBox/TopBar/TitlePanel/TitleVBox"]
-layout_mode = 2
-text = "Ancient Route Map"
-theme_override_font_sizes/font_size = 26
-theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
-
-[node name="StatusLabel" type="Label" parent="Margin/VBox/TopBar/TitlePanel/TitleVBox"]
+[node name="StatusLabel" type="Label" parent="Margin/VBox/TopBar"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
-text = "Choose your next node."
-autowrap_mode = 3
-theme_override_font_sizes/font_size = 14
-theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
 
 [node name="ViewDeckButton" type="Button" parent="Margin/VBox/TopBar"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(220, 52)
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 theme_override_styles/normal = SubResource("StyleBoxFlat_view_deck_normal")
@@ -192,6 +178,7 @@ custom_minimum_size = Vector2(152, 0)
 layout_mode = 2
 
 [node name="StatsPanel" type="PanelContainer" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_stats")
 
@@ -204,6 +191,7 @@ theme_override_colors/font_color = Color(1, 0.95, 0.78, 1)
 autowrap_mode = 3
 
 [node name="RelicRow" type="HBoxContainer" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
@@ -218,6 +206,23 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
+
+[node name="PotionRow" type="HBoxContainer" parent="Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PotionLabel" type="Label" parent="Margin/VBox/PotionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🧪 Potions:"
+theme_override_colors/font_color = Color(0.85, 1, 0.85, 1)
+
+[node name="PotionSlots" type="HBoxContainer" parent="Margin/VBox/PotionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
 [node name="Legend" type="Label" parent="Margin/VBox"]
 layout_mode = 2

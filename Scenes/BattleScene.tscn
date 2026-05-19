@@ -150,7 +150,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 14
+theme_override_constants/margin_top = 168
 theme_override_constants/margin_right = 18
 theme_override_constants/margin_bottom = 16
 
@@ -160,7 +160,8 @@ size_flags_vertical = 3
 theme_override_constants/separation = 14
 
 [node name="LeftSidebar" type="PanelContainer" parent="MainMargin/MainHBox"]
-custom_minimum_size = Vector2(150, 0)
+visible = false
+custom_minimum_size = Vector2(0, 0)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")

@@ -439,8 +439,11 @@ public partial class GameState : Node
         PendingRelicOptions.Clear();
 
         var summary = new BattleRewardSummary();
+        // Robbing the shop is a high-stakes elite-tier fight — drop the same
+        // generous reward pool as elite encounters.
         var isElite = PendingEncounterType == MapNodeType.EliteBattle
-            || PendingEncounterType == MapNodeType.Boss;
+            || PendingEncounterType == MapNodeType.Boss
+            || PendingEncounterType == MapNodeType.MerchantFight;
         summary.IsEliteTier = isElite;
 
         if (HasRelic("charm"))
@@ -756,12 +759,17 @@ public partial class GameState : Node
 
     public void ResolveMerchantFightVictory()
     {
-        // The rob fight is special: no floor advance, no reward roll, no gold reward.
-        // Just mark the merchant as fled so the shop unlocks free items on return,
-        // and let ShopScene clean up the snapshot once it has restored its UI.
+        // Rob fight: no floor advance (the shop is still the same node) but
+        // DOES drop elite-tier rewards. Mark the merchant as fled so the shop
+        // unlocks free items on return; ShopScene cleans up the snapshot once
+        // it has restored its UI.
         BattlesWon += 1;
         MerchantFled = true;
         PendingMerchantFightVictory = true;
+        // Roll the same reward pool the player would get from a regular
+        // victory. `isElite` inside RollBattleRewardOffers picks up the
+        // MerchantFight encounter type and grants the boosted pool.
+        RollBattleRewardOffers();
     }
 
     public void ConsumePendingMerchantFightVictory()

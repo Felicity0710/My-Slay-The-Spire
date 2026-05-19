@@ -136,6 +136,7 @@ public partial class BattleScene : Control
     private Control _enemyDropArea = null!;
     private Label _dropHintLabel = null!;
     private GridContainer _enemyRosterGrid = null!;
+    private RunStatusOverlay _statusOverlay = null!;
     private readonly Dictionary<int, Control> _enemyCardTargetByIndex = new();
     private readonly Dictionary<int, EnemyCardView> _enemyCardButtonByIndex = new();
     private readonly PackedScene _enemyCardScene = GD.Load<PackedScene>("res://Scenes/EnemyCardView.tscn");
@@ -228,6 +229,16 @@ public partial class BattleScene : Control
         }
 
         GetNode<GameState>("/root/GameState").SetUiPhase("battle");
+
+        // Floating top status bar + Drink popup replaces the old LeftSidebar
+        // potion/relic listing. CanOpenSlotMenu gates clicks during enemy turn
+        // or while input is otherwise locked.
+        _statusOverlay = GD.Load<PackedScene>("res://Scenes/RunStatusOverlay.tscn").Instantiate<RunStatusOverlay>();
+        _statusOverlay.PotionAction = RunStatusOverlay.PotionSlotAction.Drink;
+        _statusOverlay.CanOpenSlotMenu = () => !_battleEnded && !IsInputLocked();
+        _statusOverlay.PotionConsumed = OnOverlayPotionConsumed;
+        AddChild(_statusOverlay);
+
         _turnLabel = GetNode<Label>("%TurnLabel");
         _energyLabel = GetNode<Label>("%EnergyLabel");
         _energyValueLabel = GetNodeOrNull<Label>("%EnergyValueLabel") ?? _energyLabel;
@@ -1464,9 +1475,14 @@ public partial class BattleScene : Control
 
         if (_state.PendingEncounterType == MapNodeType.MerchantFight)
         {
+            // Rob fight drops elite-tier rewards now. ResolveMerchantFightVictory
+            // sets PendingMerchantFightVictory + rolls the reward offers, then
+            // we route to RewardScene; its Continue button (when it sees the
+            // flag is still set) sends the player back to the shop instead of
+            // the map.
             _state.ResolveMerchantFightVictory();
-            _state.SetUiPhase("shop");
-            GetTree().ChangeSceneToFile("res://Scenes/ShopScene.tscn");
+            _state.SetUiPhase("reward");
+            GetTree().ChangeSceneToFile("res://Scenes/RewardScene.tscn");
             return;
         }
 
@@ -2029,6 +2045,19 @@ public partial class BattleScene : Control
         if (_enemies.Count == 0)
         {
             return;
+        }
+
+        // The floating status bar binds directly to GameState. Sync the live
+        // battle HP into GameState so the overlay shows the up-to-date value
+        // (potion slots and relic list are already shared state).
+        var state = GetNodeOrNull<GameState>("/root/GameState");
+        if (state != null)
+        {
+            state.PlayerHp = _playerHp;
+            if (IsInstanceValid(_statusOverlay))
+            {
+                _statusOverlay.Refresh();
+            }
         }
 
         SelectNextAliveEnemy();

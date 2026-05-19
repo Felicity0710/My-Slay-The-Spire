@@ -26,6 +26,7 @@ public partial class ShopScene : Control
     private Label _titleLabel = null!;
     private Label _goldLabel = null!;
     private Label _statusLabel = null!;
+    private RunStatusOverlay _statusOverlay = null!;
     private VBoxContainer _itemsVBox = null!;
     private GridContainer _cardGrid = null!;
     private GridContainer _relicGrid = null!;
@@ -60,6 +61,8 @@ public partial class ShopScene : Control
         state.SetUiPhase("shop");
         _rng = state.Rng;
         AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
+        _statusOverlay = GD.Load<PackedScene>("res://Scenes/RunStatusOverlay.tscn").Instantiate<RunStatusOverlay>();
+        AddChild(_statusOverlay);
 
         _titleLabel = GetNode<Label>("%TitleLabel");
         _goldLabel = GetNode<Label>("%GoldLabel");
@@ -727,6 +730,14 @@ public partial class ShopScene : Control
         if (!string.IsNullOrWhiteSpace(status))
         {
             _statusLabel.Text = status;
+        }
+
+        // Mirror gold/deck/relic/potion changes into the floating status bar.
+        // Without this, players see e.g. their deck count stay stale after
+        // buying a card — and the potion slot row doesn't show the new bottle.
+        if (IsInstanceValid(_statusOverlay))
+        {
+            _statusOverlay.Refresh();
         }
 
         var removePrice = _robbed ? 0 : RemoveServiceBasePrice;
