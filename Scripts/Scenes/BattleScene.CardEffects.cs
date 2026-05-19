@@ -184,13 +184,27 @@ public partial class BattleScene
         Log(LocalizationService.Format("log.battle.play_damage", "Play {0}: damage {1} ({2} HP)", card.GetLocalizedName(), resolution.FinalDamage, resolution.Taken), "#f87171");
         if (resolution.Taken > 0)
         {
-            TriggerHitStop(0.045f);
-            SpawnFloatingText(effectTarget, $"-{resolution.Taken}", new Color("fda4af"));
-            SpawnSlashEffect(effectTarget, new Color("fda4af"));
-            TriggerEnemyHit();
-            FlashPanel(effectTarget, new Color(1f, 0.55f, 0.55f, 1f));
-            PunchPanel(effectTarget, 8f);
-            PulseImpact(effectTarget, 1.05f);
+            // Phase 3: player lunges toward the target. Impact frame fires at
+            // the apex (the callback) — damage number, slash, hit-stop, flash
+            // — then the player recoils back automatically.
+            //
+            // IMPORTANT: the enemy card the lunge starts on may be replaced by
+            // RefreshEnemyRuntimeStatusUi (which destroys+recreates all enemy
+            // views) between lunge start and impact. Capture the enemy *index*
+            // and re-resolve the fresh target inside the callback so we don't
+            // spawn floating text on a freed Control.
+            var damageTaken = resolution.Taken;
+            var capturedIndex = enemyIndex;
+            PlayPlayerAttackAnimation(effectTarget, () =>
+            {
+                var freshTarget = EnemyEffectTarget(capturedIndex);
+                TriggerHitStop(0.045f);
+                SpawnFallingDamage(freshTarget, damageTaken, new Color("fda4af"));
+                SpawnSlashEffect(freshTarget, new Color("fda4af"));
+                TriggerEnemyHit();
+                FlashPanel(freshTarget, new Color(1f, 0.55f, 0.55f, 1f));
+                PulseImpact(freshTarget, 1.05f);
+            });
         }
 
         RefreshEnemyRuntimeStatusUi();

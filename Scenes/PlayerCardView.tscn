@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/UI/PlayerCardView.cs" id="1_j7m0g"]
 
 [node name="PlayerCardView" type="Control"]
+custom_minimum_size = Vector2(160, 200)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -15,24 +16,52 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 6
 
 [node name="VBox" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="NameLabel" type="Label" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
 text = "Player"
-theme_override_font_sizes/font_size = 17
+
+[node name="HpBarContainer" type="Control" parent="Margin/VBox"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+
+[node name="HpBar" type="ProgressBar" parent="Margin/VBox/HpBarContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+max_value = 80.0
+value = 80.0
+show_percentage = false
+
+[node name="HpLabel" type="Label" parent="Margin/VBox/HpBarContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "80 / 80"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 12
 
 [node name="PortraitBg" type="ColorRect" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 88)
+custom_minimum_size = Vector2(0, 110)
 layout_mode = 2
+size_flags_vertical = 3
 color = Color(0.1, 0.18, 0.23, 0.92)
 
 [node name="PortraitGlow" type="ColorRect" parent="Margin/VBox/PortraitBg"]
@@ -42,25 +71,27 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 color = Color(0.54, 0.8, 1, 0.3)
 
-[node name="HpLabel" type="Label" parent="Margin/VBox"]
-layout_mode = 2
-text = "HP 80/80"
-
-[node name="HpBar" type="ProgressBar" parent="Margin/VBox"]
-custom_minimum_size = Vector2(0, 14)
-layout_mode = 2
-max_value = 80.0
-value = 80.0
-show_percentage = false
+[node name="PortraitGlyph" type="Label" parent="Margin/VBox/PortraitBg"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "🧙"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 64
 
 [node name="StatusRow" type="HBoxContainer" parent="Margin/VBox"]
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
+alignment = 1
 theme_override_constants/separation = 4
 
 [node name="SummaryLabel" type="Label" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
-modulate = Color(0.74, 0.86, 0.94, 0.95)
-text = "Block 0 · STR 0 · VUL 0"
-autowrap_mode = 2

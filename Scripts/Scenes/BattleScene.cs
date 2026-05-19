@@ -202,6 +202,11 @@ public partial class BattleScene : Control
     private bool _enemyEntrancePlayed;
     private float _playerPunchX;
     private float _enemyPunchX;
+    // Per-axis lunge offsets layered on top of the breathing animation. Used by
+    // Phase 3 attack animations to make the attacker physically move toward its
+    // target before recoiling back. Lerped back to zero each frame.
+    private float _playerPunchY;
+    private float _enemyPunchY;
     private bool _deferredHandLayoutPending;
     private bool _dropZoneHighlighted;
     private float _hitStopTimer;
@@ -377,7 +382,9 @@ public partial class BattleScene : Control
         var breatheEnemy = Mathf.Sin(_animTime * 1.1f + 1.3f) * 2.8f;
         _playerPunchX = Mathf.Lerp(_playerPunchX, 0f, (float)delta * 16f);
         _enemyPunchX = Mathf.Lerp(_enemyPunchX, 0f, (float)delta * 16f);
-        _playerPanel.Position = _playerPanelBasePos + new Vector2(_playerPunchX, breathePlayer);
+        _playerPunchY = Mathf.Lerp(_playerPunchY, 0f, (float)delta * 16f);
+        _enemyPunchY = Mathf.Lerp(_enemyPunchY, 0f, (float)delta * 16f);
+        _playerPanel.Position = _playerPanelBasePos + new Vector2(_playerPunchX, breathePlayer + _playerPunchY);
 
         var enemyAnimOffset = Vector2.Zero;
         var enemyAnimScaleMul = 1f;
@@ -398,7 +405,7 @@ public partial class BattleScene : Control
                 break;
         }
 
-        _enemyDropArea.Position = _enemyDropAreaBasePos + new Vector2(_enemyPunchX, breatheEnemy) + enemyAnimOffset;
+        _enemyDropArea.Position = _enemyDropAreaBasePos + new Vector2(_enemyPunchX, breatheEnemy + _enemyPunchY) + enemyAnimOffset;
         _enemyDropArea.Scale = _enemyDropAreaBaseScale * ((1f + Mathf.Sin(_animTime * 1.1f + 1.3f) * 0.01f) * enemyAnimScaleMul);
 
         var shadowScale = 1f + Mathf.Sin(_animTime * 1.1f + 1.3f) * 0.03f;
@@ -749,7 +756,29 @@ public partial class BattleScene : Control
             return;
         }
 
-        _enemyRosterGrid.Columns = _enemies.Count >= 3 ? 3 : 2;
+        // 1-3 enemies → single row; 4+ → two-row grid so individual cards stay
+        // readable rather than getting squeezed into a single wide strip.
+        _enemyRosterGrid.Columns = _enemies.Count switch
+        {
+            <= 1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 2,
+            5 => 3,
+            _ => 3
+        };
+
+        // Per-card visual scale shrinks as the roster grows so the layout never
+        // overflows the arena. Two-row layouts can stay closer to full size.
+        var cardScale = _enemies.Count switch
+        {
+            <= 2 => 1.00f,
+            3 => 0.92f,
+            4 => 0.88f,
+            5 => 0.82f,
+            _ => 0.76f
+        };
+
         _enemyCardTargetByIndex.Clear();
         _enemyCardButtonByIndex.Clear();
         foreach (Node child in _enemyRosterGrid.GetChildren())
@@ -780,7 +809,8 @@ public partial class BattleScene : Control
                 isSelectedTarget,
                 isHoveredTarget,
                 selectableTarget,
-                IsInputLocked());
+                IsInputLocked(),
+                cardScale);
 
             cardButton.Pressed += () =>
             {
@@ -887,7 +917,7 @@ public partial class BattleScene : Control
         {
             _enemies[i].Block = TurnFlowResolver.ResolveEnemyTurnStartBlock(_enemies[i].Block);
         }
-        ExecuteEnemyTurn();
+        await ExecuteEnemyTurn();
         if (_battleEnded)
         {
             RefreshUi();
@@ -901,7 +931,7 @@ public partial class BattleScene : Control
         await StartPlayerTurn();
     }
 
-    private void ExecuteEnemyTurn()
+    private async Task ExecuteEnemyTurn()
     {
         for (var i = 0; i < _enemies.Count; i++)
         {
@@ -926,13 +956,12 @@ public partial class BattleScene : Control
                     Log(LocalizationService.Format("log.battle.enemy_attack", "{0} attacks {1}, blocked {2}, took {3}", CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name), resolution.FinalDamage, resolution.Blocked, resolution.Taken), "#f87171");
                     if (resolution.Taken > 0)
                     {
-                        TriggerHitStop(0.045f);
+                        // Phase 3: enemy lunges at the player, hit lands when
+                        // the card reaches its apex, then recoils back. Each
+                        // enemy is awaited individually so multi-attack turns
+                        // play out as a sequence rather than a single blur.
                         var playerEffectTarget = _playerCardView.EffectTarget();
-                        SpawnFloatingText(playerEffectTarget, $"-{resolution.Taken}", new Color("fca5a5"));
-                        SpawnSlashEffect(playerEffectTarget, new Color("fecaca"));
-                        FlashPanel(_playerPanel, new Color(1f, 0.5f, 0.5f, 1f));
-                        PunchPanel(_playerPanel, -8f);
-                        PulseImpact(_playerPanel, 1.045f);
+                        await PlayEnemyAttackAnimation(i, playerEffectTarget, resolution.Taken);
                     }
 
                     break;
@@ -940,20 +969,17 @@ public partial class BattleScene : Control
                 case EnemyIntentType.Defend:
                     enemy.Block += enemy.IntentValue;
                     Log(LocalizationService.Format("log.battle.enemy_gain_block", "{0} gains {1} Block", CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name), enemy.IntentValue), "#60a5fa");
-                    SpawnFloatingText(_enemyPanel, $"+{enemy.IntentValue} Block", new Color("93c5fd"));
-                    if (i == _selectedEnemyIndex)
-                    {
-                        SpawnShieldEffect(EnemyEffectTarget(i), new Color("93c5fd"));
-                    }
+                    // Anchor the floating text on the acting enemy's card, not
+                    // the (hidden) old _enemyPanel. Show the shield ring on
+                    // every defender, not just the selected one.
+                    SpawnFloatingText(EnemyEffectTarget(i), $"+{enemy.IntentValue} Block", new Color("93c5fd"));
+                    SpawnShieldEffect(EnemyEffectTarget(i), new Color("93c5fd"));
                     break;
                 case EnemyIntentType.Buff:
                     enemy.Strength += enemy.IntentValue;
                     Log(LocalizationService.Format("log.battle.enemy_gain_strength", "{0} gains {1} Strength", CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name), enemy.IntentValue), "#c084fc");
-                    SpawnFloatingText(_enemyPanel, $"+{enemy.IntentValue} STR", new Color("d8b4fe"));
-                    if (i == _selectedEnemyIndex)
-                    {
-                        SpawnRuneEffect(EnemyEffectTarget(i), new Color("d8b4fe"));
-                    }
+                    SpawnFloatingText(EnemyEffectTarget(i), $"+{enemy.IntentValue} STR", new Color("d8b4fe"));
+                    SpawnRuneEffect(EnemyEffectTarget(i), new Color("d8b4fe"));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -969,6 +995,46 @@ public partial class BattleScene : Control
                 return;
             }
         }
+    }
+
+    // Two-phase enemy attack: card lunges to apex, damage lands with floating
+    // number + slash + flash, card recoils back.
+    private async Task PlayEnemyAttackAnimation(int enemyIndex, Control playerTarget, int damage)
+    {
+        if (!_enemyCardButtonByIndex.TryGetValue(enemyIndex, out var card) || !IsInstanceValid(card))
+        {
+            return;
+        }
+        var cardCenter = card.GetGlobalRect().GetCenter();
+        var targetCenter = playerTarget.GetGlobalRect().GetCenter();
+        var dir = targetCenter - cardCenter;
+        if (dir.LengthSquared() < 1f)
+        {
+            return;
+        }
+        dir = dir.Normalized() * 65f;
+        var basePos = card.Position;
+
+        // Phase A: lunge to apex.
+        var lungeIn = CreateTween();
+        lungeIn.SetEase(Tween.EaseType.Out);
+        lungeIn.SetTrans(Tween.TransitionType.Cubic);
+        lungeIn.TweenProperty(card, "position", basePos + dir, 0.22f);
+        await ToSignal(lungeIn, Tween.SignalName.Finished);
+
+        // Phase B: impact frame — damage, slash, flash.
+        TriggerHitStop(0.045f);
+        SpawnFallingDamage(playerTarget, damage, new Color("fca5a5"));
+        SpawnSlashEffect(playerTarget, new Color("fecaca"));
+        FlashPanel(_playerPanel, new Color(1f, 0.5f, 0.5f, 1f));
+        PulseImpact(_playerPanel, 1.045f);
+
+        // Phase C: recoil back to slot.
+        var recoil = CreateTween();
+        recoil.SetEase(Tween.EaseType.Out);
+        recoil.SetTrans(Tween.TransitionType.Cubic);
+        recoil.TweenProperty(card, "position", basePos, 0.36f);
+        await ToSignal(recoil, Tween.SignalName.Finished);
     }
 
     private void TickStatuses()

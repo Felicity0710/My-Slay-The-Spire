@@ -149,6 +149,99 @@ public partial class BattleScene
         _enemyPunchX += offsetX;
     }
 
+    // Fire-and-forget player attack animation. Lunges toward the target,
+    // invokes onImpact when the card reaches its apex (so damage text /
+    // hit flash appear at the right moment), then recoils back to base.
+    // ~220ms in, ~360ms out → committed attack feel without dragging.
+    private void PlayPlayerAttackAnimation(Control target, System.Action onImpact)
+    {
+        if (!IsInstanceValid(target) || !IsInstanceValid(_playerPanel))
+        {
+            onImpact?.Invoke();
+            return;
+        }
+        var playerCenter = _playerPanel.GetGlobalRect().GetCenter();
+        var targetCenter = target.GetGlobalRect().GetCenter();
+        var dir = (targetCenter - playerCenter);
+        if (dir.LengthSquared() < 1f)
+        {
+            onImpact?.Invoke();
+            return;
+        }
+        dir = dir.Normalized() * 70f;
+        var dirX = dir.X;
+        var dirY = dir.Y;
+
+        var lungeIn = CreateTween();
+        lungeIn.SetEase(Tween.EaseType.Out);
+        lungeIn.SetTrans(Tween.TransitionType.Cubic);
+        lungeIn.TweenMethod(Callable.From<float>(SetPlayerPunchX), _playerPunchX, dirX, 0.22f);
+        lungeIn.Parallel().TweenMethod(Callable.From<float>(SetPlayerPunchY), _playerPunchY, dirY, 0.22f);
+        lungeIn.Finished += () =>
+        {
+            onImpact?.Invoke();
+
+            var recoil = CreateTween();
+            recoil.SetEase(Tween.EaseType.Out);
+            recoil.SetTrans(Tween.TransitionType.Cubic);
+            recoil.TweenMethod(Callable.From<float>(SetPlayerPunchX), dirX, 0f, 0.36f);
+            recoil.Parallel().TweenMethod(Callable.From<float>(SetPlayerPunchY), dirY, 0f, 0.36f);
+        };
+    }
+
+    private void SetPlayerPunchX(float value) => _playerPunchX = value;
+    private void SetPlayerPunchY(float value) => _playerPunchY = value;
+
+    // Damage number that drops downward. Modeled directly on the proven
+    // SpawnFloatingText pattern but flipped — single tween, no chain, no
+    // pre-pop, just drop + fade so there's no chance of a tween-config quirk
+    // hiding the label.
+    private void SpawnFallingDamage(Control target, int damage, Color tint)
+    {
+        if (!IsInstanceValid(target) || damage <= 0)
+        {
+            return;
+        }
+
+        var label = new Label
+        {
+            Text = damage.ToString(),
+            Modulate = tint,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            TopLevel = true,
+            ZIndex = 220
+        };
+        var isBig = damage >= 12;
+        label.AddThemeFontSizeOverride("font_size", isBig ? 42 : 34);
+        label.AddThemeColorOverride("font_color", tint);
+        label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 1f));
+        label.AddThemeConstantOverride("outline_size", 6);
+
+        _effectsLayer.AddChild(label);
+
+        var targetRect = target.GetGlobalRect();
+        var start = new Vector2(
+            targetRect.Position.X + targetRect.Size.X * 0.5f - 26f,
+            targetRect.Position.Y + targetRect.Size.Y * 0.25f);
+        label.GlobalPosition = start;
+
+        // Drop ~80px over ~1.0s with gravity easing, fade out in the back half
+        // so the number lingers long enough to read before it disappears.
+        var tween = CreateTween();
+        tween.SetEase(Tween.EaseType.In);
+        tween.SetTrans(Tween.TransitionType.Quad);
+        tween.TweenProperty(label, "global_position", start + new Vector2(0f, 80f), 1.0f);
+        tween.Parallel().TweenProperty(label, "modulate:a", 0f, 0.65f).SetDelay(0.35f);
+        tween.Finished += () =>
+        {
+            if (IsInstanceValid(label))
+            {
+                label.QueueFree();
+            }
+        };
+    }
+
     private async void ShakeMain(float intensity, int steps)
     {
         if (!IsInstanceValid(_mainMargin))
@@ -246,14 +339,17 @@ public partial class BattleScene
             label.AddThemeColorOverride("font_color", new Color("93c5fd"));
         }
 
+        // Match SpawnFallingDamage's pacing — visible long enough to read,
+        // fade delayed so the number is fully readable for ~0.4s before it
+        // starts disappearing.
         var tween = CreateTween();
         tween.SetEase(Tween.EaseType.Out);
         tween.SetTrans(Tween.TransitionType.Back);
-        tween.TweenProperty(label, "scale", label.Scale * (isCritStyle ? 1.15f : 1.07f), 0.12f);
-        tween.Parallel().TweenProperty(label, "global_position", start + new Vector2(0f, -18f), 0.12f);
+        tween.TweenProperty(label, "scale", label.Scale * (isCritStyle ? 1.15f : 1.07f), 0.15f);
+        tween.Parallel().TweenProperty(label, "global_position", start + new Vector2(0f, -22f), 0.18f);
         tween.TweenProperty(label, "scale", isCritStyle ? new Vector2(1.12f, 1.12f) : Vector2.One, 0.1f);
-        tween.Parallel().TweenProperty(label, "global_position", start + new Vector2(0f, -42f), 0.34f);
-        tween.Parallel().TweenProperty(label, "modulate:a", 0f, 0.34f);
+        tween.Parallel().TweenProperty(label, "global_position", start + new Vector2(0f, -80f), 0.85f);
+        tween.Parallel().TweenProperty(label, "modulate:a", 0f, 0.6f).SetDelay(0.25f);
         tween.Finished += () =>
         {
             if (IsInstanceValid(label))

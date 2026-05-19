@@ -1,10 +1,12 @@
-[gd_scene load_steps=16 format=3 uid="uid://dhl63infi0nua"]
+[gd_scene load_steps=17 format=3 uid="uid://dhl63infi0nua"]
 
 [ext_resource type="Script" uid="uid://p8rbtdgwkm3l" path="res://Scripts/Scenes/BattleScene.cs" id="1_fh80r"]
 [ext_resource type="PackedScene" path="res://Scenes/PlayerCardView.tscn" id="2_84p6t"]
 [ext_resource type="Texture2D" path="res://Assets/Icons/pile_draw.svg" id="3_pile_draw"]
 [ext_resource type="Texture2D" path="res://Assets/Icons/pile_discard.svg" id="4_pile_discard"]
 [ext_resource type="Texture2D" path="res://Assets/Icons/pile_exhaust.svg" id="5_pile_exhaust"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_arena_unit"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.09, 0.12, 0.16, 0.88)
@@ -268,6 +270,7 @@ theme_override_constants/separation = 16
 
 [node name="TopHpLabel" type="Label" parent="MainMargin/MainHBox/MainVBox/TopHud/TopHudRow"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "❤ 80/80"
 
@@ -278,6 +281,7 @@ text = "⏳ 1"
 
 [node name="HandCountLabel" type="Label" parent="MainMargin/MainHBox/MainVBox/TopHud/TopHudRow"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 text = "Hand: 0 | Draw: 0 | Discard: 0"
 
@@ -411,12 +415,12 @@ custom_minimum_size = Vector2(240, 240)
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.04
-anchor_top = 0.18
+anchor_top = 0.20
 anchor_right = 0.30
 anchor_bottom = 0.78
 grow_horizontal = 1
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_arena_unit")
 
 [node name="PlayerCardView" parent="MainMargin/MainHBox/MainVBox/Arena/PlayerPanel" instance=ExtResource("2_84p6t")]
 unique_name_in_owner = true
@@ -426,24 +430,26 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(280, 220)
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.55
-anchor_top = 0.10
-anchor_right = 0.96
-anchor_bottom = 0.92
+anchor_left = 0.66
+anchor_top = 0.20
+anchor_right = 1.00
+anchor_bottom = 0.78
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_arena_unit")
 
 [node name="DropVBox" type="VBoxContainer" parent="MainMargin/MainHBox/MainVBox/Arena/EnemyDropArea"]
 layout_mode = 2
+alignment = 1
 theme_override_constants/separation = 8
 
 [node name="EnemyRosterGrid" type="GridContainer" parent="MainMargin/MainHBox/MainVBox/Arena/EnemyDropArea/DropVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 6
-theme_override_constants/v_separation = 6
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/h_separation = 28
+theme_override_constants/v_separation = 20
 columns = 2
 
 [node name="EnemyBody" type="PanelContainer" parent="MainMargin/MainHBox/MainVBox/Arena/EnemyDropArea/DropVBox"]
@@ -694,6 +700,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_end_turn_hover")
 text = "End Turn"
 
 [node name="LogOverlay" type="PanelContainer" parent="."]
+visible = false
 layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -749,7 +756,6 @@ vertical_alignment = 1
 
 [node name="EffectsLayer" type="Control" parent="."]
 unique_name_in_owner = true
-visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
