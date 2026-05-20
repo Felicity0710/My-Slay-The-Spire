@@ -466,10 +466,12 @@ public partial class CardView : PanelContainer
         CustomMinimumSize = new Vector2(190, 250);
         ApplyPivotOffset();
 
+        // Warm parchment-brown card face with a gold frame — matches the
+        // game's overall amber/brown UI theme instead of the old cold blue.
         var style = new StyleBoxFlat
         {
-            BgColor = new Color("18212b"),
-            BorderColor = new Color("7aa8cf"),
+            BgColor = new Color("1c1610"),
+            BorderColor = new Color("d9a552"),
             BorderWidthLeft = 2,
             BorderWidthTop = 2,
             BorderWidthRight = 2,
@@ -502,7 +504,7 @@ public partial class CardView : PanelContainer
             AutowrapMode = TextServer.AutowrapMode.WordSmart
         };
         _nameLabel.MouseFilter = MouseFilterEnum.Ignore;
-        _nameLabel.AddThemeColorOverride("font_color", new Color("e2e8f0"));
+        _nameLabel.AddThemeColorOverride("font_color", new Color("f1e4c4"));
 
         _kindLabel = new Label
         {
@@ -523,8 +525,8 @@ public partial class CardView : PanelContainer
         costBadge.MouseFilter = MouseFilterEnum.Ignore;
         var costStyle = new StyleBoxFlat
         {
-            BgColor = new Color("0d2538"),
-            BorderColor = new Color("7dd3fc"),
+            BgColor = new Color("2a1d0a"),
+            BorderColor = new Color("f0b94a"),
             BorderWidthLeft = 1,
             BorderWidthTop = 1,
             BorderWidthRight = 1,
@@ -538,7 +540,7 @@ public partial class CardView : PanelContainer
 
         _costLabel = new Label { HorizontalAlignment = HorizontalAlignment.Center };
         _costLabel.MouseFilter = MouseFilterEnum.Ignore;
-        _costLabel.AddThemeColorOverride("font_color", new Color("93c5fd"));
+        _costLabel.AddThemeColorOverride("font_color", new Color("f0c674"));
         costBadge.AddChild(_costLabel);
 
         _descLabel = new RichTextLabel
@@ -550,7 +552,7 @@ public partial class CardView : PanelContainer
             CustomMinimumSize = new Vector2(0, 96)
         };
         _descLabel.MouseFilter = MouseFilterEnum.Ignore;
-        _descLabel.AddThemeColorOverride("default_color", new Color("cbd5e1"));
+        _descLabel.AddThemeColorOverride("default_color", new Color("ddd0b4"));
 
         _keywordLabel = new Label
         {

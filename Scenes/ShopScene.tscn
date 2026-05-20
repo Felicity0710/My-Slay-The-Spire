@@ -358,6 +358,7 @@ autowrap_mode = 3
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
 
 [node name="SectionsVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll"]
 unique_name_in_owner = true
@@ -386,7 +387,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 14
 theme_override_constants/v_separation = 14
-columns = 3
+columns = 6
 
 [node name="RelicSection" type="PanelContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox"]
 unique_name_in_owner = true
@@ -432,7 +433,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 14
 theme_override_constants/v_separation = 14
-columns = 4
+columns = 6
 
 [node name="ItemsVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox"]
 unique_name_in_owner = true

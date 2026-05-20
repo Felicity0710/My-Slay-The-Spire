@@ -133,7 +133,11 @@ public partial class MapScene : Control
             return;
         }
 
-        if (mb.ButtonIndex == MouseButton.Right)
+        // Left-drag pans the map. This handler only fires for clicks that land
+        // on empty map area — node buttons consume their own left-clicks for
+        // selection before the event reaches the ScrollContainer, so dragging
+        // and node-picking don't conflict.
+        if (mb.ButtonIndex == MouseButton.Left)
         {
             if (mb.Pressed)
             {
@@ -154,9 +158,9 @@ public partial class MapScene : Control
             return;
         }
 
-        // Right-mouse release ends panning even if the cursor is now off the map.
+        // Left-mouse release ends panning even if the cursor is now off the map.
         if (@event is InputEventMouseButton release
-            && release.ButtonIndex == MouseButton.Right
+            && release.ButtonIndex == MouseButton.Left
             && !release.Pressed
             && _isPanningMap)
         {
@@ -475,7 +479,10 @@ public partial class MapScene : Control
                 nodeButton.Size = new Vector2(nodeSize, nodeSize);
                 nodeButton.CustomMinimumSize = new Vector2(nodeSize, nodeSize);
                 nodeButton.Text = state.MapNodeSymbol(nodeType);
-                nodeButton.TooltipText = $"{row + 1:00}F - {state.MapNodeLabel(nodeType)}";
+                // Tooltip removed — the icon glyph itself communicates the
+                // node type, and the floor index isn't useful info to surface
+                // on hover. The legend row below the status bar covers icon
+                // legends for new players.
                 nodeButton.Position = positions[row][col] - nodeButton.Size / 2f;
                 nodeButton.Disabled = !canSelect;
                 var fontSize = Mathf.RoundToInt((canSelect ? 56 : explored ? 42 : 50) * _zoom);
