@@ -9,7 +9,10 @@ public partial class MapCanvas : Control
     private const float DashLength = 6f;
     private const float GapLength = 5f;
 
-    private readonly List<(Vector2 Start, Vector2 End, Color Tint)> _lines = new();
+    // Seed is a zoom-invariant identifier for the edge (derived from node
+    // row/col indices). The curve's bend direction keys off Seed instead of
+    // the on-screen midpoint, so zooming never flips a road to the other side.
+    private readonly List<(Vector2 Start, Vector2 End, Color Tint, int Seed)> _lines = new();
 
     public override void _Draw()
     {
@@ -29,12 +32,12 @@ public partial class MapCanvas : Control
 
         foreach (var line in _lines)
         {
-            var points = BuildCurve(line.Start, line.End);
+            var points = BuildCurve(line.Start, line.End, line.Seed);
             DrawDashedCurve(points, line.Tint, LineWidth, DashLength, GapLength);
         }
     }
 
-    public void SetLines(IEnumerable<(Vector2 Start, Vector2 End, Color Tint)> lines)
+    public void SetLines(IEnumerable<(Vector2 Start, Vector2 End, Color Tint, int Seed)> lines)
     {
         _lines.Clear();
         _lines.AddRange(lines);
@@ -42,10 +45,10 @@ public partial class MapCanvas : Control
     }
 
     // Subtle quadratic-Bezier arc between two map nodes. The control point sits
-    // perpendicular to the segment with a deterministic sign (based on a hash of
-    // the midpoint) so adjacent edges arc in different directions, breaking the
-    // dense straight-line look without making the layout look animated.
-    private static Vector2[] BuildCurve(Vector2 start, Vector2 end)
+    // perpendicular to the segment with a deterministic sign keyed off the
+    // edge's stable Seed (node indices) — NOT the on-screen midpoint — so the
+    // arc keeps its shape and bend direction at every zoom level.
+    private static Vector2[] BuildCurve(Vector2 start, Vector2 end, int seed)
     {
         var diff = end - start;
         var length = diff.Length();
@@ -56,8 +59,7 @@ public partial class MapCanvas : Control
 
         var perp = new Vector2(-diff.Y, diff.X) / length;
         var midpoint = (start + end) * 0.5f;
-        var hash = Mathf.RoundToInt(midpoint.X * 17.31f + midpoint.Y * 11.07f);
-        var sign = (hash & 1) == 0 ? 1f : -1f;
+        var sign = (seed & 1) == 0 ? 1f : -1f;
         var offset = length * CurveOffsetRatio * sign;
         var control = midpoint + perp * offset;
 

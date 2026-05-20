@@ -89,10 +89,10 @@ corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
-content_margin_left = 14.0
-content_margin_top = 14.0
-content_margin_right = 14.0
-content_margin_bottom = 14.0
+content_margin_left = 20.0
+content_margin_top = 18.0
+content_margin_right = 20.0
+content_margin_bottom = 20.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_remove_normal"]
 bg_color = Color(0.30, 0.18, 0.12, 1)
@@ -224,7 +224,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 24
+theme_override_constants/margin_top = 168
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
@@ -358,12 +358,13 @@ autowrap_mode = 3
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
 
 [node name="SectionsVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 14
+theme_override_constants/separation = 22
 
 [node name="CardSection" type="PanelContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox"]
 unique_name_in_owner = true
@@ -384,9 +385,9 @@ theme_override_colors/font_color = Color(1, 0.85, 0.55, 1)
 [node name="CardGrid" type="GridContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/CardSection/CardSectionVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 14
-columns = 3
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 22
+columns = 6
 
 [node name="RelicSection" type="PanelContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox"]
 unique_name_in_owner = true
@@ -407,8 +408,8 @@ theme_override_colors/font_color = Color(1, 0.85, 0.55, 1)
 [node name="RelicGrid" type="GridContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/RelicSection/RelicSectionVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 14
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 22
 columns = 4
 
 [node name="PotionSection" type="PanelContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox"]
@@ -430,9 +431,9 @@ theme_override_colors/font_color = Color(1, 0.85, 0.55, 1)
 [node name="PotionGrid" type="GridContainer" parent="Margin/MainHBox/ContentVBox/ItemsScroll/SectionsVBox/PotionSection/PotionSectionVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 14
-columns = 4
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 22
+columns = 6
 
 [node name="ItemsVBox" type="VBoxContainer" parent="Margin/MainHBox/ContentVBox"]
 unique_name_in_owner = true
@@ -529,8 +530,8 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 columns = 4
-theme_override_constants/h_separation = 14
-theme_override_constants/v_separation = 14
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 22
 
 [node name="RemoveButtonRow" type="HBoxContainer" parent="RemoveOverlay/Dialog/DialogMargin/DialogVBox"]
 layout_mode = 2

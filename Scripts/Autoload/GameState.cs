@@ -45,6 +45,15 @@ public partial class GameState : Node
     public MapNodeType PendingEncounterType { get; private set; } = MapNodeType.NormalBattle;
     public string PendingEventId { get; private set; } = string.Empty;
 
+    // Map camera state — preserved across node visits so returning to the map
+    // keeps the player's zoom level and scroll position instead of snapping
+    // back to the default centered view. HasMapViewState is false on a fresh
+    // run so the first map open still auto-focuses the starting row.
+    public bool HasMapViewState { get; set; }
+    public float MapZoom { get; set; } = 1f;
+    public float MapScrollH { get; set; }
+    public float MapScrollV { get; set; }
+
     public List<string> PendingRewardOptions { get; } = new();
     public List<string> PendingRelicOptions { get; } = new();
 
@@ -119,6 +128,13 @@ public partial class GameState : Node
         PendingRelicOptions.Clear();
         ClearShopSnapshot();
         PendingMerchantFightVictory = false;
+
+        // Fresh run: drop any preserved map camera so the first map open
+        // auto-focuses the starting row.
+        HasMapViewState = false;
+        MapZoom = 1f;
+        MapScrollH = 0f;
+        MapScrollV = 0f;
 
         CurrentMapRow = 0;
         CurrentMapColumn = -1;
@@ -439,8 +455,11 @@ public partial class GameState : Node
         PendingRelicOptions.Clear();
 
         var summary = new BattleRewardSummary();
+        // Robbing the shop is a high-stakes elite-tier fight — drop the same
+        // generous reward pool as elite encounters.
         var isElite = PendingEncounterType == MapNodeType.EliteBattle
-            || PendingEncounterType == MapNodeType.Boss;
+            || PendingEncounterType == MapNodeType.Boss
+            || PendingEncounterType == MapNodeType.MerchantFight;
         summary.IsEliteTier = isElite;
 
         if (HasRelic("charm"))
@@ -756,12 +775,17 @@ public partial class GameState : Node
 
     public void ResolveMerchantFightVictory()
     {
-        // The rob fight is special: no floor advance, no reward roll, no gold reward.
-        // Just mark the merchant as fled so the shop unlocks free items on return,
-        // and let ShopScene clean up the snapshot once it has restored its UI.
+        // Rob fight: no floor advance (the shop is still the same node) but
+        // DOES drop elite-tier rewards. Mark the merchant as fled so the shop
+        // unlocks free items on return; ShopScene cleans up the snapshot once
+        // it has restored its UI.
         BattlesWon += 1;
         MerchantFled = true;
         PendingMerchantFightVictory = true;
+        // Roll the same reward pool the player would get from a regular
+        // victory. `isElite` inside RollBattleRewardOffers picks up the
+        // MerchantFight encounter type and grants the boosted pool.
+        RollBattleRewardOffers();
     }
 
     public void ConsumePendingMerchantFightVictory()

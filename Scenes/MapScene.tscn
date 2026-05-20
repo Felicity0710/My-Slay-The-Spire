@@ -38,28 +38,30 @@ content_margin_right = 14.0
 content_margin_bottom = 10.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_view_deck_normal"]
-bg_color = Color(0.13, 0.18, 0.25, 0.96)
+bg_color = Color(0.13, 0.10, 0.06, 0.96)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.55, 0.78, 0.85, 0.9)
+border_color = Color(0.85, 0.65, 0.32, 0.90)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 4
 content_margin_left = 12.0
 content_margin_top = 8.0
 content_margin_right = 12.0
 content_margin_bottom = 8.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_view_deck_hover"]
-bg_color = Color(0.20, 0.28, 0.36, 1)
+bg_color = Color(0.20, 0.16, 0.10, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.72, 0.92, 1, 1)
+border_color = Color(1, 0.92, 0.55, 1)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
@@ -133,6 +135,26 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.06, 0.05, 0.03, 1)
 
+[node name="ViewDeckLayer" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="ViewDeckButton" type="Button" parent="ViewDeckLayer"]
+unique_name_in_owner = true
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -148.0
+offset_top = 72.0
+offset_right = -16.0
+offset_bottom = 116.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 0.98, 0.88, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_view_deck_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_view_deck_hover")
+text = "🎴 卡组 0"
+
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -141,7 +163,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 18
+theme_override_constants/margin_top = 152
 theme_override_constants/margin_right = 22
 theme_override_constants/margin_bottom = 18
 
@@ -149,49 +171,13 @@ theme_override_constants/margin_bottom = 18
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="TopBar" type="HBoxContainer" parent="Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="TitlePanel" type="PanelContainer" parent="Margin/VBox/TopBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("StyleBoxFlat_title")
-
-[node name="TitleVBox" type="VBoxContainer" parent="Margin/VBox/TopBar/TitlePanel"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Title" type="Label" parent="Margin/VBox/TopBar/TitlePanel/TitleVBox"]
-layout_mode = 2
-text = "Ancient Route Map"
-theme_override_font_sizes/font_size = 26
-theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
-
-[node name="StatusLabel" type="Label" parent="Margin/VBox/TopBar/TitlePanel/TitleVBox"]
+[node name="StatusLabel" type="Label" parent="Margin/VBox"]
 unique_name_in_owner = true
-layout_mode = 2
-text = "Choose your next node."
-autowrap_mode = 3
-theme_override_font_sizes/font_size = 14
-theme_override_colors/font_color = Color(0.92, 0.88, 0.72, 1)
-
-[node name="ViewDeckButton" type="Button" parent="Margin/VBox/TopBar"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_view_deck_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_view_deck_hover")
-text = "🎴 View Deck (0)"
-
-[node name="GearReserve" type="Control" parent="Margin/VBox/TopBar"]
-custom_minimum_size = Vector2(152, 0)
+visible = false
 layout_mode = 2
 
 [node name="StatsPanel" type="PanelContainer" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_stats")
 
@@ -204,6 +190,7 @@ theme_override_colors/font_color = Color(1, 0.95, 0.78, 1)
 autowrap_mode = 3
 
 [node name="RelicRow" type="HBoxContainer" parent="Margin/VBox"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
@@ -219,6 +206,23 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
+[node name="PotionRow" type="HBoxContainer" parent="Margin/VBox"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PotionLabel" type="Label" parent="Margin/VBox/PotionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "🧪 Potions:"
+theme_override_colors/font_color = Color(0.85, 1, 0.85, 1)
+
+[node name="PotionSlots" type="HBoxContainer" parent="Margin/VBox/PotionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
 [node name="Legend" type="Label" parent="Margin/VBox"]
 layout_mode = 2
 text = "⚔ Normal   ☠ Elite   ◆ Event   ♥ Rest   $ Shop   ★ Intro   ✪ Boss"
@@ -229,7 +233,7 @@ theme_override_colors/font_color = Color(0.78, 0.72, 0.55, 1)
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-horizontal_scroll_mode = 1
+horizontal_scroll_mode = 3
 vertical_scroll_mode = 3
 
 [node name="MapCenterRow" type="HBoxContainer" parent="Margin/VBox/MapScroll"]

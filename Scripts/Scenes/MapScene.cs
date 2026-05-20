@@ -15,14 +15,19 @@ public partial class MapScene : Control
     private const float MapZoomStep = 1.12f;
 
     private float _zoom = 1f;
+    // When set, BuildTreasureMap skips its auto row-focus scroll so the
+    // caller (zoom) can position the camera itself.
+    private bool _suppressAutoFocus;
     private Vector2 _baseCanvasSize = new(MapCanvasMinWidth, MapCanvasBaseHeight);
     private bool _isPanningMap;
 
-    private Label _titleLabel = null!;
     private Label _runInfoLabel = null!;
     private Label _statusLabel = null!;
     private Label _relicLabel = null!;
     private HBoxContainer _relicIcons = null!;
+    private Label _potionLabel = null!;
+    private HBoxContainer _potionSlots = null!;
+    private RunStatusOverlay _statusOverlay = null!;
     private Label _legendLabel = null!;
     private ScrollContainer _mapScroll = null!;
     private MapCanvas _mapCanvas = null!;
@@ -42,7 +47,6 @@ public partial class MapScene : Control
             return;
         }
 
-        _titleLabel = GetNode<Label>("Margin/VBox/TopBar/TitlePanel/TitleVBox/Title");
         stateAtEntry.SetUiPhase("map");
 
         // Re-save whenever we land back on the map (after StartNewRun, after a
@@ -53,10 +57,18 @@ public partial class MapScene : Control
         stateAtEntry.TryWriteSave("res://Scenes/MapScene.tscn");
 
         AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
+        // Map now shares the same floating status bar as combat / shops / etc
+        // — the in-scene StatsPanel / RelicRow / PotionRow stay in the tree
+        // but are visible=false (kept for legacy GetNode calls).
+        _statusOverlay = GD.Load<PackedScene>("res://Scenes/RunStatusOverlay.tscn").Instantiate<RunStatusOverlay>();
+        _statusOverlay.PotionAction = RunStatusOverlay.PotionSlotAction.Discard;
+        AddChild(_statusOverlay);
         _runInfoLabel = GetNode<Label>("%RunInfoLabel");
         _statusLabel = GetNode<Label>("%StatusLabel");
         _relicLabel = GetNode<Label>("%RelicLabel");
         _relicIcons = GetNode<HBoxContainer>("%RelicIcons");
+        _potionLabel = GetNode<Label>("%PotionLabel");
+        _potionSlots = GetNode<HBoxContainer>("%PotionSlots");
         _legendLabel = GetNode<Label>("Margin/VBox/Legend");
         _mapScroll = GetNode<ScrollContainer>("%MapScroll");
         _mapCanvas = GetNode<MapCanvas>("%MapCanvas");
@@ -124,7 +136,11 @@ public partial class MapScene : Control
             return;
         }
 
-        if (mb.ButtonIndex == MouseButton.Right)
+        // Left-drag pans the map. This handler only fires for clicks that land
+        // on empty map area — node buttons consume their own left-clicks for
+        // selection before the event reaches the ScrollContainer, so dragging
+        // and node-picking don't conflict.
+        if (mb.ButtonIndex == MouseButton.Left)
         {
             if (mb.Pressed)
             {
@@ -145,9 +161,9 @@ public partial class MapScene : Control
             return;
         }
 
-        // Right-mouse release ends panning even if the cursor is now off the map.
+        // Left-mouse release ends panning even if the cursor is now off the map.
         if (@event is InputEventMouseButton release
-            && release.ButtonIndex == MouseButton.Right
+            && release.ButtonIndex == MouseButton.Left
             && !release.Pressed
             && _isPanningMap)
         {
@@ -177,8 +193,50 @@ public partial class MapScene : Control
             return;
         }
 
+        // Restore a preserved zoom level BEFORE building so node positions and
+        // sizes are computed at the right scale.
+        var state = GetNode<GameState>("/root/GameState");
+        if (state.HasMapViewState)
+        {
+            _zoom = Mathf.Clamp(state.MapZoom, MapZoomMin, MapZoomMax);
+        }
+
         UpdateMapCanvasWidth();
-        BuildTreasureMap(GetNode<GameState>("/root/GameState"));
+        BuildTreasureMap(state);
+
+        // BuildTreasureMap queued an auto-focus scroll (deferred). Queue the
+        // saved-scroll restore AFTER it so ours wins and the player keeps
+        // their previous scroll position.
+        if (state.HasMapViewState)
+        {
+            CallDeferred(nameof(RestoreMapScroll));
+        }
+    }
+
+    private void RestoreMapScroll()
+    {
+        if (!IsInstanceValid(_mapScroll))
+        {
+            return;
+        }
+        var state = GetNode<GameState>("/root/GameState");
+        var mapSize = GetEffectiveMapCanvasSize();
+        var maxH = Mathf.Max(0f, mapSize.X - _mapScroll.Size.X);
+        var maxV = Mathf.Max(0f, mapSize.Y - _mapScroll.Size.Y);
+        _mapScroll.ScrollHorizontal = Mathf.RoundToInt(Mathf.Clamp(state.MapScrollH, 0f, maxH));
+        _mapScroll.ScrollVertical = Mathf.RoundToInt(Mathf.Clamp(state.MapScrollV, 0f, maxV));
+    }
+
+    private void SaveMapViewState(GameState state)
+    {
+        if (!IsInstanceValid(_mapScroll))
+        {
+            return;
+        }
+        state.HasMapViewState = true;
+        state.MapZoom = _zoom;
+        state.MapScrollH = _mapScroll.ScrollHorizontal;
+        state.MapScrollV = _mapScroll.ScrollVertical;
     }
 
     private void OnMapViewportResized()
@@ -233,19 +291,46 @@ public partial class MapScene : Control
             return;
         }
 
+        // Capture the canvas point currently under the viewport center, in
+        // ZOOM-INVARIANT (unscaled) coordinates. After the zoom rebuild we
+        // restore the scroll so this exact point stays centered — no drift.
+        var viewW = _mapScroll.Size.X;
+        var viewH = _mapScroll.Size.Y;
+        var unscaledCenterX = (_mapScroll.ScrollHorizontal + viewW * 0.5f) / _zoom;
+        var unscaledCenterY = (_mapScroll.ScrollVertical + viewH * 0.5f) / _zoom;
+
         _zoom = newZoom;
         ApplyZoomTransform();
 
-        // Rebuild the map so node positions / sizes pick up the new zoom factor.
+        // Rebuild the map so node positions / sizes pick up the new zoom
+        // factor. Suppress the auto row-focus during this rebuild — we'll
+        // restore the centered point ourselves instead.
         var state = GetNodeOrNull<GameState>("/root/GameState");
         if (state != null)
         {
+            _suppressAutoFocus = true;
             BuildTreasureMap(state);
+            _suppressAutoFocus = false;
         }
 
-        // Always recenter after zoom — BuildTreasureMap only refocuses if there
-        // are selectable nodes on the current row; this guarantees centering.
-        CallDeferred(MethodName.CenterMapHorizontally);
+        CallDeferred(nameof(ApplyZoomCenter), unscaledCenterX, unscaledCenterY);
+    }
+
+    private void ApplyZoomCenter(float unscaledCenterX, float unscaledCenterY)
+    {
+        if (!IsInstanceValid(_mapScroll))
+        {
+            return;
+        }
+        var mapSize = GetEffectiveMapCanvasSize();
+        var viewW = _mapScroll.Size.X;
+        var viewH = _mapScroll.Size.Y;
+        var maxH = Mathf.Max(0f, mapSize.X - viewW);
+        var maxV = Mathf.Max(0f, mapSize.Y - viewH);
+        _mapScroll.ScrollHorizontal = Mathf.RoundToInt(
+            Mathf.Clamp(unscaledCenterX * _zoom - viewW * 0.5f, 0f, maxH));
+        _mapScroll.ScrollVertical = Mathf.RoundToInt(
+            Mathf.Clamp(unscaledCenterY * _zoom - viewH * 0.5f, 0f, maxV));
     }
 
     // Returns the SCALED canvas size used by BuildNodePositions — the entire
@@ -268,12 +353,10 @@ public partial class MapScene : Control
 
         var state = GetNode<GameState>("/root/GameState");
 
-        var potionSummary = state.PotionIds.Count == 0
-            ? LocalizationService.Get("ui.map.potion_none", "None")
-            : string.Join(", ", state.PotionIds.ConvertAll(id => PotionData.CreateById(id).Name));
-
         // Each stat is prefixed with a Unicode icon so the row scans like a
-        // dashboard rather than a wall of text.
+        // dashboard rather than a wall of text. Potions moved out to their own
+        // slot row below — the text version was hard to parse with multiple
+        // potions and didn't give a sense of inventory capacity.
         _runInfoLabel.Text = string.Join("    ", new[]
         {
             "🗺 " + LocalizationService.Format("ui.map.act", "Act {0}/{1}", state.Act, MapProgressionRules.MaxActs),
@@ -281,7 +364,6 @@ public partial class MapScene : Control
             "❤ " + LocalizationService.Format("ui.map.hp", "HP {0}/{1}", state.PlayerHp, state.MaxHp),
             "💰 " + LocalizationService.Format("ui.map.gold", "Gold {0}", state.Gold),
             "🎴 " + LocalizationService.Format("ui.map.deck", "Deck {0}", state.DeckCardIds.Count),
-            "🧪 " + LocalizationService.Format("ui.map.potions", "Potions {0} ({1})", state.PotionCharges, potionSummary),
             "🏆 " + LocalizationService.Format("ui.map.wins", "Wins {0}", state.BattlesWon)
         });
 
@@ -289,6 +371,15 @@ public partial class MapScene : Control
 
         _relicLabel.Text = LocalizationService.Get("ui.map.relics_prefix", "💠 Relics:");
         RefreshRelicIcons(state);
+        _potionLabel.Text = LocalizationService.Get("ui.map.potions_prefix", "🧪 Potions:");
+        RefreshPotionSlots(state);
+
+        // Shared top status overlay shows the same info. Refresh it whenever
+        // map state changes (deck count, HP, gold, etc.).
+        if (IsInstanceValid(_statusOverlay))
+        {
+            _statusOverlay.Refresh();
+        }
 
         UpdateMapCanvasWidth();
         RefreshDeckViewerUi(state);
@@ -330,9 +421,94 @@ public partial class MapScene : Control
         }
     }
 
+    // Show the potion belt as a fixed-width row of slots so the inventory cap
+    // (3) is visible at a glance — empty slots render as dimmed placeholders,
+    // filled slots show the potion's color-coded glyph + tooltip.
+    private void RefreshPotionSlots(GameState state)
+    {
+        foreach (var child in _potionSlots.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        for (var i = 0; i < GameState.PotionInventoryCapacity; i++)
+        {
+            string? potionId = i < state.PotionIds.Count ? state.PotionIds[i] : null;
+            _potionSlots.AddChild(BuildPotionSlot(potionId));
+        }
+    }
+
+    public static PanelContainer BuildPotionSlot(string? potionId)
+    {
+        var filled = !string.IsNullOrEmpty(potionId);
+        var (glyph, accent) = filled
+            ? PotionVisualForId(potionId!)
+            : ("·", new Color(0.55f, 0.55f, 0.55f, 0.55f));
+
+        var slot = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(40, 40),
+            MouseFilter = MouseFilterEnum.Stop
+        };
+        var style = new StyleBoxFlat
+        {
+            BgColor = filled
+                ? new Color(accent.R * 0.20f, accent.G * 0.20f, accent.B * 0.20f, 0.95f)
+                : new Color(0.10f, 0.10f, 0.10f, 0.55f),
+            BorderColor = filled ? accent : new Color(0.45f, 0.42f, 0.30f, 0.55f),
+            BorderWidthLeft = 2,
+            BorderWidthTop = 2,
+            BorderWidthRight = 2,
+            BorderWidthBottom = 2,
+            CornerRadiusTopLeft = 8,
+            CornerRadiusTopRight = 8,
+            CornerRadiusBottomLeft = 8,
+            CornerRadiusBottomRight = 8
+        };
+        slot.AddThemeStyleboxOverride("panel", style);
+
+        var label = new Label
+        {
+            Text = glyph,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Modulate = filled ? Colors.White : new Color(1f, 1f, 1f, 0.45f)
+        };
+        label.AddThemeFontSizeOverride("font_size", filled ? 22 : 18);
+        slot.AddChild(label);
+
+        if (filled)
+        {
+            var potion = PotionData.CreateById(potionId!);
+            var name = LocalizationService.Get($"potion.{potion.Id}.name", potion.Name);
+            var desc = LocalizationService.Get($"potion.{potion.Id}.description", potion.Description);
+            slot.TooltipText = $"{name}\n{desc}";
+        }
+        else
+        {
+            slot.TooltipText = LocalizationService.Get("ui.map.potion_slot_empty", "Empty slot");
+        }
+
+        return slot;
+    }
+
+    private static (string Glyph, Color Accent) PotionVisualForId(string potionId)
+    {
+        return potionId switch
+        {
+            "healing_potion" => ("❤", new Color("ef4444")),
+            "strength_potion" => ("💪", new Color("fca5a5")),
+            "swift_potion" => ("⚡", new Color("fde047")),
+            "guard_potion" => ("🛡", new Color("93c5fd")),
+            "fury_potion" => ("🔥", new Color("fb923c")),
+            _ => ("🧪", new Color("a78bfa"))
+        };
+    }
+
     private void RefreshStaticText()
     {
-        _titleLabel.Text = LocalizationService.Get("ui.map.title", "Ancient Route Map");
+        // Title label was removed when the map switched to the shared status
+        // overlay — there's no in-scene title anymore.
         _legendLabel.Text = LocalizationService.Get("ui.map.legend", "⚔ Normal  ☠ Elite  ◆ Event  ♥ Rest  $ Shop");
         _menuButton.Text = LocalizationService.Get("ui.map.back_to_menu", "Back To Menu");
     }
@@ -345,7 +521,7 @@ public partial class MapScene : Control
         }
 
         var positions = BuildNodePositions(state);
-        var lines = new List<(Vector2 Start, Vector2 End, Color Tint)>();
+        var lines = new List<(Vector2 Start, Vector2 End, Color Tint, int Seed)>();
 
         for (var row = 0; row < state.MapConnections.Count; row++)
         {
@@ -355,7 +531,10 @@ public partial class MapScene : Control
                 foreach (var nextCol in state.MapConnections[row][col])
                 {
                     var end = positions[row + 1][nextCol];
-                    lines.Add((start, end, LineTint(state, row, col)));
+                    // Stable per-edge seed from node indices — zoom-invariant,
+                    // so the road's curve direction never flips when zooming.
+                    var seed = row * 73856093 ^ col * 19349663 ^ nextCol * 83492791;
+                    lines.Add((start, end, LineTint(state, row, col), seed));
                 }
             }
         }
@@ -375,7 +554,10 @@ public partial class MapScene : Control
                 nodeButton.Size = new Vector2(nodeSize, nodeSize);
                 nodeButton.CustomMinimumSize = new Vector2(nodeSize, nodeSize);
                 nodeButton.Text = state.MapNodeSymbol(nodeType);
-                nodeButton.TooltipText = $"{row + 1:00}F - {state.MapNodeLabel(nodeType)}";
+                // Tooltip removed — the icon glyph itself communicates the
+                // node type, and the floor index isn't useful info to surface
+                // on hover. The legend row below the status bar covers icon
+                // legends for new players.
                 nodeButton.Position = positions[row][col] - nodeButton.Size / 2f;
                 nodeButton.Disabled = !canSelect;
                 var fontSize = Mathf.RoundToInt((canSelect ? 56 : explored ? 42 : 50) * _zoom);
@@ -408,6 +590,13 @@ public partial class MapScene : Control
 
     private void EnsureCurrentSelectableRowVisible(List<List<Vector2>> positions, GameState state)
     {
+        // During a zoom rebuild the caller restores the camera itself — don't
+        // fight it with an auto row-focus scroll.
+        if (_suppressAutoFocus)
+        {
+            return;
+        }
+
         if (positions.Count == 0 || state.CurrentMapRow < 0 || state.CurrentMapRow >= positions.Count)
         {
             return;
@@ -596,6 +785,11 @@ public partial class MapScene : Control
         }
 
         var state = GetNode<GameState>("/root/GameState");
+
+        // Preserve the current camera (zoom + scroll) so returning to the map
+        // after the node resolves keeps the player's view instead of snapping
+        // back to the default centered layout.
+        SaveMapViewState(state);
 
         // Snapshot the map state RIGHT BEFORE consuming this click. "Re-enter
         // current node" from inside a node scene restores this snapshot and

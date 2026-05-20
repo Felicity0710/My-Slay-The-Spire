@@ -22,10 +22,27 @@ public partial class RewardScene : Control
 
     private RewardCategory _currentCategory = RewardCategory.None;
 
+    private RunStatusOverlay? _statusOverlay;
+
     public override void _Ready()
     {
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("reward");
+        // Reward screen also shows the run status overlay so players can
+        // discard a potion if the belt is full and they want a new one.
+        _statusOverlay = GD.Load<PackedScene>("res://Scenes/RunStatusOverlay.tscn").Instantiate<RunStatusOverlay>();
+        _statusOverlay.PotionAction = RunStatusOverlay.PotionSlotAction.Discard;
+        // After a discard the previously-disabled potion options become
+        // selectable — rebuild the active detail view (if any) so the player
+        // doesn't have to navigate out and back in.
+        _statusOverlay.PotionConsumed = (_, _) =>
+        {
+            if (_currentCategory != RewardCategory.None)
+            {
+                RebuildDetailView();
+            }
+        };
+        AddChild(_statusOverlay);
 
         _titleLabel = GetNode<Label>("%Title");
         _summaryLabel = GetNode<Label>("%SummaryLabel");
@@ -290,10 +307,13 @@ public partial class RewardScene : Control
         var options = state.PendingPotionRewardOptions;
         var fullInventory = state.PotionIds.Count >= GameState.PotionInventoryCapacity;
 
+        // The status-bar overlay shows the player's 3 potion slots and lets
+        // them left-click any slot to discard. So this screen just nudges them
+        // to clear a slot when full — the discard happens up there, not here.
         _detailHeaderLabel.Text = "🧪 " + (fullInventory
             ? LocalizationService.Get(
                 "ui.reward.potion_section_label_full",
-                "Potion belt is full — skip or replace nothing")
+                "Belt is full — discard a potion from the top status bar first")
             : LocalizationService.Get(
                 "ui.reward.potion_section_label",
                 "Pick 1 potion or skip"));
@@ -406,6 +426,10 @@ public partial class RewardScene : Control
         state.TakeRewardPotionOption(idx);
         ShowCategoryView();
         RebuildCategoryGrid();
+        // Update the floating status bar so the new potion appears in a slot
+        // immediately, and a previously-full belt shows the freed slot if the
+        // player discarded before taking.
+        _statusOverlay?.Refresh();
     }
 
     private void OnTakeRelic(int idx)
@@ -439,6 +463,17 @@ public partial class RewardScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         state.ClearBattleRewardOffers();
+
+        // After robbing the shop, ResolveMerchantFightVictory leaves the
+        // PendingMerchantFightVictory flag set so ShopScene knows to restore
+        // its post-rob state. Route back there instead of the map.
+        if (state.PendingMerchantFightVictory)
+        {
+            state.SetUiPhase("shop");
+            GetTree().ChangeSceneToFile("res://Scenes/ShopScene.tscn");
+            return;
+        }
+
         state.SetUiPhase("map");
         GetTree().ChangeSceneToFile("res://Scenes/MapScene.tscn");
     }

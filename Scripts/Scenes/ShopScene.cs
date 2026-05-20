@@ -17,8 +17,13 @@ public partial class ShopScene : Control
         public string Id { get; init; } = string.Empty;
         public int Price { get; set; }
         public bool Sold { get; set; }
+        // BuyButton points at the whole tile (the tile IS the Button now) so
+        // we can disable it on sold-out or insufficient gold.
         public Button BuyButton { get; set; } = null!;
         public Label NameLabel { get; set; } = null!;
+        // PriceLabel is the decorative chip showing the price; we update its
+        // text to "Sold" / "Free" / "{N}" without touching the button text.
+        public Label PriceLabel { get; set; } = null!;
     }
 
     private const int RemoveServiceBasePrice = 75;
@@ -26,6 +31,7 @@ public partial class ShopScene : Control
     private Label _titleLabel = null!;
     private Label _goldLabel = null!;
     private Label _statusLabel = null!;
+    private RunStatusOverlay _statusOverlay = null!;
     private VBoxContainer _itemsVBox = null!;
     private GridContainer _cardGrid = null!;
     private GridContainer _relicGrid = null!;
@@ -60,6 +66,8 @@ public partial class ShopScene : Control
         state.SetUiPhase("shop");
         _rng = state.Rng;
         AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
+        _statusOverlay = GD.Load<PackedScene>("res://Scenes/RunStatusOverlay.tscn").Instantiate<RunStatusOverlay>();
+        AddChild(_statusOverlay);
 
         _titleLabel = GetNode<Label>("%TitleLabel");
         _goldLabel = GetNode<Label>("%GoldLabel");
@@ -175,7 +183,7 @@ public partial class ShopScene : Control
         var cardPool = CardData.RewardPoolIds();
         cardPool.RemoveAll(id => id == "strike" || id == "defend");
         Shuffle(cardPool);
-        var cardCount = Math.Min(3, cardPool.Count);
+        var cardCount = Math.Min(8, cardPool.Count);
         for (var i = 0; i < cardCount; i++)
         {
             var rolledId = state.MaybeUpgradeCardId(cardPool[i]);
@@ -196,7 +204,7 @@ public partial class ShopScene : Control
         var relicPool = new List<string>(RelicData.AllRelicIds());
         relicPool.RemoveAll(state.HasRelic);
         Shuffle(relicPool);
-        var relicCount = Math.Min(2, relicPool.Count);
+        var relicCount = Math.Min(4, relicPool.Count);
         for (var i = 0; i < relicCount; i++)
         {
             _items.Add(new ShopItem
@@ -209,7 +217,7 @@ public partial class ShopScene : Control
 
         var potionPool = new List<string>(PotionData.AllPotionIds());
         Shuffle(potionPool);
-        var potionCount = Math.Min(2, potionPool.Count);
+        var potionCount = Math.Min(6, potionPool.Count);
         for (var i = 0; i < potionCount; i++)
         {
             _items.Add(new ShopItem
@@ -270,33 +278,37 @@ public partial class ShopScene : Control
 
     private Control BuildItemTile(ShopItem item)
     {
-        var tile = new PanelContainer();
-        var tileStyle = new StyleBoxFlat
+        // Tile is a Button so the entire surface buys the item — players
+        // previously had to aim at the small price chip below to purchase.
+        // The Button also gives free hover/pressed visual feedback for the
+        // whole tile.
+        var tile = new Button
         {
-            BgColor = new Color(0.10f, 0.13f, 0.18f, 0.95f),
-            BorderColor = TileBorderColor(item.Kind),
-            BorderWidthLeft = 2,
-            BorderWidthTop = 2,
-            BorderWidthRight = 2,
-            BorderWidthBottom = 2,
-            CornerRadiusTopLeft = 10,
-            CornerRadiusTopRight = 10,
-            CornerRadiusBottomLeft = 10,
-            CornerRadiusBottomRight = 10,
-            ContentMarginLeft = 10,
-            ContentMarginTop = 10,
-            ContentMarginRight = 10,
-            ContentMarginBottom = 10,
-            ShadowColor = new Color(0, 0, 0, 0.4f),
-            ShadowSize = 4
+            FocusMode = Control.FocusModeEnum.None,
+            ClipText = false,
+            Text = string.Empty,
+            CustomMinimumSize = item.Kind == ShopItemKind.Card
+                ? new Vector2(200, 260)
+                : new Vector2(160, 200)
         };
-        tile.AddThemeStyleboxOverride("panel", tileStyle);
-        tile.CustomMinimumSize = item.Kind == ShopItemKind.Card
-            ? new Vector2(200, 260)
-            : new Vector2(160, 200);
+        var tileBg = TileBorderColor(item.Kind);
+        var tileNormal = BuildTileStyle(tileBg, isHover: false);
+        var tileHover = BuildTileStyle(tileBg, isHover: true);
+        tile.AddThemeStyleboxOverride("normal", tileNormal);
+        tile.AddThemeStyleboxOverride("hover", tileHover);
+        tile.AddThemeStyleboxOverride("pressed", tileNormal);
+        tile.AddThemeStyleboxOverride("disabled", tileNormal);
+        tile.AddThemeStyleboxOverride("focus", tileNormal);
+        tile.Pressed += () => OnBuyPressed(item);
 
-        var vbox = new VBoxContainer();
+        var vbox = new VBoxContainer
+        {
+            // Pass mouse events through so the Button parent catches clicks
+            // on the labels/icons inside the tile.
+            MouseFilter = Control.MouseFilterEnum.Ignore
+        };
         vbox.AddThemeConstantOverride("separation", 6);
+        vbox.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
         tile.AddChild(vbox);
 
         var nameLabel = new Label
@@ -434,23 +446,96 @@ public partial class ShopScene : Control
             }
         }
 
-        var spacer = new Control();
+        var spacer = new Control
+        {
+            MouseFilter = Control.MouseFilterEnum.Ignore
+        };
         spacer.SizeFlagsVertical = SizeFlags.ExpandFill;
         vbox.AddChild(spacer);
 
-        var priceButton = new Button
+        // Price is just a decorative chip now — the tile itself fires Buy.
+        // Wrapping it in a PanelContainer keeps the framed-chip look from
+        // the old button without intercepting clicks.
+        var priceChipFrame = new PanelContainer
+        {
+            CustomMinimumSize = new Vector2(0, 38),
+            MouseFilter = Control.MouseFilterEnum.Ignore
+        };
+        var chipStyle = new StyleBoxFlat
+        {
+            BgColor = new Color(0.06f, 0.05f, 0.04f, 0.85f),
+            BorderColor = TileBorderColor(item.Kind),
+            BorderWidthLeft = 1,
+            BorderWidthTop = 1,
+            BorderWidthRight = 1,
+            BorderWidthBottom = 1,
+            CornerRadiusTopLeft = 8,
+            CornerRadiusTopRight = 8,
+            CornerRadiusBottomLeft = 8,
+            CornerRadiusBottomRight = 8,
+            ContentMarginLeft = 6,
+            ContentMarginTop = 4,
+            ContentMarginRight = 6,
+            ContentMarginBottom = 4
+        };
+        priceChipFrame.AddThemeStyleboxOverride("panel", chipStyle);
+
+        var priceLabel = new Label
         {
             Text = FormatPrice(item.Price),
-            CustomMinimumSize = new Vector2(0, 38)
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = Control.MouseFilterEnum.Ignore
         };
-        priceButton.AddThemeFontSizeOverride("font_size", 14);
-        var captured = item;
-        priceButton.Pressed += () => OnBuyPressed(captured);
-        vbox.AddChild(priceButton);
+        priceLabel.AddThemeFontSizeOverride("font_size", 14);
+        priceLabel.AddThemeColorOverride("font_color", new Color(1f, 0.94f, 0.78f, 1f));
+        priceChipFrame.AddChild(priceLabel);
+        vbox.AddChild(priceChipFrame);
 
         item.NameLabel = nameLabel;
-        item.BuyButton = priceButton;
+        // BuyButton stays bound to the tile so existing disable/refresh logic
+        // (e.g. greying out unaffordable items) keeps working — that path
+        // toggles .Disabled and .Text on this control.
+        item.BuyButton = tile;
+        item.PriceLabel = priceLabel;
+
+        // An item bought BEFORE robbing the shop must still read "Sold" after
+        // the rebuild — FormatPrice() only knows about price/robbed state, not
+        // per-item Sold flags, so it would wrongly show "Free" here.
+        if (item.Sold)
+        {
+            priceLabel.Text = LocalizationService.Get("ui.shop.sold", "Sold");
+            tile.Disabled = true;
+        }
+
         return tile;
+    }
+
+    private static StyleBoxFlat BuildTileStyle(Color borderColor, bool isHover)
+    {
+        return new StyleBoxFlat
+        {
+            BgColor = isHover
+                ? new Color(0.16f, 0.20f, 0.26f, 1f)
+                : new Color(0.10f, 0.13f, 0.18f, 0.95f),
+            BorderColor = isHover
+                ? borderColor.Lightened(0.25f)
+                : borderColor,
+            BorderWidthLeft = isHover ? 3 : 2,
+            BorderWidthTop = isHover ? 3 : 2,
+            BorderWidthRight = isHover ? 3 : 2,
+            BorderWidthBottom = isHover ? 3 : 2,
+            CornerRadiusTopLeft = 10,
+            CornerRadiusTopRight = 10,
+            CornerRadiusBottomLeft = 10,
+            CornerRadiusBottomRight = 10,
+            ContentMarginLeft = 10,
+            ContentMarginTop = 10,
+            ContentMarginRight = 10,
+            ContentMarginBottom = 10,
+            ShadowColor = new Color(0, 0, 0, isHover ? 0.6f : 0.4f),
+            ShadowSize = isHover ? 8 : 4
+        };
     }
 
     private static Color TileBorderColor(ShopItemKind kind) => kind switch
@@ -540,7 +625,7 @@ public partial class ShopScene : Control
 
         item.Sold = true;
         item.BuyButton.Disabled = true;
-        item.BuyButton.Text = LocalizationService.Get("ui.shop.sold", "Sold");
+        item.PriceLabel.Text = LocalizationService.Get("ui.shop.sold", "Sold");
         RefreshUi(LocalizationService.Format("ui.shop.status_bought", "Bought: {0}", acquired));
     }
 
@@ -727,6 +812,14 @@ public partial class ShopScene : Control
         if (!string.IsNullOrWhiteSpace(status))
         {
             _statusLabel.Text = status;
+        }
+
+        // Mirror gold/deck/relic/potion changes into the floating status bar.
+        // Without this, players see e.g. their deck count stay stale after
+        // buying a card — and the potion slot row doesn't show the new bottle.
+        if (IsInstanceValid(_statusOverlay))
+        {
+            _statusOverlay.Refresh();
         }
 
         var removePrice = _robbed ? 0 : RemoveServiceBasePrice;

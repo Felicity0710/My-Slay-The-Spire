@@ -110,6 +110,17 @@ public partial class BattleScene
         RefreshUi();
     }
 
+    // Fired by RunStatusOverlay AFTER the potion has already been removed
+    // from inventory — we apply the effect here and refresh battle UI. The
+    // overlay itself has handled its own visual refresh.
+    private void OnOverlayPotionConsumed(int slotIndex, string potionId)
+    {
+        var potion = PotionData.CreateById(potionId);
+        ApplyPotionEffect(potion);
+        EmitUiSfx("card_play");
+        RefreshUi();
+    }
+
     private void ApplyPotionEffect(PotionData potion)
     {
         const int healingPotionHeal = 15;

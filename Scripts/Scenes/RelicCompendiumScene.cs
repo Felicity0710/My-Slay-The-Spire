@@ -20,7 +20,7 @@ public partial class RelicCompendiumScene : Control
     public override void _Ready()
     {
         _backButton = GetNode<Button>("%BackButton");
-        _titleLabel = GetNode<Label>("Margin/Root/Title");
+        _titleLabel = GetNode<Label>("Margin/Root/TopBar/TitlePanel/Title");
         _content = GetNode<VBoxContainer>("%RelicContent");
 
         _backButton.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
@@ -37,8 +37,8 @@ public partial class RelicCompendiumScene : Control
 
     private void RefreshUiText()
     {
-        _backButton.Text = LocalizationService.Get("ui.relic_compendium.back", "Back");
-        _titleLabel.Text = LocalizationService.Get("ui.relic_compendium.title", "Relic Compendium");
+        _backButton.Text = "← " + LocalizationService.Get("ui.relic_compendium.back", "返回主菜单");
+        _titleLabel.Text = "💎 " + LocalizationService.Get("ui.relic_compendium.title", "Relic Compendium");
     }
 
     private void BuildCompendium()

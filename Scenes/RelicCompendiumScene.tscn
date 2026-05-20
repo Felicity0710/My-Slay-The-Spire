@@ -1,6 +1,54 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/RelicCompendiumScene.cs" id="1_relic_compendium"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_back_normal"]
+bg_color = Color(0.13, 0.13, 0.18, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.75, 0.85, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_back_hover"]
+bg_color = Color(0.22, 0.22, 0.28, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_title"]
+bg_color = Color(0.10, 0.08, 0.05, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.85, 0.65, 0.32, 0.95)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
 
 [node name="RelicCompendiumScene" type="Control"]
 layout_mode = 3
@@ -30,15 +78,30 @@ theme_override_constants/separation = 10
 
 [node name="TopBar" type="HBoxContainer" parent="Margin/Root"]
 layout_mode = 2
+theme_override_constants/separation = 18
 
 [node name="BackButton" type="Button" parent="Margin/Root/TopBar"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "返回主菜单"
+custom_minimum_size = Vector2(180, 48)
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.92, 0.92, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_back_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_back_hover")
+text = "← 返回主菜单"
 
-[node name="Title" type="Label" parent="Margin/Root"]
+[node name="TitlePanel" type="PanelContainer" parent="Margin/Root/TopBar"]
 layout_mode = 2
-text = "遗物图鉴（配置化）"
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_title")
+
+[node name="Title" type="Label" parent="Margin/Root/TopBar/TitlePanel"]
+layout_mode = 2
+text = "💎 遗物图鉴"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(1, 0.92, 0.65, 1)
 
 [node name="Scroll" type="ScrollContainer" parent="Margin/Root"]
 layout_mode = 2

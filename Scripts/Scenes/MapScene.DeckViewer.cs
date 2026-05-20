@@ -50,7 +50,7 @@ public partial class MapScene
 
         _viewDeckButton.Text = LocalizationService.Format(
             "ui.map.view_deck",
-            "🎴 View Deck ({0})",
+            "🎴 卡组 {0}",
             state.DeckCardIds.Count);
 
         _deckViewerTitleLabel.Text = LocalizationService.Get("ui.map.deck_viewer.title", "Deck Viewer");

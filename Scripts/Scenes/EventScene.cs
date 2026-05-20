@@ -33,6 +33,7 @@ public partial class EventScene : Control
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("event");
         AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
+        AddChild(GD.Load<PackedScene>("res://Scenes/RunStatusOverlay.tscn").Instantiate());
 
         _titleLabel = GetNode<Label>("%TitleLabel");
         _descLabel = GetNode<Label>("%DescLabel");

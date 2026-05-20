@@ -1,6 +1,38 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://Scripts/Scenes/CardBrowserScene.cs" id="1_browser"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_back_normal"]
+bg_color = Color(0.13, 0.13, 0.18, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.75, 0.85, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_back_hover"]
+bg_color = Color(0.22, 0.22, 0.28, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 20.0
+content_margin_top = 10.0
+content_margin_right = 20.0
+content_margin_bottom = 10.0
 
 [node name="CardBrowserScene" type="Control"]
 layout_mode = 3
@@ -76,12 +108,24 @@ layout_mode = 2
 [node name="ResetButton" type="Button" parent="Margin/Root/FilterRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "重置"
+custom_minimum_size = Vector2(120, 44)
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.95, 0.92, 0.78, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_back_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_back_hover")
+text = "↻ 重置"
 
 [node name="BackButton" type="Button" parent="Margin/Root/FilterRow"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "返回"
+custom_minimum_size = Vector2(140, 44)
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.92, 0.92, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_back_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_back_hover")
+text = "← 返回"
 
 [node name="Scroll" type="ScrollContainer" parent="Margin/Root"]
 layout_mode = 2
