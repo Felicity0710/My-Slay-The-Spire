@@ -41,6 +41,7 @@ public partial class RestScene : Control
 
     public override void _Ready()
     {
+        AudioManager.PlayBgm("map");
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("rest");
         AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
@@ -86,48 +87,26 @@ public partial class RestScene : Control
 
     private void RefreshUi(GameState state)
     {
-        _titleLabel.Text = LocalizationService.Get("ui.rest.title", "Campfire");
-        _statusLabel.Text = LocalizationService.Get(
-            "ui.rest.status",
-            "Take a moment to recover or improve your deck.");
-        _hpLabel.Text = LocalizationService.Format(
-            "ui.rest.hp",
-            "HP {0}/{1}",
-            state.PlayerHp,
-            state.MaxHp);
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
+        _titleLabel.Text = zh ? "篝火" : "Campfire";
+        _statusLabel.Text = zh ? "休息片刻，恢复生命或强化牌组。" : "Take a moment to recover or improve your deck.";
+        _hpLabel.Text = string.Format(zh ? "生命 {0}/{1}" : "HP {0}/{1}", state.PlayerHp, state.MaxHp);
 
         var healAmount = state.RestHealAmount();
-        _restNameLabel.Text = LocalizationService.Get("ui.rest.tile_rest_name", "Rest");
-        _restDescLabel.Text = LocalizationService.Format(
-            "ui.rest.tile_rest_desc",
-            "Heal {0} HP",
-            healAmount);
+        _restNameLabel.Text = zh ? "休息" : "Rest";
+        _restDescLabel.Text = string.Format(zh ? "回复 {0} 点生命" : "Heal {0} HP", healAmount);
 
-        _smithNameLabel.Text = LocalizationService.Get("ui.rest.tile_smith_name", "Smith");
-        _smithDescLabel.Text = LocalizationService.Get(
-            "ui.rest.tile_smith_desc",
-            "Upgrade a card");
+        _smithNameLabel.Text = zh ? "锻造" : "Smith";
+        _smithDescLabel.Text = zh ? "升级一张牌" : "Upgrade a card";
 
-        _skipButton.Text = "✕ " + LocalizationService.Get("ui.rest.skip_button", "Skip");
+        _skipButton.Text = zh ? "✕ 跳过" : "✕ Skip";
 
-        _upgradeTitleLabel.Text = LocalizationService.Get(
-            "ui.rest.upgrade_title",
-            "Choose a card to upgrade");
-        _upgradeHintLabel.Text = LocalizationService.Get(
-            "ui.rest.upgrade_hint",
-            "Left-click to select a card. Right-click to preview the upgraded version.");
-        _emptyHintLabel.Text = LocalizationService.Get(
-            "ui.rest.upgrade_empty",
-            "(No cards eligible for upgrade.)");
-        _confirmButton.Text = LocalizationService.Get(
-            "ui.rest.upgrade_confirm",
-            "✦ Confirm Upgrade");
-        _cancelButton.Text = LocalizationService.Get(
-            "ui.rest.upgrade_cancel",
-            "← Cancel");
-        _previewTitleLabel.Text = LocalizationService.Get(
-            "ui.rest.preview_title",
-            "Upgrade Preview");
+        _upgradeTitleLabel.Text = zh ? "选择一张牌升级" : "Choose a card to upgrade";
+        _upgradeHintLabel.Text = zh ? "左键选择卡牌，右键预览升级后效果。" : "Left-click to select a card. Right-click to preview the upgraded version.";
+        _emptyHintLabel.Text = zh ? "（没有可升级的卡牌）" : "(No cards eligible for upgrade.)";
+        _confirmButton.Text = zh ? "✦ 确认升级" : "✦ Confirm Upgrade";
+        _cancelButton.Text = zh ? "← 取消" : "← Cancel";
+        _previewTitleLabel.Text = zh ? "升级预览" : "Upgrade Preview";
     }
 
     private void OnRestTileInput(InputEvent @event)

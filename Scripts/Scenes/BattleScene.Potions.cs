@@ -70,8 +70,8 @@ public partial class BattleScene
         }
 
         var potion = PotionData.CreateById(_state.PotionIds[slotIndex]);
-        button.Text = LocalizationService.Format("ui.battle.potion_slot_item", "{0}. {1}", slotIndex + 1, potion.Name);
-        button.TooltipText = $"{potion.Name}\n{potion.Description}";
+        button.Text = LocalizationService.Format("ui.battle.potion_slot_item", "{0}. {1}", slotIndex + 1, potion.DisplayName);
+        button.TooltipText = $"{potion.DisplayName}\n{potion.DisplayDescription}";
         button.Disabled = _battleEnded || IsInputLocked();
     }
 
@@ -123,68 +123,68 @@ public partial class BattleScene
 
     private void ApplyPotionEffect(PotionData potion)
     {
-        const int healingPotionHeal = 15;
-        const int strengthPotionGain = 2;
-        const int swiftPotionEnergy = 1;
-        const int guardPotionBlock = 12;
-        const int furyPotionStrength = 2;
-        const int furyPotionEnergy = 1;
-
         var playerTarget = _playerCardView.EffectTarget();
 
-        switch (potion.Id)
+        // Apply numeric effects from PotionData
+        if (potion.HealAmount > 0)
         {
-            case "healing_potion":
-            {
-                var heal = Math.Min(healingPotionHeal, Math.Max(_playerMaxHp - _playerHp, 0));
-                _playerHp += heal;
-                SpawnFloatingText(playerTarget, $"+{heal} HP", new Color("86efac"));
-                SpawnRuneEffect(playerTarget, new Color("86efac"));
-                Log(LocalizationService.Format("log.battle.potion_healing", "Used {0}: heal {1} HP", potion.Name, heal), "#86efac");
-                break;
-            }
-            case "strength_potion":
-            {
-                _playerStrength += strengthPotionGain;
-                SpawnFloatingText(playerTarget, $"+{strengthPotionGain} STR", new Color("d8b4fe"));
-                SpawnRuneEffect(playerTarget, new Color("d8b4fe"));
-                Log(LocalizationService.Format("log.battle.potion_strength", "Used {0}: gain {1} Strength", potion.Name, strengthPotionGain), "#d8b4fe");
-                break;
-            }
-            case "swift_potion":
-            {
-                _energy += swiftPotionEnergy;
-                SpawnFloatingText(playerTarget, $"+{swiftPotionEnergy} EN", new Color("fde68a"));
-                SpawnRuneEffect(playerTarget, new Color("fde68a"));
-                Log(LocalizationService.Format("log.battle.potion_swift", "Used {0}: gain {1} Energy", potion.Name, swiftPotionEnergy), "#fde68a");
-                break;
-            }
-            case "guard_potion":
-            {
-                _playerBlock += guardPotionBlock;
-                SpawnFloatingText(playerTarget, $"+{guardPotionBlock} Block", new Color("93c5fd"));
-                SpawnShieldEffect(playerTarget, new Color("93c5fd"));
-                Log(LocalizationService.Format("log.battle.potion_guard", "Used {0}: gain {1} Block", potion.Name, guardPotionBlock), "#93c5fd");
-                break;
-            }
-            case "fury_potion":
-            {
-                _playerStrength += furyPotionStrength;
-                _energy += furyPotionEnergy;
-                SpawnFloatingText(playerTarget, $"+{furyPotionStrength} STR +{furyPotionEnergy} EN", new Color("fca5a5"));
-                SpawnRuneEffect(playerTarget, new Color("fca5a5"));
-                Log(LocalizationService.Format("log.battle.potion_fury", "Used {0}: gain {1} Strength and {2} Energy", potion.Name, furyPotionStrength, furyPotionEnergy), "#fca5a5");
-                break;
-            }
-            default:
-            {
-                var fallbackHeal = Math.Min(healingPotionHeal, Math.Max(_playerMaxHp - _playerHp, 0));
-                _playerHp += fallbackHeal;
-                SpawnFloatingText(playerTarget, $"+{fallbackHeal} HP", new Color("86efac"));
-                SpawnRuneEffect(playerTarget, new Color("86efac"));
-                Log(LocalizationService.Format("log.battle.potion_unknown", "Used {0}: fallback heal {1} HP", potion.Name, fallbackHeal), "#86efac");
-                break;
-            }
+            var heal = Math.Min(potion.HealAmount, Math.Max(_playerMaxHp - _playerHp, 0));
+            _playerHp += heal;
+            SpawnFloatingText(playerTarget, $"+{heal} HP", new Color("86efac"));
+            SpawnRuneEffect(playerTarget, new Color("86efac"));
+            Log(LocalizationService.Format("log.battle.potion_healing", "Used {0}: heal {1} HP", potion.DisplayName, heal), "#86efac");
+        }
+
+        if (potion.StrengthAmount > 0)
+        {
+            _playerStrength += potion.StrengthAmount;
+            SpawnFloatingText(playerTarget, $"+{potion.StrengthAmount} STR", new Color("d8b4fe"));
+            SpawnRuneEffect(playerTarget, new Color("d8b4fe"));
+            Log(LocalizationService.Format("log.battle.potion_strength", "Used {0}: gain {1} Strength", potion.DisplayName, potion.StrengthAmount), "#d8b4fe");
+        }
+
+        if (potion.EnergyAmount > 0)
+        {
+            _energy += potion.EnergyAmount;
+            SpawnFloatingText(playerTarget, $"+{potion.EnergyAmount} EN", new Color("fde68a"));
+            SpawnRuneEffect(playerTarget, new Color("fde68a"));
+            Log(LocalizationService.Format("log.battle.potion_swift", "Used {0}: gain {1} Energy", potion.DisplayName, potion.EnergyAmount), "#fde68a");
+        }
+
+        if (potion.BlockAmount > 0)
+        {
+            _playerBlock += potion.BlockAmount;
+            SpawnFloatingText(playerTarget, $"+{potion.BlockAmount} Block", new Color("93c5fd"));
+            SpawnShieldEffect(playerTarget, new Color("93c5fd"));
+            Log(LocalizationService.Format("log.battle.potion_guard", "Used {0}: gain {1} Block", potion.DisplayName, potion.BlockAmount), "#93c5fd");
+        }
+
+        if (potion.MaxHpAmount > 0)
+        {
+            _playerMaxHp += potion.MaxHpAmount;
+            SpawnFloatingText(playerTarget, $"+{potion.MaxHpAmount} Max HP", new Color("fde68a"));
+            SpawnRuneEffect(playerTarget, new Color("fde68a"));
+            Log(LocalizationService.Format("log.battle.potion_maxhp", "Used {0}: +{1} Max HP", potion.DisplayName, potion.MaxHpAmount), "#fde68a");
+        }
+
+        // Special: Vampire Philter — extra heal + strength
+        if (potion.Id == "vampire_potion")
+        {
+            _playerStrength += 2;
+            SpawnFloatingText(playerTarget, "+2 STR", new Color("f87171"));
+            SpawnRuneEffect(playerTarget, new Color("f87171"));
+            Log(LocalizationService.Format("log.battle.potion_vampire", "Used {0}: gain 2 Strength and heal {1} HP", potion.DisplayName, potion.HealAmount), "#f87171");
+        }
+
+        // Fallback: if no effect was applied, do a small heal
+        if (potion.HealAmount == 0 && potion.StrengthAmount == 0 && potion.EnergyAmount == 0
+            && potion.BlockAmount == 0 && potion.MaxHpAmount == 0 && potion.Id != "vampire_potion")
+        {
+            var fallbackHeal = Math.Min(10, Math.Max(_playerMaxHp - _playerHp, 0));
+            _playerHp += fallbackHeal;
+            SpawnFloatingText(playerTarget, $"+{fallbackHeal} HP", new Color("86efac"));
+            SpawnRuneEffect(playerTarget, new Color("86efac"));
+            Log(LocalizationService.Format("log.battle.potion_unknown", "Used {0}: fallback heal {1} HP", potion.DisplayName, fallbackHeal), "#86efac");
         }
     }
 }

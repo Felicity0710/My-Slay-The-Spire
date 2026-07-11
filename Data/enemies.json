@@ -4,195 +4,273 @@
       "id": "cultist",
       "displayName": "Cultist",
       "visualId": "cultist",
-      "nameTemplate": "{displayName} {suffix}",
-      "baseHp": 36,
-      "hpPerFloor": 7
+      "nameTemplate": "{displayName}",
+      "baseHp": 40,
+      "hpPerFloor": 2
     },
     {
       "id": "cultist_scout",
       "displayName": "Scout",
       "visualId": "cultist_scout",
-      "nameTemplate": "{displayName} {suffix}",
-      "baseHp": 32,
-      "hpPerFloor": 6
-    },
-    {
-      "id": "cultist_shaman",
-      "displayName": "Shaman",
-      "visualId": "cultist_shaman",
-      "nameTemplate": "{displayName} {suffix}",
-      "baseHp": 28,
-      "hpPerFloor": 5
+      "nameTemplate": "{displayName}",
+      "baseHp": 30,
+      "hpPerFloor": 2
     },
     {
       "id": "cultist_guard",
       "displayName": "Guard",
       "visualId": "cultist_guard",
-      "nameTemplate": "{displayName} {suffix}",
-      "baseHp": 40,
-      "hpPerFloor": 7
+      "nameTemplate": "{displayName}",
+      "baseHp": 44,
+      "hpPerFloor": 3
+    },
+    {
+      "id": "cultist_shaman",
+      "displayName": "Shaman",
+      "visualId": "cultist_shaman",
+      "nameTemplate": "{displayName}",
+      "baseHp": 26,
+      "hpPerFloor": 2
+    },
+    {
+      "id": "cultist_acolyte",
+      "displayName": "Acolyte",
+      "visualId": "cultist_acolyte",
+      "nameTemplate": "{displayName}",
+      "baseHp": 22,
+      "hpPerFloor": 2
     },
     {
       "id": "cultist_brute",
       "displayName": "Brute",
       "visualId": "cultist_brute",
-      "nameTemplate": "{displayName} {suffix}",
+      "nameTemplate": "{displayName}",
+      "baseHp": 48,
+      "hpPerFloor": 4
+    },
+    {
+      "id": "thief_cutpurse",
+      "displayName": "Cutpurse",
+      "visualId": "thief_cutpurse",
+      "nameTemplate": "{displayName}",
+      "baseHp": 46,
+      "hpPerFloor": 3
+    },
+    {
+      "id": "thief_assassin",
+      "displayName": "Assassin",
+      "visualId": "thief_assassin",
+      "nameTemplate": "{displayName}",
+      "baseHp": 40,
+      "hpPerFloor": 3
+    },
+    {
+      "id": "thief_fencer",
+      "displayName": "Fencer",
+      "visualId": "thief_fencer",
+      "nameTemplate": "{displayName}",
       "baseHp": 50,
-      "hpPerFloor": 9
+      "hpPerFloor": 4
+    },
+    {
+      "id": "slaver_red",
+      "displayName": "Red Slaver",
+      "visualId": "slaver_red",
+      "nameTemplate": "{displayName}",
+      "baseHp": 52,
+      "hpPerFloor": 4
+    },
+    {
+      "id": "slaver_blue",
+      "displayName": "Blue Slaver",
+      "visualId": "slaver_blue",
+      "nameTemplate": "{displayName}",
+      "baseHp": 46,
+      "hpPerFloor": 3
+    },
+    {
+      "id": "plague_rat",
+      "displayName": "Plague Rat",
+      "visualId": "plague_rat",
+      "nameTemplate": "{displayName}",
+      "baseHp": 32,
+      "hpPerFloor": 3
+    },
+    {
+      "id": "mercenary",
+      "displayName": "Mercenary",
+      "visualId": "mercenary",
+      "nameTemplate": "{displayName}",
+      "baseHp": 56,
+      "hpPerFloor": 4
+    },
+    {
+      "id": "corrupted_guardian",
+      "displayName": "Corrupted Guardian",
+      "visualId": "corrupted_guardian",
+      "nameTemplate": "{displayName}",
+      "baseHp": 68,
+      "hpPerFloor": 5
+    },
+    {
+      "id": "dark_oracle",
+      "displayName": "Dark Oracle",
+      "visualId": "dark_oracle",
+      "nameTemplate": "{displayName}",
+      "baseHp": 50,
+      "hpPerFloor": 4
+    },
+    {
+      "id": "void_beast",
+      "displayName": "Void Beast",
+      "visualId": "void_beast",
+      "nameTemplate": "{displayName}",
+      "baseHp": 60,
+      "hpPerFloor": 5
+    },
+    {
+      "id": "ancient_automaton",
+      "displayName": "Ancient Automaton",
+      "visualId": "ancient_automaton",
+      "nameTemplate": "{displayName}",
+      "baseHp": 80,
+      "hpPerFloor": 6
+    },
+    {
+      "id": "temple_knight",
+      "displayName": "Temple Knight",
+      "visualId": "temple_knight",
+      "nameTemplate": "{displayName}",
+      "baseHp": 72,
+      "hpPerFloor": 5
+    },
+    {
+      "id": "flame_wraith",
+      "displayName": "Flame Wraith",
+      "visualId": "flame_wraith",
+      "nameTemplate": "{displayName}",
+      "baseHp": 42,
+      "hpPerFloor": 3
     },
     {
       "id": "elite_sentinel",
       "displayName": "Elite Sentinel",
       "visualId": "elite_sentinel",
-      "nameTemplate": "{displayName} {suffix}",
-      "baseHp": 78,
-      "hpPerFloor": 10
+      "nameTemplate": "{displayName}",
+      "baseHp": 72,
+      "hpPerFloor": 4
+    },
+    {
+      "id": "elite_inquisitor",
+      "displayName": "Inquisitor",
+      "visualId": "elite_inquisitor",
+      "nameTemplate": "{displayName}",
+      "baseHp": 60,
+      "hpPerFloor": 3
+    },
+    {
+      "id": "elite_assassin_guild",
+      "displayName": "Assassin Lord",
+      "visualId": "elite_assassin_guild",
+      "nameTemplate": "{displayName}",
+      "baseHp": 85,
+      "hpPerFloor": 5
+    },
+    {
+      "id": "elite_slaver_boss",
+      "displayName": "Slaver Chief",
+      "visualId": "elite_slaver_boss",
+      "nameTemplate": "{displayName}",
+      "baseHp": 95,
+      "hpPerFloor": 6
+    },
+    {
+      "id": "elite_corrupted_golem",
+      "displayName": "Corrupted Golem",
+      "visualId": "elite_corrupted_golem",
+      "nameTemplate": "{displayName}",
+      "baseHp": 115,
+      "hpPerFloor": 7
+    },
+    {
+      "id": "elite_ancient_dragon",
+      "displayName": "Ancient Wyrm",
+      "visualId": "elite_ancient_dragon",
+      "nameTemplate": "{displayName}",
+      "baseHp": 100,
+      "hpPerFloor": 7
     },
     {
       "id": "merchant",
       "displayName": "Merchant",
       "visualId": "merchant",
       "nameTemplate": "{displayName}",
-      "baseHp": 55,
-      "hpPerFloor": 5
+      "baseHp": 50,
+      "hpPerFloor": 4
     },
     {
-      "id": "act_boss_placeholder",
-      "displayName": "Act Boss",
-      "visualId": "elite_sentinel",
+      "id": "boss_high_priest",
+      "displayName": "High Priest Morg",
+      "visualId": "boss_high_priest",
       "nameTemplate": "{displayName}",
-      "baseHp": 95,
-      "hpPerFloor": 12
+      "baseHp": 130,
+      "hpPerFloor": 4
+    },
+    {
+      "id": "boss_master_thief",
+      "displayName": "Master Thief Rane",
+      "visualId": "boss_master_thief",
+      "nameTemplate": "{displayName}",
+      "baseHp": 175,
+      "hpPerFloor": 6
+    },
+    {
+      "id": "boss_corrupted_heart",
+      "displayName": "Corrupted Heart",
+      "visualId": "boss_corrupted_heart",
+      "nameTemplate": "{displayName}",
+      "baseHp": 250,
+      "hpPerFloor": 8
     }
   ],
+
   "encounters": {
     "NormalBattle": [
-      {
-        "archetypeId": "cultist_guard",
-        "suffix": "A",
-        "minFloor": 1,
-        "strength": {
-          "baseValue": 0,
-          "floorMultiplier": 1,
-          "floorDivisor": 2,
-          "floorOffset": -1,
-          "minValue": 0
-        }
-      },
-      {
-        "archetypeId": "cultist",
-        "suffix": "B",
-        "minFloor": 1,
-        "strength": {
-          "baseValue": 0,
-          "floorMultiplier": 1,
-          "floorDivisor": 1,
-          "floorOffset": -1,
-          "minValue": 0
-        }
-      },
-      {
-        "archetypeId": "cultist_shaman",
-        "suffix": "C",
-        "minFloor": 2,
-        "strength": {
-          "baseValue": 0,
-          "floorMultiplier": 1,
-          "floorDivisor": 2,
-          "floorOffset": -1,
-          "minValue": 0
-        }
-      },
-      {
-        "archetypeId": "cultist_scout",
-        "suffix": "D",
-        "minFloor": 4,
-        "strength": {
-          "baseValue": 1,
-          "floorMultiplier": 1,
-          "floorDivisor": 2,
-          "floorOffset": -1,
-          "minValue": 1
-        }
-      },
-      {
-        "archetypeId": "cultist_brute",
-        "suffix": "E",
-        "minFloor": 6,
-        "strength": {
-          "baseValue": 1,
-          "floorMultiplier": 1,
-          "floorDivisor": 2,
-          "floorOffset": 0,
-          "minValue": 1
-        }
-      }
+      { "archetypeId": "cultist",         "suffix": "", "minFloor": 1, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "cultist_scout",   "suffix": "", "minFloor": 1, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "cultist_guard",   "suffix": "", "minFloor": 2, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "cultist_shaman",  "suffix": "", "minFloor": 2, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "cultist_acolyte", "suffix": "", "minFloor": 3, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "cultist_brute",   "suffix": "", "minFloor": 5, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "thief_cutpurse",  "suffix": "", "minFloor": 2, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "thief_assassin",  "suffix": "", "minFloor": 3, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "thief_fencer",    "suffix": "", "minFloor": 3, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "slaver_red",      "suffix": "", "minFloor": 4, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "slaver_blue",     "suffix": "", "minFloor": 4, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "plague_rat",      "suffix": "", "minFloor": 4, "strength": { "baseValue": 0, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "mercenary",       "suffix": "", "minFloor": 5, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "corrupted_guardian", "suffix": "", "minFloor": 5, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "dark_oracle",     "suffix": "", "minFloor": 5, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "void_beast",      "suffix": "", "minFloor": 6, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } },
+      { "archetypeId": "ancient_automaton","suffix": "", "minFloor": 7, "strength": { "baseValue": 2, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 1 } },
+      { "archetypeId": "temple_knight",   "suffix": "", "minFloor": 6, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 1 } },
+      { "archetypeId": "flame_wraith",    "suffix": "", "minFloor": 6, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 0 } }
     ],
     "EliteBattle": [
-      {
-        "archetypeId": "elite_sentinel",
-        "suffix": "A",
-        "minFloor": 1,
-        "strength": {
-          "baseValue": 0,
-          "floorMultiplier": 1,
-          "floorDivisor": 2,
-          "floorOffset": 0,
-          "minValue": 1
-        }
-      },
-      {
-        "archetypeId": "elite_sentinel",
-        "suffix": "B",
-        "minFloor": 1,
-        "strength": {
-          "baseValue": 0,
-          "floorMultiplier": 1,
-          "floorDivisor": 2,
-          "floorOffset": 0,
-          "minValue": 1
-        }
-      },
-      {
-        "archetypeId": "cultist_shaman",
-        "suffix": "C",
-        "minFloor": 3,
-        "strength": {
-          "baseValue": 1,
-          "floorMultiplier": 1,
-          "floorDivisor": 2,
-          "floorOffset": 0,
-          "minValue": 1
-        }
-      }
+      { "archetypeId": "elite_sentinel",       "suffix": "", "minFloor": 1, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 1 } },
+      { "archetypeId": "elite_inquisitor",      "suffix": "", "minFloor": 3, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 1 } },
+      { "archetypeId": "elite_assassin_guild",  "suffix": "", "minFloor": 4, "strength": { "baseValue": 2, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 2 } },
+      { "archetypeId": "elite_slaver_boss",     "suffix": "", "minFloor": 4, "strength": { "baseValue": 2, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 2 } },
+      { "archetypeId": "elite_corrupted_golem", "suffix": "", "minFloor": 6, "strength": { "baseValue": 2, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 2 } },
+      { "archetypeId": "elite_ancient_dragon",  "suffix": "", "minFloor": 6, "strength": { "baseValue": 2, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 2 } }
     ],
     "MerchantFight": [
-      {
-        "archetypeId": "merchant",
-        "suffix": "",
-        "minFloor": 1,
-        "strength": {
-          "baseValue": 1,
-          "floorMultiplier": 1,
-          "floorDivisor": 3,
-          "floorOffset": 0,
-          "minValue": 1
-        }
-      }
+      { "archetypeId": "merchant", "suffix": "", "minFloor": 1, "strength": { "baseValue": 1, "floorMultiplier": 1, "floorDivisor": 4, "floorOffset": 0, "minValue": 1 } }
     ],
     "Boss": [
-      {
-        "archetypeId": "act_boss_placeholder",
-        "suffix": "",
-        "minFloor": 1,
-        "strength": {
-          "baseValue": 2,
-          "floorMultiplier": 1,
-          "floorDivisor": 2,
-          "floorOffset": 0,
-          "minValue": 2
-        }
-      }
+      { "archetypeId": "boss_high_priest",    "suffix": "", "minFloor": 1, "strength": { "baseValue": 2, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 2 } },
+      { "archetypeId": "boss_master_thief",   "suffix": "", "minFloor": 1, "strength": { "baseValue": 3, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 3 } },
+      { "archetypeId": "boss_corrupted_heart","suffix": "", "minFloor": 1, "strength": { "baseValue": 4, "floorMultiplier": 1, "floorDivisor": 3, "floorOffset": 0, "minValue": 4 } }
     ]
   }
 }

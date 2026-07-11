@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+<defs><filter id="g"><feGaussianBlur stdDeviation="2.5"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="200" height="280" fill="#120808" rx="10"/>
+<rect x="2" y="2" width="196" height="276" fill="none" stroke="#cc3333" stroke-width="1.5" rx="8" opacity="0.25"/>
+<rect x="6" y="6" width="188" height="268" fill="none" stroke="#ff5544" stroke-width="0.5" rx="6" opacity="0.12"/>
+<rect x="10" y="12" width="180" height="20" fill="#fca5a5" opacity="0.12" rx="4"/>
+<text x="100.0" y="27" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="monospace" opacity="0.7">ATTACK</text>
+<path d="M74.7 47.800000000000004 L100.0 34.0 L125.3 47.800000000000004 L120.7 105.3 Q79.3 114.5 79.3 105.3 Z" fill="none" stroke="#ff5544" stroke-width="2.875" opacity="0.7" filter="url(#g)"/>
+<line x1="100.0" y1="59.3" x2="100.0" y2="91.5" stroke="#cc3333" stroke-width="1.7249999999999999" opacity="0.4"/>
+<rect x="39.3" y="105.75" width="1.4" height="19.25" fill="#fca5a5" rx="0.35" opacity="0.7" filter="url(#g)"/>
+<rect x="35.1" y="104.35" width="9.799999999999999" height="2.8" fill="#fca5a5" rx="0.7" opacity="0.6"/>
+<rect x="34.4" y="124.3" width="11.2" height="1.4" fill="#cc3333" rx="0.35" opacity="0.4"/>
+<line x1="60" y1="204" x2="87" y2="203" stroke="#ff5544" stroke-width="1.3" opacity="0.24"/>
+<line x1="56" y1="222" x2="89" y2="233" stroke="#ff5544" stroke-width="1.1" opacity="0.27"/>
+<line x1="172" y1="195" x2="195" y2="193" stroke="#ff5544" stroke-width="0.7" opacity="0.24"/>
+<line x1="63" y1="218" x2="98" y2="219" stroke="#ff5544" stroke-width="1.0" opacity="0.16"/>
+<line x1="112" y1="232" x2="145" y2="231" stroke="#ff5544" stroke-width="1.2" opacity="0.22"/>
+<rect x="14" y="250" width="24" height="18" fill="none" stroke="#ff5544" stroke-width="1.5" rx="4" opacity="0.6"/>
+<text x="26" y="264" text-anchor="middle" fill="#ff5544" font-size="13" font-weight="bold" opacity="0.8">1</text>
+<rect x="24" y="272" width="152" height="2" fill="#ff5544" opacity="0.25" rx="1"/>
+</svg>

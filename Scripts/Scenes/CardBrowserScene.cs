@@ -40,9 +40,14 @@ public partial class CardBrowserScene : Control
         LocalizationSettings.LanguageChanged += RefreshFiltersAndCards;
 
         _resetButton.Pressed += ResetFilters;
-        _backButton.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+        _backButton.Pressed += () => CallDeferred(nameof(ReturnToMainMenu));
 
         RefreshFiltersAndCards();
+    }
+
+    private void ReturnToMainMenu()
+    {
+        GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
     }
 
     public override void _ExitTree()

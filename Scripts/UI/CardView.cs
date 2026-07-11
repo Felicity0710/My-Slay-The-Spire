@@ -463,11 +463,9 @@ public partial class CardView : PanelContainer
 
     private void BuildUi()
     {
-        CustomMinimumSize = new Vector2(190, 250);
+        CustomMinimumSize = new Vector2(190, 280);
         ApplyPivotOffset();
 
-        // Warm parchment-brown card face with a gold frame — matches the
-        // game's overall amber/brown UI theme instead of the old cold blue.
         var style = new StyleBoxFlat
         {
             BgColor = new Color("1c1610"),
@@ -488,14 +486,14 @@ public partial class CardView : PanelContainer
         var margin = new MarginContainer();
         margin.MouseFilter = MouseFilterEnum.Ignore;
         margin.AddThemeConstantOverride("margin_left", 10);
-        margin.AddThemeConstantOverride("margin_top", 10);
+        margin.AddThemeConstantOverride("margin_top", 8);
         margin.AddThemeConstantOverride("margin_right", 10);
-        margin.AddThemeConstantOverride("margin_bottom", 10);
+        margin.AddThemeConstantOverride("margin_bottom", 8);
         AddChild(margin);
 
         var vbox = new VBoxContainer();
         vbox.MouseFilter = MouseFilterEnum.Ignore;
-        vbox.AddThemeConstantOverride("separation", 6);
+        vbox.AddThemeConstantOverride("separation", 4);
         margin.AddChild(vbox);
 
         _nameLabel = new Label
@@ -505,19 +503,21 @@ public partial class CardView : PanelContainer
         };
         _nameLabel.MouseFilter = MouseFilterEnum.Ignore;
         _nameLabel.AddThemeColorOverride("font_color", new Color("f1e4c4"));
+        _nameLabel.AddThemeFontSizeOverride("font_size", 13);
 
         _kindLabel = new Label
         {
             HorizontalAlignment = HorizontalAlignment.Center
         };
         _kindLabel.MouseFilter = MouseFilterEnum.Ignore;
-        _kindLabel.AddThemeFontSizeOverride("font_size", 12);
+        _kindLabel.AddThemeFontSizeOverride("font_size", 11);
 
         _artTexture = new TextureRect
         {
             ExpandMode = TextureRect.ExpandModeEnum.FitWidthProportional,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
-            CustomMinimumSize = new Vector2(0, 102)
+            CustomMinimumSize = new Vector2(0, 110),
+            SizeFlagsVertical = SizeFlags.ExpandFill
         };
         _artTexture.MouseFilter = MouseFilterEnum.Ignore;
 
@@ -543,17 +543,6 @@ public partial class CardView : PanelContainer
         _costLabel.AddThemeColorOverride("font_color", new Color("f0c674"));
         costBadge.AddChild(_costLabel);
 
-        _descLabel = new RichTextLabel
-        {
-            BbcodeEnabled = true,
-            FitContent = false,
-            ScrollActive = false,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            CustomMinimumSize = new Vector2(0, 96)
-        };
-        _descLabel.MouseFilter = MouseFilterEnum.Ignore;
-        _descLabel.AddThemeColorOverride("default_color", new Color("ddd0b4"));
-
         _keywordLabel = new Label
         {
             HorizontalAlignment = HorizontalAlignment.Center,
@@ -562,6 +551,17 @@ public partial class CardView : PanelContainer
         };
         _keywordLabel.MouseFilter = MouseFilterEnum.Ignore;
         _keywordLabel.AddThemeColorOverride("font_color", new Color("fbcfe8"));
+
+        _descLabel = new RichTextLabel
+        {
+            BbcodeEnabled = true,
+            FitContent = false,
+            ScrollActive = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            CustomMinimumSize = new Vector2(0, 64)
+        };
+        _descLabel.MouseFilter = MouseFilterEnum.Ignore;
+        _descLabel.AddThemeColorOverride("default_color", new Color("ddd0b4"));
 
         vbox.AddChild(_nameLabel);
         vbox.AddChild(_kindLabel);
@@ -598,14 +598,13 @@ public partial class CardView : PanelContainer
             return;
         }
 
-        var kindKey = $"ui.card_kind.{Card.Kind.ToString().ToLowerInvariant()}";
-        var fallback = Card.Kind switch
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
+        _kindLabel.Text = Card.Kind switch
         {
-            CardKind.Attack => "Attack",
-            CardKind.Skill => "Skill",
+            CardKind.Attack => zh ? "攻击" : "Attack",
+            CardKind.Skill => zh ? "技能" : "Skill",
             _ => Card.Kind.ToString()
         };
-        _kindLabel.Text = LocalizationService.Get(kindKey, fallback);
         _kindLabel.AddThemeColorOverride("font_color", Card.Kind switch
         {
             CardKind.Attack => new Color("fca5a5"),
@@ -621,20 +620,22 @@ public partial class CardView : PanelContainer
             return;
         }
 
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
         var chips = new System.Collections.Generic.List<string>();
         foreach (var keyword in Card.Keywords)
         {
-            chips.Add(LocalizationService.Get(
-                $"ui.keyword.{keyword.ToString().ToLowerInvariant()}",
-                keyword.ToString()));
+            chips.Add(keyword switch
+            {
+                CardKeyword.Retain => zh ? "保留" : "Retain",
+                CardKeyword.Exhaust => zh ? "消耗" : "Exhaust",
+                CardKeyword.Curious => zh ? "奇巧" : "Curious",
+                _ => keyword.ToString()
+            });
         }
 
         if (Card.ReplayCount > 1)
         {
-            chips.Add(LocalizationService.Format(
-                "ui.keyword.replay",
-                "Replay x{0}",
-                Card.ReplayCount));
+            chips.Add(string.Format(zh ? "重放 x{0}" : "Replay x{0}", Card.ReplayCount));
         }
 
         if (chips.Count == 0)

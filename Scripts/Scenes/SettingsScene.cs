@@ -34,6 +34,11 @@ public partial class SettingsScene : Control
 
     public override void _Ready()
     {
+        // CRITICAL: wire up the Close button FIRST — if any later init fails,
+        // the player must still be able to return to the main menu.
+        _closeButton = GetNode<Button>("%CloseButton");
+        _closeButton.Pressed += OnClosePressed;
+
         _titleLabel = GetNode<Label>("%TitleLabel");
         _sectionLanguageLabel = GetNode<Label>("%SectionLanguageLabel");
         _languageButton = GetNode<Button>("%LanguageButton");
@@ -51,28 +56,34 @@ public partial class SettingsScene : Control
         _masterVolumeSlider = GetNode<HSlider>("%MasterVolumeSlider");
         _musicVolumeLabel = GetNode<Label>("%MusicVolumeLabel");
         _musicVolumeSlider = GetNode<HSlider>("%MusicVolumeSlider");
-        _closeButton = GetNode<Button>("%CloseButton");
 
-        PopulateResolutionOptions();
-        PopulateMaxFpsOptions();
-
-        var settings = AppSettings.Instance;
-        _vsyncCheckBox.ButtonPressed = settings.VSyncEnabled;
-        _fpsCounterCheckBox.ButtonPressed = settings.ShowFpsCounter;
-        _masterVolumeSlider.Value = settings.MasterVolumePercent;
-        _musicVolumeSlider.Value = settings.MusicVolumePercent;
-
+        // Connect critical UI signals FIRST, before any init that might fail
         _languageButton.Pressed += OnLanguagePressed;
-        _resolutionOption.ItemSelected += OnResolutionSelected;
-        _maxFpsOption.ItemSelected += OnMaxFpsSelected;
-        _vsyncCheckBox.Toggled += OnVsyncToggled;
-        _fpsCounterCheckBox.Toggled += OnFpsCounterToggled;
-        _masterVolumeSlider.ValueChanged += OnMasterVolumeChanged;
-        _musicVolumeSlider.ValueChanged += OnMusicVolumeChanged;
-        _closeButton.Pressed += OnClosePressed;
-
         LocalizationSettings.LanguageChanged += RefreshText;
         RefreshText();
+
+        try
+        {
+            PopulateResolutionOptions();
+            PopulateMaxFpsOptions();
+
+            var settings = AppSettings.Instance;
+            _vsyncCheckBox.ButtonPressed = settings.VSyncEnabled;
+            _fpsCounterCheckBox.ButtonPressed = settings.ShowFpsCounter;
+            _masterVolumeSlider.Value = settings.MasterVolumePercent;
+            _musicVolumeSlider.Value = settings.MusicVolumePercent;
+
+            _resolutionOption.ItemSelected += OnResolutionSelected;
+            _maxFpsOption.ItemSelected += OnMaxFpsSelected;
+            _vsyncCheckBox.Toggled += OnVsyncToggled;
+            _fpsCounterCheckBox.Toggled += OnFpsCounterToggled;
+            _masterVolumeSlider.ValueChanged += OnMasterVolumeChanged;
+            _musicVolumeSlider.ValueChanged += OnMusicVolumeChanged;
+        }
+        catch
+        {
+            // Non-critical settings init failed — language & back buttons still work.
+        }
     }
 
     public override void _ExitTree()
@@ -82,22 +93,23 @@ public partial class SettingsScene : Control
 
     private void RefreshText()
     {
-        _titleLabel.Text = LocalizationService.Get("ui.settings.title", "Settings");
-        _sectionLanguageLabel.Text = "🌐 " + LocalizationService.Get("ui.settings.section_language", "Language");
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
+        _titleLabel.Text = zh ? "设置" : "Settings";
+        _sectionLanguageLabel.Text = zh ? "🌐 语言" : "🌐 Language";
         _languageButton.Text = LocalizationSettings.LanguageButtonText();
-        _sectionDisplayLabel.Text = "🖥 " + LocalizationService.Get("ui.node_settings.section_display", "Display");
-        _resolutionLabel.Text = LocalizationService.Get("ui.battle.settings_resolution", "Resolution");
-        _maxFpsLabel.Text = LocalizationService.Get("ui.battle.settings_max_fps", "Max FPS");
-        _vsyncLabel.Text = LocalizationService.Get("ui.battle.settings_vsync", "VSync");
-        _fpsCounterLabel.Text = LocalizationService.Get("ui.battle.settings_fps_counter", "Show FPS");
-        _sectionAudioLabel.Text = "🔊 " + LocalizationService.Get("ui.node_settings.section_audio", "Audio");
-        _masterVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_master_volume", "Master Volume");
-        _musicVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_music_volume", "Music Volume");
-        _closeButton.Text = "← " + LocalizationService.Get("ui.common.back", "Back");
+        _sectionDisplayLabel.Text = zh ? "🖥 显示" : "🖥 Display";
+        _resolutionLabel.Text = zh ? "分辨率" : "Resolution";
+        _maxFpsLabel.Text = zh ? "最大帧率" : "Max FPS";
+        _vsyncLabel.Text = zh ? "垂直同步" : "VSync";
+        _fpsCounterLabel.Text = zh ? "显示帧率" : "Show FPS";
+        _sectionAudioLabel.Text = zh ? "🔊 音频" : "🔊 Audio";
+        _masterVolumeLabel.Text = zh ? "主音量" : "Master Volume";
+        _musicVolumeLabel.Text = zh ? "音乐音量" : "Music Volume";
+        _closeButton.Text = zh ? "← 返回" : "← Back";
 
         if (_maxFpsOption.ItemCount > 0)
         {
-            _maxFpsOption.SetItemText(0, LocalizationService.Get("ui.options.max_fps.unlimited", "Unlimited"));
+            _maxFpsOption.SetItemText(0, zh ? "无限制" : "Unlimited");
         }
     }
 
@@ -174,6 +186,11 @@ public partial class SettingsScene : Control
     private void OnMusicVolumeChanged(double value) => AppSettings.Instance.SetMusicVolumePercent((float)value);
 
     private void OnClosePressed()
+    {
+        CallDeferred(nameof(ReturnToMainMenu));
+    }
+
+    private void ReturnToMainMenu()
     {
         GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
     }

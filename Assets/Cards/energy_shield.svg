@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+<defs><filter id="g"><feGaussianBlur stdDeviation="2.5"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="200" height="280" fill="#080a14" rx="10"/>
+<rect x="2" y="2" width="196" height="276" fill="none" stroke="#4488dd" stroke-width="1.5" rx="8" opacity="0.25"/>
+<rect x="6" y="6" width="188" height="268" fill="none" stroke="#66bbff" stroke-width="0.5" rx="6" opacity="0.12"/>
+<rect x="10" y="12" width="180" height="20" fill="#93c5fd" opacity="0.12" rx="4"/>
+<text x="100.0" y="27" text-anchor="middle" fill="#93c5fd" font-size="9" font-family="monospace" opacity="0.7">SKILL</text>
+<path d="M78.0 52.0 L100.0 40.0 L122.0 52.0 L118.0 102.0 Q82.0 110.0 82.0 102.0 Z" fill="none" stroke="#66bbff" stroke-width="2.5" opacity="0.7" filter="url(#g)"/>
+<line x1="100.0" y1="62.0" x2="100.0" y2="90.0" stroke="#4488dd" stroke-width="1.5" opacity="0.4"/>
+<circle cx="40" cy="118" r="3.5" fill="#fde68a" opacity="0.12"/>
+<circle cx="40" cy="118" r="1.75" fill="#fde68a" opacity="0.35" filter="url(#g)"/>
+<circle cx="40" cy="118" r="0.7" fill="white" opacity="0.6"/>
+<line x1="45" y1="118" x2="50" y2="118" stroke="#fde68a" stroke-width="0.42" opacity="0.35"/>
+<line x1="42" y1="122" x2="45" y2="126" stroke="#fde68a" stroke-width="0.42" opacity="0.35"/>
+<line x1="38" y1="122" x2="35" y2="126" stroke="#fde68a" stroke-width="0.42" opacity="0.35"/>
+<line x1="35" y1="118" x2="30" y2="118" stroke="#fde68a" stroke-width="0.42" opacity="0.35"/>
+<line x1="38" y1="114" x2="35" y2="110" stroke="#fde68a" stroke-width="0.42" opacity="0.35"/>
+<line x1="42" y1="114" x2="45" y2="110" stroke="#fde68a" stroke-width="0.42" opacity="0.35"/>
+<circle cx="18" cy="154" r="2.1" fill="#66bbff" opacity="0.27"/>
+<circle cx="29" cy="202" r="3.7" fill="#66bbff" opacity="0.16"/>
+<circle cx="71" cy="159" r="4.3" fill="#66bbff" opacity="0.33"/>
+<circle cx="72" cy="144" r="2.7" fill="#66bbff" opacity="0.31"/>
+<circle cx="121" cy="224" r="4.5" fill="#66bbff" opacity="0.26"/>
+<circle cx="57" cy="206" r="3.6" fill="#66bbff" opacity="0.14"/>
+<circle cx="39" cy="212" r="2.5" fill="#66bbff" opacity="0.14"/>
+<rect x="14" y="250" width="24" height="18" fill="none" stroke="#66bbff" stroke-width="1.5" rx="4" opacity="0.6"/>
+<text x="26" y="264" text-anchor="middle" fill="#66bbff" font-size="13" font-weight="bold" opacity="0.8">0</text>
+<rect x="24" y="272" width="152" height="2" fill="#66bbff" opacity="0.25" rx="1"/>
+</svg>

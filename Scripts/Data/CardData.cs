@@ -589,14 +589,13 @@ public static class LocalizationSettings
 
     public static string CostLabel()
     {
-        return LocalizationService.Get("ui.cost", "Cost");
+        return LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans ? "费用" : "Cost";
     }
 
     public static string LanguageButtonText()
     {
-        return CurrentLanguage == GameLanguage.ZhHans
-            ? LocalizationService.Get("ui.language_button", "\u8bed\u8a00: \u4e2d\u6587")
-            : LocalizationService.Get("ui.language_button", "Language: English");
+        // Show the CURRENT language name, not instructions
+        return CurrentLanguage == GameLanguage.ZhHans ? "\u4e2d\u6587" : "English";
     }
 
     public static string HighlightCardDescription(string text)
@@ -604,11 +603,18 @@ public static class LocalizationSettings
         if (CurrentLanguage == GameLanguage.ZhHans)
         {
             return text
-                .Replace("\u53d1\u52a8", "[color=#fca5a5]\u53d1\u52a8[/color]")
+                .Replace("\u4f24\u5bb3", "[color=#fca5a5]\u4f24\u5bb3[/color]")
+                .Replace("\u9020\u6210", "[color=#fca5a5]\u9020\u6210[/color]")
                 .Replace("\u683c\u6321", "[color=#93c5fd]\u683c\u6321[/color]")
-                .Replace("\u4fbf\u5bb9", "[color=#e9d5ff]\u4fbf\u5bb9[/color]")
-                .Replace("\u7075\u9b42", "[color=#a5f3fc]\u7075\u9b42[/color]")
-                .Replace("\u4fee\u590d", "[color=#86efac]\u4fee\u590d[/color]");
+                .Replace("\u83b7\u5f97", "[color=#93c5fd]\u83b7\u5f97[/color]")
+                .Replace("\u6613\u4f24", "[color=#e9d5ff]\u6613\u4f24[/color]")
+                .Replace("\u65bd\u52a0", "[color=#e9d5ff]\u65bd\u52a0[/color]")
+                .Replace("\u62bd\u724c", "[color=#a5f3fc]\u62bd\u724c[/color]")
+                .Replace("\u62bd", "[color=#a5f3fc]\u62bd[/color]")
+                .Replace("\u56de\u590d", "[color=#86efac]\u56de\u590d[/color]")
+                .Replace("\u529b\u91cf", "[color=#d8b4fe]\u529b\u91cf[/color]")
+                .Replace("\u80fd\u91cf", "[color=#fde68a]\u80fd\u91cf[/color]")
+                .Replace("\u751f\u547d", "[color=#86efac]\u751f\u547d[/color]");
         }
 
         return text

@@ -40,7 +40,10 @@ public partial class NodeSettingsOverlay : CanvasLayer
 
     public override void _Ready()
     {
+        // Set gear button text IMMEDIATELY before anything else
         _gearButton = GetNode<Button>("%GearButton");
+        _gearButton.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans ? "⚙ 设置" : "⚙ Settings";
+
         _modal = GetNode<Control>("%Modal");
         _titleLabel = GetNode<Label>("%TitleLabel");
         _sectionNodeLabel = GetNode<Label>("%SectionNodeLabel");
@@ -98,35 +101,33 @@ public partial class NodeSettingsOverlay : CanvasLayer
 
     private void RefreshText()
     {
-        _gearButton.Text = LocalizationService.Get("ui.node_settings.gear", "⚙ Settings");
-        _titleLabel.Text = LocalizationService.Get("ui.node_settings.title", "Settings");
-        _sectionNodeLabel.Text = "📍 " + LocalizationService.Get("ui.node_settings.section_node", "Current node");
-        _hintLabel.Text = LocalizationService.Get(
-            "ui.node_settings.hint",
-            "Rewind to the moment you stepped onto this node.");
-        _reenterButton.Text = "↺ " + LocalizationService.Get(
-            "ui.node_settings.reenter",
-            "Re-enter current node");
-        _sectionDisplayLabel.Text = "🖥 " + LocalizationService.Get("ui.node_settings.section_display", "Display");
-        _resolutionLabel.Text = LocalizationService.Get("ui.battle.settings_resolution", "Resolution");
-        _maxFpsLabel.Text = LocalizationService.Get("ui.battle.settings_max_fps", "Max FPS");
-        _vsyncLabel.Text = LocalizationService.Get("ui.battle.settings_vsync", "VSync");
-        _fpsCounterLabel.Text = LocalizationService.Get("ui.battle.settings_fps_counter", "Show FPS");
-        _sectionAudioLabel.Text = "🔊 " + LocalizationService.Get("ui.node_settings.section_audio", "Audio");
-        _masterVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_master_volume", "Master Volume");
-        _musicVolumeLabel.Text = LocalizationService.Get("ui.battle.settings_music_volume", "Music Volume");
-        _sectionRunLabel.Text = "🏃 " + LocalizationService.Get("ui.node_settings.section_run", "Run");
-        _menuExitButton.Text = "← " + LocalizationService.Get("ui.node_settings.menu_exit", "Return to main menu");
-        _closeButton.Text = "✕ " + LocalizationService.Get("ui.node_settings.close", "Close");
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
+        _gearButton.Text = zh ? "⚙ 设置" : "⚙ Settings";
+        _titleLabel.Text = zh ? "设置" : "Settings";
+        _sectionNodeLabel.Text = zh ? "📍 当前节点" : "📍 Current node";
+        _hintLabel.Text = zh ? "回到你踏入此节点时的瞬间。" : "Rewind to the moment you stepped onto this node.";
+        _reenterButton.Text = zh ? "↺ 重新进入当前节点" : "↺ Re-enter current node";
+        _sectionDisplayLabel.Text = zh ? "🖥 显示" : "🖥 Display";
+        _resolutionLabel.Text = zh ? "分辨率" : "Resolution";
+        _maxFpsLabel.Text = zh ? "最大帧率" : "Max FPS";
+        _vsyncLabel.Text = zh ? "垂直同步" : "VSync";
+        _fpsCounterLabel.Text = zh ? "显示帧率" : "Show FPS";
+        _sectionAudioLabel.Text = zh ? "🔊 音频" : "🔊 Audio";
+        _masterVolumeLabel.Text = zh ? "主音量" : "Master Volume";
+        _musicVolumeLabel.Text = zh ? "音乐音量" : "Music Volume";
+        _sectionRunLabel.Text = zh ? "🏃 本局" : "🏃 Run";
+        _menuExitButton.Text = zh ? "← 返回主菜单" : "← Return to main menu";
+        _closeButton.Text = zh ? "✕ 关闭" : "✕ Close";
 
         if (_maxFpsOption.ItemCount > 0)
         {
-            _maxFpsOption.SetItemText(0, LocalizationService.Get("ui.options.max_fps.unlimited", "Unlimited"));
+            _maxFpsOption.SetItemText(0, zh ? "无限制" : "Unlimited");
         }
     }
 
     private void OnGearPressed()
     {
+        RefreshText(); // always refresh before showing
         _modal.Visible = true;
         var state = GetNodeOrNull<GameState>("/root/GameState");
         var hasSnapshot = state != null && state.HasNodeEntrySnapshot;

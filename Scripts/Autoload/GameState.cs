@@ -22,6 +22,10 @@ public partial class GameState : Node
     public int PotionCharges { get; private set; }
     public int Gold { get; private set; }
     public bool MerchantFled { get; private set; }
+    public int EliteKills { get; set; }
+    public int EventsResolved { get; set; }
+    public bool MerchantRobbed { get; set; }
+    public int PerfectBattles { get; set; }
     public string CurrentUiPhase { get; private set; } = "main_menu";
     public bool ExternalFastMode { get; private set; }
 
@@ -106,6 +110,7 @@ public partial class GameState : Node
     public void StartNewRun()
     {
         SaveSystem.Delete();
+        AchievementState.ResetNewThisRun();
         SetUiPhase("map");
         MaxHp = 80;
         PlayerHp = 80;
@@ -283,6 +288,9 @@ public partial class GameState : Node
         if (!RelicIds.Contains(id))
         {
             RelicIds.Add(id);
+            // ── Pickup effects ──
+            if (id == "mango") { MaxHp += 15; PlayerHp += 15; }
+            if (id == "astrolabe") { /* Transform 3 cards on pickup (UI handled elsewhere) */ }
         }
     }
 
@@ -299,6 +307,20 @@ public partial class GameState : Node
 
     public void AddCardToDeck(string id)
     {
+        // ── Relic: Molten Egg (attacks auto-upgrade) ──
+        if (HasRelic("molten_egg") && !id.EndsWith("+"))
+        {
+            var card = CardData.CreateById(id);
+            if (card.Kind == CardKind.Attack && card.Upgrade != null)
+                id = id + "+";
+        }
+        // ── Relic: Toxic Egg (skills auto-upgrade) ──
+        if (HasRelic("toxic_egg") && !id.EndsWith("+"))
+        {
+            var card = CardData.CreateById(id);
+            if (card.Kind == CardKind.Skill && card.Upgrade != null)
+                id = id + "+";
+        }
         DeckCardIds.Add(id);
     }
 
@@ -443,6 +465,12 @@ public partial class GameState : Node
     public void ResolveBattleVictory()
     {
         BattlesWon += 1;
+        // Track elite kills for achievements
+        if (PendingEncounterType == MapNodeType.EliteBattle) EliteKills++;
+        // Track merchant robbing
+        if (PendingEncounterType == MapNodeType.MerchantFight) MerchantRobbed = true;
+        // Check instant achievements
+        AchievementState.TryUnlock("first_blood");
         RollBattleRewardOffers();
         AdvanceFloor();
     }
@@ -476,8 +504,23 @@ public partial class GameState : Node
             summary.HealedFromBloodVial = PlayerHp - before;
         }
 
+        if (HasRelic("cinder_tea") && PlayerHp < MaxHp)
+        {
+            var before = PlayerHp;
+            PlayerHp = Math.Min(PlayerHp + 3, MaxHp);
+            summary.HealedFromCharm += PlayerHp - before;
+        }
+
+        if (HasRelic("black_blood"))
+        {
+            var before = PlayerHp;
+            PlayerHp = Math.Min(PlayerHp + 10, MaxHp);
+            summary.HealedFromBloodVial += PlayerHp - before;
+        }
+
         // Gold is auto-granted (not part of the "pick one" picker UI).
         var goldGain = isElite ? _rng.Next(40, 60) : _rng.Next(18, 28);
+        if (HasRelic("lucky_coin")) goldGain += 5;
         AddGold(goldGain);
         summary.GoldGained = goldGain;
 
@@ -513,7 +556,7 @@ public partial class GameState : Node
             var relicPool = new List<string>(RelicData.AllRelicIds());
             relicPool.RemoveAll(HasRelic);
             Shuffle(relicPool);
-            var relicOfferCount = Math.Min(2, relicPool.Count);
+            var relicOfferCount = Math.Min(HasRelic("soul_compass") ? 3 : 2, relicPool.Count);
             for (var i = 0; i < relicOfferCount; i++)
             {
                 PendingRelicOptions.Add(relicPool[i]);
@@ -801,12 +844,25 @@ public partial class GameState : Node
 
     public int RestHealAmount()
     {
-        return Math.Max(1, (MaxHp * 3) / 10);
+        var pct = HasRelic("preserved_meat") ? 5 : 3;
+        return Math.Max(1, (MaxHp * pct) / 10);
     }
 
     public void ApplyRestHeal()
     {
         PlayerHp = Math.Min(PlayerHp + RestHealAmount(), MaxHp);
+        // ── Relic: Dream Catcher (rest heal → upgrade random card) ──
+        if (HasRelic("dream_catcher"))
+        {
+            var upgradable = new List<int>();
+            for (var i = 0; i < DeckCardIds.Count; i++)
+                if (DeckCardIsUpgradable(i)) upgradable.Add(i);
+            if (upgradable.Count > 0)
+            {
+                var pick = upgradable[_rng.Next(upgradable.Count)];
+                DeckCardIds[pick] = MaybeUpgradeCardId(DeckCardIds[pick], 1.0);
+            }
+        }
         AdvanceFloor();
     }
 
@@ -873,14 +929,22 @@ public partial class GameState : Node
         AdvanceFloor();
     }
 
+    private static readonly string[] EventPool =
+    {
+        "shrine", "brewer", "healer", "altar", "chest",
+        "dealer", "forge", "ritual", "gambling",
+        "ambush", "slime_pit", "cursed_idol"
+    };
+
     public void BeginRandomEvent()
     {
-        PendingEventId = _rng.Next(2) == 0 ? "shrine" : "gamble";
+        PendingEventId = EventPool[_rng.Next(EventPool.Length)];
     }
 
     public void ResolveEventFinished()
     {
         PendingEventId = string.Empty;
+        EventsResolved++;
         AdvanceFloor();
     }
 

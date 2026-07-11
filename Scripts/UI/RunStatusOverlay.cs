@@ -164,8 +164,8 @@ public partial class RunStatusOverlay : CanvasLayer
         if (filled)
         {
             var potion = PotionData.CreateById(potionId!);
-            var name = LocalizationService.Get($"potion.{potion.Id}.name", potion.Name);
-            var desc = LocalizationService.Get($"potion.{potion.Id}.description", potion.Description);
+            var name = potion.DisplayName;
+            var desc = potion.DisplayDescription;
             btn.TooltipText = $"{name}\n{desc}\n\n" + LocalizationService.Get(
                 "ui.potion_slot.click_hint",
                 "(Click to discard)");

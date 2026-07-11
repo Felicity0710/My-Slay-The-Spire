@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+<defs><filter id="g"><feGaussianBlur stdDeviation="2.5"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="200" height="280" fill="#080812" rx="10"/>
+<rect x="2" y="2" width="196" height="276" fill="none" stroke="#8855cc" stroke-width="1.5" rx="8" opacity="0.25"/>
+<rect x="6" y="6" width="188" height="268" fill="none" stroke="#bb77ee" stroke-width="0.5" rx="6" opacity="0.12"/>
+<rect x="10" y="12" width="180" height="20" fill="#93c5fd" opacity="0.12" rx="4"/>
+<text x="100.0" y="27" text-anchor="middle" fill="#93c5fd" font-size="9" font-family="monospace" opacity="0.7">SKILL</text>
+<rect x="82.0" y="56.0" width="36.0" height="48.0" fill="none" stroke="#bb77ee" stroke-width="2.0" rx="3.0" opacity="0.6"/>
+<rect x="88.0" y="66.0" width="24.0" height="2.0" fill="#bb77ee" opacity="0.35" rx="1"/>
+<rect x="88.0" y="74.0" width="18.0" height="2.0" fill="#bb77ee" opacity="0.25" rx="1"/>
+<rect x="88.0" y="82.0" width="20.0" height="2.0" fill="#bb77ee" opacity="0.25" rx="1"/>
+<path d="M33.0 118 Q40 109.25 47.0 118" fill="none" stroke="#d1d5db" stroke-width="0.875" opacity="0.7" filter="url(#g)"/>
+<polygon points="47.0,118 44.2,115.2 44.2,120.8" fill="#d1d5db" opacity="0.7"/>
+<path d="M33.0 125.0 Q40 116.25 47.0 125.0" fill="none" stroke="#d1d5db" stroke-width="0.5249999999999999" opacity="0.3"/>
+<circle cx="58" cy="189" r="3.0" fill="#bb77ee" opacity="0.15"/>
+<circle cx="108" cy="207" r="1.5" fill="#bb77ee" opacity="0.29"/>
+<circle cx="148" cy="144" r="5.0" fill="#bb77ee" opacity="0.10"/>
+<circle cx="161" cy="140" r="3.3" fill="#bb77ee" opacity="0.16"/>
+<circle cx="139" cy="216" r="3.7" fill="#bb77ee" opacity="0.22"/>
+<circle cx="32" cy="212" r="1.6" fill="#bb77ee" opacity="0.27"/>
+<circle cx="106" cy="220" r="2.3" fill="#bb77ee" opacity="0.20"/>
+<rect x="14" y="250" width="24" height="18" fill="none" stroke="#bb77ee" stroke-width="1.5" rx="4" opacity="0.6"/>
+<text x="26" y="264" text-anchor="middle" fill="#bb77ee" font-size="13" font-weight="bold" opacity="0.8">1</text>
+<rect x="24" y="272" width="152" height="2" fill="#bb77ee" opacity="0.25" rx="1"/>
+</svg>

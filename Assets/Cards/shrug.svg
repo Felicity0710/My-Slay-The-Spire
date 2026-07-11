@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+<defs><filter id="g"><feGaussianBlur stdDeviation="2.5"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="200" height="280" fill="#120808" rx="10"/>
+<rect x="2" y="2" width="196" height="276" fill="none" stroke="#cc3333" stroke-width="1.5" rx="8" opacity="0.25"/>
+<rect x="6" y="6" width="188" height="268" fill="none" stroke="#ff5544" stroke-width="0.5" rx="6" opacity="0.12"/>
+<rect x="10" y="12" width="180" height="20" fill="#93c5fd" opacity="0.12" rx="4"/>
+<text x="100.0" y="27" text-anchor="middle" fill="#93c5fd" font-size="9" font-family="monospace" opacity="0.7">SKILL</text>
+<path d="M78.0 52.0 L100.0 40.0 L122.0 52.0 L118.0 102.0 Q82.0 110.0 82.0 102.0 Z" fill="none" stroke="#ff5544" stroke-width="2.5" opacity="0.7" filter="url(#g)"/>
+<line x1="100.0" y1="62.0" x2="100.0" y2="90.0" stroke="#cc3333" stroke-width="1.5" opacity="0.4"/>
+<rect x="33.7" y="109.6" width="12.6" height="16.799999999999997" fill="none" stroke="#a5f3fc" stroke-width="0.7" rx="1.0499999999999998" opacity="0.6"/>
+<rect x="35.8" y="113.1" width="8.399999999999999" height="0.7" fill="#a5f3fc" opacity="0.35" rx="1"/>
+<rect x="35.8" y="115.9" width="6.3" height="0.7" fill="#a5f3fc" opacity="0.25" rx="1"/>
+<rect x="35.8" y="118.7" width="7.0" height="0.7" fill="#a5f3fc" opacity="0.25" rx="1"/>
+<circle cx="69" cy="167" r="4.5" fill="#ff5544" opacity="0.16"/>
+<circle cx="120" cy="213" r="2.1" fill="#ff5544" opacity="0.28"/>
+<circle cx="174" cy="216" r="4.6" fill="#ff5544" opacity="0.30"/>
+<circle cx="80" cy="200" r="2.0" fill="#ff5544" opacity="0.16"/>
+<circle cx="43" cy="236" r="4.1" fill="#ff5544" opacity="0.28"/>
+<circle cx="66" cy="245" r="3.8" fill="#ff5544" opacity="0.25"/>
+<circle cx="83" cy="169" r="3.0" fill="#ff5544" opacity="0.26"/>
+<rect x="14" y="250" width="24" height="18" fill="none" stroke="#ff5544" stroke-width="1.5" rx="4" opacity="0.6"/>
+<text x="26" y="264" text-anchor="middle" fill="#ff5544" font-size="13" font-weight="bold" opacity="0.8">1</text>
+<rect x="24" y="272" width="152" height="2" fill="#ff5544" opacity="0.25" rx="1"/>
+</svg>

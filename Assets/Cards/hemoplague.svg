@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 280">
+<defs><filter id="g"><feGaussianBlur stdDeviation="2.5"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect width="200" height="280" fill="#120808" rx="10"/>
+<rect x="2" y="2" width="196" height="276" fill="none" stroke="#cc3333" stroke-width="1.5" rx="8" opacity="0.25"/>
+<rect x="6" y="6" width="188" height="268" fill="none" stroke="#ff5544" stroke-width="0.5" rx="6" opacity="0.12"/>
+<rect x="10" y="12" width="180" height="20" fill="#fca5a5" opacity="0.12" rx="4"/>
+<text x="100.0" y="27" text-anchor="middle" fill="#fca5a5" font-size="9" font-family="monospace" opacity="0.7">ATTACK</text>
+<rect x="97.7" y="39.75" width="4.6" height="63.24999999999999" fill="#ff5544" rx="1.15" opacity="0.7" filter="url(#g)"/>
+<rect x="83.9" y="35.150000000000006" width="32.199999999999996" height="9.2" fill="#ff5544" rx="2.3" opacity="0.6"/>
+<rect x="81.6" y="100.7" width="36.8" height="4.6" fill="#cc3333" rx="1.15" opacity="0.4"/>
+<rect x="38.25" y="111.0" width="3.5" height="14.0" fill="#86efac" rx="1.0499999999999998" opacity="0.7" filter="url(#g)"/>
+<rect x="33.7" y="116.25" width="12.6" height="3.5" fill="#86efac" rx="1.0499999999999998" opacity="0.6"/>
+<circle cx="100" cy="118" r="7.0" fill="none" stroke="#e9d5ff" stroke-width="0.7" opacity="0.5"/>
+<line x1="97.2" y1="116.6" x2="100.7" y2="120.1" stroke="#e9d5ff" stroke-width="0.63" opacity="0.5"/>
+<line x1="100.7" y1="120.1" x2="98.95" y2="122.9" stroke="#e9d5ff" stroke-width="0.48999999999999994" opacity="0.4"/>
+<line x1="104.2" y1="114.5" x2="102.1" y2="117.3" stroke="#e9d5ff" stroke-width="0.5249999999999999" opacity="0.4"/>
+<line x1="53" y1="196" x2="94" y2="199" stroke="#ff5544" stroke-width="1.1" opacity="0.28"/>
+<line x1="180" y1="160" x2="222" y2="137" stroke="#ff5544" stroke-width="1.5" opacity="0.20"/>
+<line x1="90" y1="184" x2="139" y2="174" stroke="#ff5544" stroke-width="1.1" opacity="0.11"/>
+<line x1="40" y1="198" x2="75" y2="213" stroke="#ff5544" stroke-width="1.0" opacity="0.19"/>
+<line x1="145" y1="144" x2="192" y2="133" stroke="#ff5544" stroke-width="0.9" opacity="0.28"/>
+<rect x="14" y="250" width="24" height="18" fill="none" stroke="#ff5544" stroke-width="1.5" rx="4" opacity="0.6"/>
+<text x="26" y="264" text-anchor="middle" fill="#ff5544" font-size="13" font-weight="bold" opacity="0.8">2</text>
+<rect x="24" y="272" width="152" height="2" fill="#ff5544" opacity="0.25" rx="1"/>
+</svg>

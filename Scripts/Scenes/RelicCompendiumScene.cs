@@ -23,11 +23,16 @@ public partial class RelicCompendiumScene : Control
         _titleLabel = GetNode<Label>("Margin/Root/TopBar/TitlePanel/Title");
         _content = GetNode<VBoxContainer>("%RelicContent");
 
-        _backButton.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+        _backButton.Pressed += () => CallDeferred(nameof(ReturnToMainMenu));
         LocalizationSettings.LanguageChanged += OnLanguageChanged;
 
         RefreshUiText();
         BuildCompendium();
+    }
+
+    private void ReturnToMainMenu()
+    {
+        GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
     }
 
     public override void _ExitTree()

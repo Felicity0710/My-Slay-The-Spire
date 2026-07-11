@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://b53v4hnkxer8c"]
+[gd_scene load_steps=9 format=3 uid="uid://b53v4hnkxer8c"]
 
 [ext_resource type="Script" uid="uid://ch5ih6mu2x57c" path="res://Scripts/Scenes/MainMenu.cs" id="1_3plf2"]
 
@@ -16,6 +16,86 @@ corner_radius_bottom_left = 16
 shadow_color = Color(0, 0, 0, 0.7)
 shadow_size = 16
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.13, 0.2, 0.13, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.55, 0.85, 0.45, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary_hover"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 14.0
+bg_color = Color(0.18, 0.32, 0.2, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 1, 0.65, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_danger"]
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+bg_color = Color(0.18, 0.1, 0.08, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.45, 0.4, 0.85)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_ghost"]
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+bg_color = Color(0.13, 0.18, 0.25, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.65, 0.32, 0.8)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_ghost_hover"]
+content_margin_left = 18.0
+content_margin_top = 12.0
+content_margin_right = 18.0
+content_margin_bottom = 12.0
+bg_color = Color(0.22, 0.3, 0.4, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.92, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_logo_panel"]
 bg_color = Color(0.05, 0.04, 0.03, 0.85)
 border_width_left = 3
@@ -29,86 +109,6 @@ corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
 shadow_color = Color(0, 0, 0, 0.7)
 shadow_size = 18
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary"]
-bg_color = Color(0.13, 0.20, 0.13, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.55, 0.85, 0.45, 0.90)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-content_margin_left = 20.0
-content_margin_top = 14.0
-content_margin_right = 20.0
-content_margin_bottom = 14.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_primary_hover"]
-bg_color = Color(0.18, 0.32, 0.20, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.85, 1, 0.65, 1)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-content_margin_left = 20.0
-content_margin_top = 14.0
-content_margin_right = 20.0
-content_margin_bottom = 14.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_ghost"]
-bg_color = Color(0.13, 0.18, 0.25, 0.95)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.85, 0.65, 0.32, 0.80)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-content_margin_left = 18.0
-content_margin_top = 12.0
-content_margin_right = 18.0
-content_margin_bottom = 12.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_ghost_hover"]
-bg_color = Color(0.22, 0.30, 0.40, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.92, 0.55, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-content_margin_left = 18.0
-content_margin_top = 12.0
-content_margin_right = 18.0
-content_margin_bottom = 12.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_danger"]
-bg_color = Color(0.18, 0.10, 0.08, 0.95)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.85, 0.45, 0.40, 0.85)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-content_margin_left = 18.0
-content_margin_top = 12.0
-content_margin_right = 18.0
-content_margin_bottom = 12.0
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -175,20 +175,20 @@ theme_override_constants/separation = 14
 [node name="GameName" type="Label" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "SLAY THE HS"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 48
 theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 48
+text = "SLAY THE HS"
+horizontal_alignment = 1
 
 [node name="Tagline" type="Label" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
 unique_name_in_owner = true
 modulate = Color(0.92, 0.85, 0.65, 1)
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
 text = "像素卡牌肉鸽冒险"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 16
 
 [node name="HeaderSpacer" type="Control" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
 custom_minimum_size = Vector2(0, 18)
@@ -198,12 +198,12 @@ layout_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
 theme_override_colors/font_color = Color(0.85, 1, 0.78, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_primary")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_primary_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_primary")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_primary_hover")
 text = "▶ 开始游戏"
 
 [node name="AbandonRunButton" type="Button" parent="Margin/MainHBox/LeftColumn/LeftMargin/LeftVBox"]
@@ -211,8 +211,8 @@ unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(1, 0.78, 0.7, 1)
+theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_danger")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_danger")
 text = "✕ 放弃存档"
@@ -221,9 +221,9 @@ text = "✕ 放弃存档"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
 text = "🏆 成就"
@@ -232,9 +232,9 @@ text = "🏆 成就"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
 text = "🐉 敌人图鉴"
@@ -243,9 +243,9 @@ text = "🐉 敌人图鉴"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
 text = "💎 遗物图鉴"
@@ -254,9 +254,9 @@ text = "💎 遗物图鉴"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
 text = "🎴 卡牌图鉴"
@@ -265,9 +265,9 @@ text = "🎴 卡牌图鉴"
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.94, 0.78, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_ghost")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_ghost_hover")
 text = "⚙ 设置"
@@ -280,9 +280,9 @@ size_flags_vertical = 3
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 0.78, 0.7, 1)
 theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_danger")
 theme_override_styles/hover = SubResource("StyleBoxFlat_button_danger")
 text = "✕ 退出游戏"
@@ -303,28 +303,28 @@ theme_override_constants/separation = 24
 [node name="LogoImage" type="TextureRect" parent="Margin/MainHBox/RightColumn/LogoCenter/LogoStack"]
 unique_name_in_owner = true
 visible = false
-layout_mode = 2
 custom_minimum_size = Vector2(480, 480)
+layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="LogoEmoji" type="Label" parent="Margin/MainHBox/RightColumn/LogoCenter/LogoStack"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "⚔"
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_font_sizes/font_size = 320
 theme_override_colors/font_color = Color(0.85, 0.65, 0.32, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 320
+text = "⚔"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="LogoSubtitle" type="Label" parent="Margin/MainHBox/RightColumn/LogoCenter/LogoStack"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Slay the Tower"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 36
 theme_override_colors/font_color = Color(0.85, 0.65, 0.32, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 36
+text = "Slay the Tower"
+horizontal_alignment = 1

@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#341e1d"/>
-      <stop offset="100%" stop-color="#5a2825"/>
-    </linearGradient>
-  </defs>
-  <rect x="10" y="10" width="236" height="236" rx="44" fill="url(#bg)"/>
-  <path d="M52 186L128 62l76 124" fill="none" stroke="#ffb7ac" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M88 132h80" stroke="#ffd4ce" stroke-width="14" stroke-linecap="round"/>
-  <path d="M128 62l22-30" stroke="#ffd4ce" stroke-width="10" stroke-linecap="round"/>
-  <rect x="24" y="24" width="208" height="208" rx="34" fill="none" stroke="#ffd3cc" stroke-opacity="0.6" stroke-width="6"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#12121e" rx="10"/><rect x="2" y="2" width="60" height="60" fill="none" stroke="#887744" stroke-width="1.5" rx="8" opacity="0.5"/><rect x="16" y="20" width="32" height="10" fill="#8090a0" rx="2"/><polygon points="18,30 46,30 40,50 24,50" fill="#607080"/><line x1="32" y1="32" x2="32" y2="46" stroke="#a0b0c0" stroke-width="1"/></svg>

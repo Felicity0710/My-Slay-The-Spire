@@ -27,16 +27,13 @@ public static class LocalizationService
 
         var lang = LocalizationSettings.CurrentLanguage;
         var table = lang == GameLanguage.ZhHans ? _zhHans : _en;
-        if (table.TryGetValue(key, out var value))
+        if (table.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value))
         {
             return value;
         }
 
-        if (lang == GameLanguage.ZhHans && _en.TryGetValue(key, out var enFallback))
-        {
-            return enFallback;
-        }
-
+        // Never fall back to English when in Chinese mode
+        // (the caller's fallback parameter should already be in the correct language)
         return fallback;
     }
 
@@ -67,32 +64,69 @@ public static class LocalizationService
 
     private static void LoadLanguage(GameLanguage language, string fileName, Dictionary<string, string> target)
     {
+        var json = string.Empty;
+        var source = string.Empty;
+
+        // 1. Try Godot resource
         var resourcePath = $"res://Data/Localization/{fileName}";
-        if (!GameDataAccess.TryReadResourceText(resourcePath, out var json))
+        if (GameDataAccess.TryReadResourceText(resourcePath, out json))
         {
-            return;
+            source = resourcePath;
         }
+        else
+        {
+            // 2. Try project filesystem path via Godot
+            try
+            {
+                var fsPath = Godot.ProjectSettings.GlobalizePath(resourcePath);
+                if (System.IO.File.Exists(fsPath))
+                {
+                    json = System.IO.File.ReadAllText(fsPath, System.Text.Encoding.UTF8);
+                    source = fsPath;
+                }
+            }
+            catch { }
+        }
+
+        // 3. Try relative filesystem paths as last resort
+        if (string.IsNullOrEmpty(json))
+        {
+            foreach (var baseDir in new[] {
+                System.AppContext.BaseDirectory,
+                System.IO.Directory.GetCurrentDirectory(),
+                System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), ".."),
+                System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "..", ".."),
+            })
+            {
+                try
+                {
+                    var fsPath = System.IO.Path.GetFullPath(
+                        System.IO.Path.Combine(baseDir, "Data", "Localization", fileName));
+                    if (System.IO.File.Exists(fsPath))
+                    {
+                        json = System.IO.File.ReadAllText(fsPath, System.Text.Encoding.UTF8);
+                        source = fsPath;
+                        break;
+                    }
+                }
+                catch { }
+            }
+        }
+
+        if (string.IsNullOrEmpty(json)) return;
 
         Dictionary<string, string>? dict;
         try
         {
             dict = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
         }
-        catch
-        {
-            return;
-        }
-        if (dict == null)
-        {
-            return;
-        }
+        catch { return; }
+        if (dict == null) return;
 
         foreach (var kv in dict)
-        {
             target[kv.Key] = kv.Value;
-        }
 
-        GD.Print($"Loaded {language}: {dict.Count} entries from {resourcePath}");
+        GD.Print($"Localization loaded {language}: {dict.Count} entries from {source}");
     }
 
     public static void EnsureLoaded()

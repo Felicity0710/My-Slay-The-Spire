@@ -40,6 +40,7 @@ public partial class MapScene : Control
 
     public override void _Ready()
     {
+        AudioManager.PlayBgm("map");
         var stateAtEntry = GetNode<GameState>("/root/GameState");
         if (stateAtEntry.RunCompleted)
         {
@@ -57,6 +58,8 @@ public partial class MapScene : Control
         stateAtEntry.TryWriteSave("res://Scenes/MapScene.tscn");
 
         AddChild(GD.Load<PackedScene>("res://Scenes/NodeSettingsOverlay.tscn").Instantiate());
+        // Force gear button text after overlay is fully ready
+        CallDeferred(nameof(FixGearButtonText));
         // Map now shares the same floating status bar as combat / shops / etc
         // — the in-scene StatsPanel / RelicRow / PotionRow stay in the tree
         // but are visible=false (kept for legacy GetNode calls).
@@ -480,8 +483,8 @@ public partial class MapScene : Control
         if (filled)
         {
             var potion = PotionData.CreateById(potionId!);
-            var name = LocalizationService.Get($"potion.{potion.Id}.name", potion.Name);
-            var desc = LocalizationService.Get($"potion.{potion.Id}.description", potion.Description);
+            var name = potion.DisplayName;
+            var desc = potion.DisplayDescription;
             slot.TooltipText = $"{name}\n{desc}";
         }
         else
@@ -505,12 +508,28 @@ public partial class MapScene : Control
         };
     }
 
+    private void FixGearButtonText()
+    {
+        // Walk all CanvasLayer children to find the settings gear button
+        foreach (var child in GetChildren())
+        {
+            if (child is CanvasLayer overlay)
+            {
+                var gearBtn = overlay.GetNodeOrNull<Button>("%GearButton");
+                if (gearBtn != null)
+                {
+                    gearBtn.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans ? "⚙ 设置" : "⚙ Settings";
+                    return;
+                }
+            }
+        }
+    }
+
     private void RefreshStaticText()
     {
-        // Title label was removed when the map switched to the shared status
-        // overlay — there's no in-scene title anymore.
         _legendLabel.Text = LocalizationService.Get("ui.map.legend", "⚔ Normal  ☠ Elite  ◆ Event  ♥ Rest  $ Shop");
         _menuButton.Text = LocalizationService.Get("ui.map.back_to_menu", "Back To Menu");
+        FixGearButtonText();
     }
 
     private void BuildTreasureMap(GameState state)

@@ -12,6 +12,7 @@ public partial class VictoryScene : Control
     {
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("victory");
+        AudioManager.PlayBgm("victory");
         SaveSystem.Delete();
 
         _titleLabel = GetNode<Label>("%TitleLabel");
@@ -23,6 +24,12 @@ public partial class VictoryScene : Control
         _menuButton.Pressed += OnMenuPressed;
         _newRunButton.Pressed += OnNewRunPressed;
         LocalizationSettings.LanguageChanged += RefreshText;
+
+        // Evaluate and show achievements
+        AchievementState.EvaluateRunEnd(state);
+        var popup = new AchievementPopup();
+        AddChild(popup);
+        popup.ShowAllNewAchievements();
 
         RefreshText();
     }

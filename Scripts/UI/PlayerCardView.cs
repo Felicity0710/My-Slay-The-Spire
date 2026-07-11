@@ -20,16 +20,14 @@ public partial class PlayerCardView : Control
     {
         CacheNodes();
 
-        // Name + verbose summary live in the tooltip / nowhere — the compact
-        // layout speaks for itself.
         _nameLabel.Visible = false;
         _summaryLabel.Visible = false;
 
         ConfigureHpBar(player);
 
-        _portraitGlow.Color = inputLocked
-            ? new Color(0.4f, 0.55f, 0.75f, 0.2f)
-            : new Color(0.54f, 0.8f, 1f, 0.3f);
+        // Remove portrait background — character silhouette only
+        _portraitBg.Color = new Color(0, 0, 0, 0);
+        _portraitGlow.Color = new Color(0, 0, 0, 0);
 
         RebuildStatusRow(player);
     }
@@ -88,6 +86,34 @@ public partial class PlayerCardView : Control
         {
             _statusRow.AddChild(EnemyCardView.StatusChip("🩸", player.Vulnerable, new Color("d8b4fe"),
                 LocalizationService.Get("ui.battle.status_tooltip.vulnerable", "Vulnerable increases damage taken by 50%.")));
+        }
+    }
+
+    private TextureRect? _portraitTexture;
+
+    public void SetPortrait(string path)
+    {
+        CacheNodes();
+        // Always make the background transparent
+        _portraitBg.Color = new Color(0, 0, 0, 0);
+        _portraitGlow.Color = new Color(0, 0, 0, 0);
+
+        if (_portraitTexture == null)
+        {
+            _portraitTexture = new TextureRect
+            {
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            _portraitTexture.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+            _portraitBg.AddChild(_portraitTexture);
+        }
+
+        if (ResourceLoader.Exists(path))
+        {
+            _portraitTexture.Texture = GD.Load<Texture2D>(path);
+            _portraitTexture.Visible = true;
         }
     }
 

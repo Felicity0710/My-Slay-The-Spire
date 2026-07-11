@@ -62,6 +62,7 @@ public partial class ShopScene : Control
 
     public override void _Ready()
     {
+        AudioManager.PlayBgm("shop");
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("shop");
         _rng = state.Rng;
@@ -100,7 +101,8 @@ public partial class ShopScene : Control
         _cancelRemoveButton.Pressed += OnCancelRemovePressed;
 
         _removeOverlay.Visible = false;
-        _titleLabel.Text = LocalizationService.Get("ui.shop.title", "Shop");
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
+        _titleLabel.Text = zh ? "商店" : "Shop";
 
         var returningFromRobVictory = state.PendingMerchantFightVictory && state.ShopSnapshotHasData;
         if (returningFromRobVictory)
@@ -118,10 +120,8 @@ public partial class ShopScene : Control
 
         RenderItems();
         var welcome = returningFromRobVictory
-            ? LocalizationService.Get(
-                "ui.shop.status_rob_victory",
-                "You defeated the merchant! Help yourself to anything left behind.")
-            : LocalizationService.Get("ui.shop.status_welcome", "Welcome, traveler. Pick your wares.");
+            ? (zh ? "你击败了商人！剩下的东西随便拿。" : "You defeated the merchant! Help yourself to anything left behind.")
+            : (zh ? "欢迎光临，旅行者。挑选你的货物。" : "Welcome, traveler. Pick your wares.");
         RefreshUi(welcome);
     }
 
@@ -180,6 +180,7 @@ public partial class ShopScene : Control
         _items.Clear();
 
         var state = GetNode<GameState>("/root/GameState");
+        var discount = state.HasRelic("membership_card") ? 0.8f : 1.0f;
         var cardPool = CardData.RewardPoolIds();
         cardPool.RemoveAll(id => id == "strike" || id == "defend");
         Shuffle(cardPool);
@@ -188,7 +189,7 @@ public partial class ShopScene : Control
         {
             var rolledId = state.MaybeUpgradeCardId(cardPool[i]);
             var card = CardData.CreateById(rolledId);
-            var price = 45 + card.Cost * 10 + _rng.Next(0, 16);
+            var price = (int)((45 + card.Cost * 10 + _rng.Next(0, 16)) * discount);
             if (card.IsUpgraded)
             {
                 price += 30;
@@ -211,7 +212,7 @@ public partial class ShopScene : Control
             {
                 Kind = ShopItemKind.Relic,
                 Id = relicPool[i],
-                Price = 140 + _rng.Next(0, 61)
+                Price = (int)((140 + _rng.Next(0, 61)) * discount)
             });
         }
 
@@ -224,7 +225,7 @@ public partial class ShopScene : Control
             {
                 Kind = ShopItemKind.Potion,
                 Id = potionPool[i],
-                Price = 50 + _rng.Next(0, 31)
+                Price = (int)((50 + _rng.Next(0, 31)) * discount)
             });
         }
     }
@@ -235,9 +236,10 @@ public partial class ShopScene : Control
         ClearGrid(_relicGrid);
         ClearGrid(_potionGrid);
 
-        _cardSectionLabel.Text = LocalizationService.Get("ui.shop.section_cards", "Cards");
-        _relicSectionLabel.Text = LocalizationService.Get("ui.shop.section_relics", "Relics");
-        _potionSectionLabel.Text = LocalizationService.Get("ui.shop.section_potions", "Potions");
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
+        _cardSectionLabel.Text = zh ? "卡牌" : "Cards";
+        _relicSectionLabel.Text = zh ? "遗物" : "Relics";
+        _potionSectionLabel.Text = zh ? "药水" : "Potions";
 
         var hasCards = false;
         var hasRelics = false;
@@ -327,12 +329,13 @@ public partial class ShopScene : Control
                 nameLabel.Text = card.GetLocalizedName();
                 vbox.AddChild(nameLabel);
 
+                bool zh2 = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
                 var kindLabel = new Label
                 {
                     Text = card.Kind switch
                     {
-                        CardKind.Attack => LocalizationService.Get("ui.card_kind.attack", "Attack"),
-                        CardKind.Skill => LocalizationService.Get("ui.card_kind.skill", "Skill"),
+                        CardKind.Attack => zh2 ? "攻击" : "Attack",
+                        CardKind.Skill => zh2 ? "技能" : "Skill",
                         _ => card.Kind.ToString()
                     },
                     HorizontalAlignment = HorizontalAlignment.Center
@@ -354,7 +357,7 @@ public partial class ShopScene : Control
 
                 var costLabel = new Label
                 {
-                    Text = LocalizationService.Format("ui.shop.card_cost", "Cost {0}", card.Cost),
+                    Text = string.Format(zh2 ? "费用 {0}" : "Cost {0}", card.Cost),
                     HorizontalAlignment = HorizontalAlignment.Center
                 };
                 costLabel.AddThemeFontSizeOverride("font_size", 13);
@@ -401,8 +404,8 @@ public partial class ShopScene : Control
             case ShopItemKind.Potion:
             {
                 var potion = PotionData.CreateById(item.Id);
-                var potionName = LocalizationService.Get($"potion.{potion.Id}.name", potion.Name);
-                var potionDesc = LocalizationService.Get($"potion.{potion.Id}.description", potion.Description);
+                var potionName = potion.DisplayName;
+                var potionDesc = potion.DisplayDescription;
                 nameLabel.Text = potionName;
 
                 var swatch = new PanelContainer();
@@ -504,7 +507,7 @@ public partial class ShopScene : Control
         // per-item Sold flags, so it would wrongly show "Free" here.
         if (item.Sold)
         {
-            priceLabel.Text = LocalizationService.Get("ui.shop.sold", "Sold");
+            priceLabel.Text = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans ? "已售" : "Sold";
             tile.Disabled = true;
         }
 
@@ -573,12 +576,12 @@ public partial class ShopScene : Control
 
     private string FormatPrice(int price)
     {
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
         if (_robbed || price <= 0)
         {
-            return LocalizationService.Get("ui.shop.free", "Free");
+            return zh ? "免费" : "Free";
         }
-
-        return LocalizationService.Format("ui.shop.buy_price", "💰 {0}", price);
+        return string.Format(zh ? "💰 {0}" : "💰 {0}", price);
     }
 
     private void OnBuyPressed(ShopItem item)
@@ -589,10 +592,11 @@ public partial class ShopScene : Control
         }
 
         var state = GetNode<GameState>("/root/GameState");
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
         var effectivePrice = _robbed ? 0 : item.Price;
         if (!state.TrySpendGold(effectivePrice))
         {
-            RefreshUi(LocalizationService.Get("ui.shop.status_no_gold", "Not enough gold."));
+            RefreshUi(zh ? "金币不足。" : "Not enough gold.");
             return;
         }
 
@@ -611,13 +615,11 @@ public partial class ShopScene : Control
                 if (!state.TryAddPotion(item.Id))
                 {
                     state.AddGold(effectivePrice);
-                    RefreshUi(LocalizationService.Format(
-                        "ui.shop.status_potion_full",
-                        "Potion belt is full (max {0}).",
+                    RefreshUi(string.Format(zh ? "药水栏已满（最多{0}瓶）。" : "Potion belt is full (max {0}).",
                         GameState.PotionInventoryCapacity));
                     return;
                 }
-                acquired = PotionData.CreateById(item.Id).Name;
+                acquired = PotionData.CreateById(item.Id).DisplayName;
                 break;
             default:
                 return;
@@ -625,8 +627,8 @@ public partial class ShopScene : Control
 
         item.Sold = true;
         item.BuyButton.Disabled = true;
-        item.PriceLabel.Text = LocalizationService.Get("ui.shop.sold", "Sold");
-        RefreshUi(LocalizationService.Format("ui.shop.status_bought", "Bought: {0}", acquired));
+        item.PriceLabel.Text = zh ? "已售" : "Sold";
+        RefreshUi(string.Format(zh ? "已购买：{0}" : "Bought: {0}", acquired));
     }
 
     private void OnRemoveCardPressed()
@@ -636,17 +638,18 @@ public partial class ShopScene : Control
             return;
         }
 
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
         var state = GetNode<GameState>("/root/GameState");
         var price = _robbed ? 0 : RemoveServiceBasePrice;
         if (state.Gold < price)
         {
-            RefreshUi(LocalizationService.Get("ui.shop.status_no_gold", "Not enough gold."));
+            RefreshUi(zh ? "金币不足。" : "Not enough gold.");
             return;
         }
 
         if (state.DeckCardIds.Count == 0)
         {
-            RefreshUi(LocalizationService.Get("ui.shop.status_deck_empty", "Your deck is empty."));
+            RefreshUi(zh ? "牌库为空。" : "Your deck is empty.");
             return;
         }
 
@@ -655,11 +658,12 @@ public partial class ShopScene : Control
 
     private void ShowRemoveOverlay()
     {
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
         var state = GetNode<GameState>("/root/GameState");
-        _removeTitleLabel.Text = LocalizationService.Get("ui.shop.remove_title", "Choose a card to remove");
-        _removeHintLabel.Text = LocalizationService.Get("ui.shop.remove_hint", "Click a card to select. Click Confirm to delete it from your deck.");
-        _confirmRemoveButton.Text = LocalizationService.Get("ui.shop.remove_confirm", "Confirm");
-        _cancelRemoveButton.Text = LocalizationService.Get("ui.shop.remove_cancel", "Cancel");
+        _removeTitleLabel.Text = zh ? "选择要移除的卡牌" : "Choose a card to remove";
+        _removeHintLabel.Text = zh ? "点击卡牌选择，点击确认从牌库中删除。" : "Click a card to select. Click Confirm to delete it from your deck.";
+        _confirmRemoveButton.Text = zh ? "确认" : "Confirm";
+        _cancelRemoveButton.Text = zh ? "取消" : "Cancel";
 
         // Tear down old grid contents and rebuild fresh — deck contents may
         // have shifted since last open.
@@ -744,10 +748,11 @@ public partial class ShopScene : Control
             return;
         }
 
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
         var price = _robbed ? 0 : RemoveServiceBasePrice;
         if (!state.TrySpendGold(price))
         {
-            RefreshUi(LocalizationService.Get("ui.shop.status_no_gold", "Not enough gold."));
+            RefreshUi(zh ? "金币不足。" : "Not enough gold.");
             return;
         }
 
@@ -759,9 +764,7 @@ public partial class ShopScene : Control
         _removeSelectedIndex = -1;
 
         var card = CardData.CreateById(removedId);
-        RefreshUi(LocalizationService.Format(
-            "ui.shop.status_removed_card",
-            "Removed card: {0}",
+        RefreshUi(string.Format(zh ? "已移除卡牌：{0}" : "Removed card: {0}",
             card.GetLocalizedName()));
     }
 
@@ -807,6 +810,7 @@ public partial class ShopScene : Control
 
     private void RefreshUi(string status)
     {
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
         var state = GetNode<GameState>("/root/GameState");
         _goldLabel.Text = state.Gold.ToString();
         if (!string.IsNullOrWhiteSpace(status))
@@ -814,9 +818,6 @@ public partial class ShopScene : Control
             _statusLabel.Text = status;
         }
 
-        // Mirror gold/deck/relic/potion changes into the floating status bar.
-        // Without this, players see e.g. their deck count stay stale after
-        // buying a card — and the potion slot row doesn't show the new bottle.
         if (IsInstanceValid(_statusOverlay))
         {
             _statusOverlay.Refresh();
@@ -826,27 +827,27 @@ public partial class ShopScene : Control
         if (_removeServiceUsed)
         {
             _removeCardButton.Disabled = true;
-            _removeCardButton.Text = LocalizationService.Get("ui.shop.remove_done", "🗡 Remove service used");
+            _removeCardButton.Text = zh ? "🗡 移除服务已使用" : "🗡 Remove service used";
         }
         else
         {
             _removeCardButton.Disabled = false;
             _removeCardButton.Text = removePrice <= 0
-                ? LocalizationService.Get("ui.shop.remove_free", "🗡 Remove a card\nFree")
-                : LocalizationService.Format("ui.shop.remove_price", "🗡 Remove a card\n💰 {0}", removePrice);
+                ? (zh ? "🗡 移除一张牌\n免费" : "🗡 Remove a card\nFree")
+                : string.Format(zh ? "🗡 移除一张牌\n💰 {0}" : "🗡 Remove a card\n💰 {0}", removePrice);
         }
 
         if (_robbed)
         {
             _robButton.Disabled = true;
-            _robButton.Text = LocalizationService.Get("ui.shop.rob_done", "Merchant has fled");
+            _robButton.Text = zh ? "商人已逃走" : "Merchant has fled";
         }
         else
         {
-            _robButton.Text = LocalizationService.Get("ui.shop.rob", "Rob the shop");
+            _robButton.Text = zh ? "抢劫商店" : "Rob the shop";
         }
 
-        _leaveButton.Text = LocalizationService.Get("ui.shop.leave", "Leave");
+        _leaveButton.Text = zh ? "离开" : "Leave";
     }
 
     private void Shuffle<T>(IList<T> list)

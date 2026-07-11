@@ -12,7 +12,7 @@ public partial class AchievementsScene : Control
         _backButton = GetNode<Button>("%BackButton");
         _entryList = GetNode<VBoxContainer>("%EntryList");
 
-        _backButton.Pressed += () => GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
+        _backButton.Pressed += () => CallDeferred(nameof(ReturnToMainMenu));
 
         BuildList();
         LocalizationSettings.LanguageChanged += OnLanguageChanged;
@@ -22,6 +22,11 @@ public partial class AchievementsScene : Control
     public override void _ExitTree()
     {
         LocalizationSettings.LanguageChanged -= OnLanguageChanged;
+    }
+
+    private void ReturnToMainMenu()
+    {
+        GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
     }
 
     private void OnLanguageChanged()

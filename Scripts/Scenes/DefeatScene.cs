@@ -8,14 +8,11 @@ public partial class DefeatScene : Control
     private Button _menuButton = null!;
     private Button _retryButton = null!;
 
-    // Snapshot the run summary BEFORE we wipe the save so the player can see
-    // what they accomplished. GameState is autoload — its fields survive the
-    // scene change from BattleScene, but we delete the save file on entry
-    // to ensure Try Again starts a fresh run.
     public override void _Ready()
     {
         var state = GetNode<GameState>("/root/GameState");
         state.SetUiPhase("defeat");
+        AudioManager.PlayBgm("defeat");
         SaveSystem.Delete();
 
         _titleLabel = GetNode<Label>("%TitleLabel");
@@ -28,6 +25,13 @@ public partial class DefeatScene : Control
         _retryButton.Pressed += OnRetryPressed;
 
         LocalizationSettings.LanguageChanged += RefreshText;
+
+        // Evaluate and show achievements (player may still earn achievements on defeat)
+        AchievementState.EvaluateRunEnd(state);
+        var popup = new AchievementPopup();
+        AddChild(popup);
+        popup.ShowAllNewAchievements();
+
         RefreshText();
     }
 

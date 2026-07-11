@@ -21,7 +21,7 @@ public partial class EnemyCardView : Button
         Flat = true;
         Text = string.Empty;
         ClipText = true;
-
+        Theme = null; // Kill ALL theme rendering
         CacheNodes();
 
         // Configure() sets PivotOffset = Size * 0.5f, but on the FIRST call
@@ -49,6 +49,10 @@ public partial class EnemyCardView : Button
         _portraitBg = GetNode<ColorRect>("Margin/VBox/PortraitBg");
         _portrait = GetNode<TextureRect>("Margin/VBox/PortraitBg/Portrait");
         _targetGlow = GetNode<ColorRect>("Margin/VBox/PortraitBg/TargetGlow");
+
+        // Immediately kill the TSCN default white background — before first frame
+        _portraitBg.Color = new Color(0, 0, 0, 0);
+        _targetGlow.Color = new Color(0, 0, 0, 0);
         _nameLabel = GetNode<Label>("Margin/VBox/NameLabel");
         _traitLabel = GetNode<Label>("Margin/VBox/TraitLabel");
         _statusRow = GetNode<HBoxContainer>("Margin/VBox/StatusRow");
@@ -87,50 +91,42 @@ public partial class EnemyCardView : Button
 
         // Compact slate-grey card shell. The card itself shouldn't compete with
         // the portrait / intent badge for attention.
+        // Hover-only subtle glow, no permanent frame even when selected
         var cardStyle = new StyleBoxFlat
         {
-            BgColor = enemy.IsAlive
-                ? (isHovered ? new Color("1a2d2a") : (isSelected ? new Color("1a2b3b") : new Color("141a22")))
-                : new Color("0f1318"),
-            BorderColor = !enemy.IsAlive
-                ? new Color("374151")
-                : isHovered
-                    ? traitAccent.Lightened(0.12f)
-                    : isSelected
-                        ? traitAccent
-                        : isTargetable
-                            ? traitAccent.Darkened(0.2f)
-                            : new Color("2a3340"),
-            BorderWidthLeft = isHovered || isSelected ? 3 : 1,
-            BorderWidthTop = isHovered || isSelected ? 3 : 1,
-            BorderWidthRight = isHovered || isSelected ? 3 : 1,
-            BorderWidthBottom = isHovered || isSelected ? 3 : 1,
+            BgColor = new Color(0, 0, 0, 0),
+            BorderColor = isHovered ? new Color(traitAccent.R, traitAccent.G, traitAccent.B, 0.5f) : new Color(0, 0, 0, 0),
+            BorderWidthLeft = isHovered ? 2 : 0,
+            BorderWidthTop = isHovered ? 2 : 0,
+            BorderWidthRight = isHovered ? 2 : 0,
+            BorderWidthBottom = isHovered ? 2 : 0,
             CornerRadiusTopLeft = 8,
             CornerRadiusTopRight = 8,
             CornerRadiusBottomLeft = 8,
-            CornerRadiusBottomRight = 8
+            CornerRadiusBottomRight = 8,
+            ShadowColor = isHovered ? new Color(traitAccent.R, traitAccent.G, traitAccent.B, 0.3f) : new Color(0, 0, 0, 0),
+            ShadowSize = isHovered ? 12 : 0
         };
+        var transparentStyle = new StyleBoxEmpty();
         AddThemeStyleboxOverride("normal", cardStyle);
         AddThemeStyleboxOverride("pressed", cardStyle);
         AddThemeStyleboxOverride("hover", cardStyle);
+        AddThemeStyleboxOverride("disabled", transparentStyle);
+        AddThemeStyleboxOverride("focus", transparentStyle);
 
         PivotOffset = Size * 0.5f;
-        var scaleMul = isSelected ? 1.035f : (isHovered ? 1.015f : 1f);
+        var scaleMul = isHovered ? 1.03f : 1f;
         var finalScale = scaleMul * rosterScale;
         Scale = new Vector2(finalScale, finalScale);
-        var elevation = isSelected ? -7f : (isHovered ? -3f : 0f);
-        Position = new Vector2(Position.X, elevation);
+        Position = new Vector2(Position.X, 0);
 
         ConfigureIntent(enemy, intentCompactText, intentTooltip, intentTint);
         ConfigureHpBar(enemy);
 
-        _portraitBg.Color = new Color(stageTint.R, stageTint.G, stageTint.B, enemy.IsAlive ? 1f : 0.45f);
+        // Transparent background — only the SVG silhouette shows
+        _portraitBg.Color = new Color(0, 0, 0, 0);
         _portrait.Texture = portraitTexture;
-
-        var glowAlpha = !enemy.IsAlive
-            ? 0f
-            : isHovered ? 0.18f : isSelected ? 0.24f : isTargetable ? 0.10f : 0f;
-        _targetGlow.Color = new Color(traitAccent.R, traitAccent.G, traitAccent.B, glowAlpha);
+        _targetGlow.Color = new Color(0, 0, 0, 0);
 
         TooltipText = enemy.IsAlive
             ? $"{localizedEnemyName}\n{traitSummary}\n{LocalizationService.Get("ui.battle.next_intent_prefix", "Next intent: ")}{intentTooltip}"

@@ -309,28 +309,33 @@ internal static class Program
 
     private static void TestNormalEncounterRoster()
     {
-        var early = EnemyEncounterBuilder.BuildEncounter(MapNodeType.NormalBattle, floor: 1);
-        ExpectEqual(2, early.Count, "early.Count");
-        ExpectEqual("Guard A", early[0].Name, "early[0].Name");
-        ExpectEqual(47, early[0].Hp, "early[0].Hp");
+        var rng = new Random(42);
+        var early = EnemyEncounterBuilder.BuildEncounter(MapNodeType.NormalBattle, floor: 1, act: 1, rng);
+        // Floor 1: should produce exactly 1 enemy
+        if (early.Count != 1)
+            throw new InvalidOperationException($"Floor 1 normal encounter should have 1 enemy, got {early.Count}");
+        if (early[0].Hp <= 0)
+            throw new InvalidOperationException("Enemy should have positive HP");
 
-        var later = EnemyEncounterBuilder.BuildEncounter(MapNodeType.NormalBattle, floor: 6);
-        ExpectEqual(5, later.Count, "later.Count");
-        ExpectEqual("Brute E", later[4].Name, "later[4].Name");
-        ExpectEqual(104, later[4].Hp, "later[4].Hp");
-        ExpectEqual("cultist_guard", later[0].VisualId, "later[0].VisualId");
-        ExpectEqual("cultist_shaman", later[2].VisualId, "later[2].VisualId");
-        ExpectEqual("cultist_brute", later[4].VisualId, "later[4].VisualId");
+        var later = EnemyEncounterBuilder.BuildEncounter(MapNodeType.NormalBattle, floor: 6, act: 1, rng);
+        // Floor 6: should produce 2-3 enemies
+        if (later.Count < 2 || later.Count > 3)
+            throw new InvalidOperationException($"Floor 6 normal encounter should have 2-3 enemies, got {later.Count}");
+        foreach (var e in later)
+            if (e.Hp <= 0) throw new InvalidOperationException($"Enemy {e.Name} should have positive HP");
     }
 
     private static void TestEliteEncounterRoster()
     {
-        var roster = EnemyEncounterBuilder.BuildEncounter(MapNodeType.EliteBattle, floor: 4);
-        ExpectEqual(3, roster.Count, "roster.Count");
-        ExpectEqual("Elite Sentinel A", roster[0].Name, "roster[0].Name");
-        ExpectEqual("elite_sentinel", roster[0].VisualId, "roster[0].VisualId");
-        ExpectEqual(118, roster[0].Hp, "roster[0].Hp");
-        ExpectEqual(2, roster[0].Strength, "roster[0].Strength");
+        var rng = new Random(42);
+        var roster = EnemyEncounterBuilder.BuildEncounter(MapNodeType.EliteBattle, floor: 4, act: 1, rng);
+        // Floor 4 Elite: should produce 1 enemy
+        if (roster.Count != 1)
+            throw new InvalidOperationException($"Floor 4 elite encounter should have 1 enemy, got {roster.Count}");
+        if (roster[0].Hp <= 0)
+            throw new InvalidOperationException("Elite should have positive HP");
+        if (roster[0].Strength < 0)
+            throw new InvalidOperationException("Elite strength should be non-negative");
     }
 
     private static void TestCardEffectsAggregateLegacyFields()
@@ -533,10 +538,11 @@ internal static class Program
         var catalog = EnemyEncounterCatalog.Load();
         ExpectEqual(true, catalog.EncounterMembersByType.ContainsKey(MapNodeType.Boss), "Boss encounter exists");
 
-        var roster = EnemyEncounterBuilder.BuildEncounter(MapNodeType.Boss, floor: 8);
-        if (roster.Count == 0)
+        var rng = new Random(42);
+        var roster = EnemyEncounterBuilder.BuildEncounter(MapNodeType.Boss, floor: 8, act: 1, rng);
+        if (roster.Count != 1)
         {
-            throw new InvalidOperationException("Boss encounter should produce at least one enemy.");
+            throw new InvalidOperationException($"Boss encounter should produce exactly one enemy, got {roster.Count}.");
         }
 
         var boss = roster[0];

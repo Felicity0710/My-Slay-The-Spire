@@ -214,6 +214,11 @@ public partial class BestiaryScene : Control
 
     private void OnBackPressed()
     {
+        CallDeferred(nameof(ReturnToMainMenu));
+    }
+
+    private void ReturnToMainMenu()
+    {
         GetTree().ChangeSceneToFile("res://Scenes/MainMenu.tscn");
     }
 }

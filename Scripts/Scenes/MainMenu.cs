@@ -17,6 +17,7 @@ public partial class MainMenu : Control
     public override void _Ready()
     {
         GetNode<GameState>("/root/GameState").SetUiPhase("main_menu");
+        AudioManager.PlayBgm("main_menu");
 
         _gameNameLabel = GetNode<Label>("%GameName");
         _taglineLabel = GetNode<Label>("%Tagline");

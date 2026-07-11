@@ -350,8 +350,8 @@ public partial class RewardScene : Control
         btn.AddThemeStyleboxOverride("pressed", BuildStyle(0.08f, 0.16f, 0.12f, 0.65f, 0.95f, 0.65f, !disabled));
         btn.AddThemeStyleboxOverride("disabled", BuildStyle(0.10f, 0.10f, 0.10f, 0.40f, 0.40f, 0.35f, false));
 
-        var name = LocalizationService.Get($"potion.{potion.Id}.name", potion.Name);
-        var desc = LocalizationService.Get($"potion.{potion.Id}.description", potion.Description);
+        var name = potion.DisplayName;
+        var desc = potion.DisplayDescription;
         btn.Text = $"🧪 {name}\n\n{desc}";
         if (!disabled)
         {

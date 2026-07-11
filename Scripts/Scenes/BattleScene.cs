@@ -150,6 +150,7 @@ public partial class BattleScene : Control
     private ColorRect _arenaFarBg = null!;
     private ColorRect _arenaMidBg = null!;
     private ColorRect _arenaFrontFog = null!;
+    private TextureRect _arenaBgTexture = null!;
     private PanelContainer _keywordTooltip = null!;
     private RichTextLabel _keywordTooltipText = null!;
 
@@ -173,6 +174,15 @@ public partial class BattleScene : Control
     private bool _isElite;
 
     private int _energy;
+    private int _carriedEnergy;
+    private int _cardsPlayedThisTurn;
+    private int _cardsPlayedThisTurnAttacks;
+    private int _cardsPlayedThisTurnSkills;
+    private int _totalCardsPlayed;
+    private int _totalAttacksPlayed;
+    private int _lastTurnCardsPlayed;
+    private bool _selfRepairUsed;
+    private bool _prayerBeadsUsed;
     private bool _battleEnded;
     private int _inputLockDepth;
     private string _relicUiSignature = string.Empty;
@@ -261,6 +271,9 @@ public partial class BattleScene : Control
         _arenaFarBg = GetNode<ColorRect>("%ArenaFarBg");
         _arenaMidBg = GetNode<ColorRect>("%ArenaMidBg");
         _arenaFrontFog = GetNode<ColorRect>("%ArenaFrontFog");
+        // Hide the original solid color backgrounds so our drawn background shows
+        _arenaFarBg.Visible = false;
+        _arenaMidBg.Visible = false;
         _keywordTooltip = GetNode<PanelContainer>("%KeywordTooltip");
         _keywordTooltipText = GetNode<RichTextLabel>("%KeywordTooltipText");
         _enemyShadow = GetNode<ColorRect>("MainMargin/MainVBox/Arena/EnemyShadow");
@@ -609,11 +622,41 @@ public partial class BattleScene : Control
         _playerMaxHp = _state.MaxHp;
         _player.Name = "Player";
 
+        // Set character-specific portrait
+        var portraitPath = _state.SelectedDeckPresetId switch
+        {
+            "iron_vanguard" => "res://Assets/Portraits/iron_vanguard_battle.svg",
+            "phantom_dancer" => "res://Assets/Portraits/phantom_dancer_battle.svg",
+            "storm_mage" => "res://Assets/Portraits/storm_mage_battle.svg",
+            _ => "res://Assets/Portraits/iron_vanguard_battle.svg",
+        };
+        _playerCardView.SetPortrait(portraitPath);
+        // Remove player card background
+        var playerPanel = GetNode<PanelContainer>("MainMargin/MainHBox/MainVBox/Arena/PlayerPanel");
+        playerPanel.AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
+
         _enemies.Clear();
         _selectedEnemyIndex = 0;
-        _enemies.AddRange(EnemyEncounterBuilder.BuildEncounter(_state.PendingEncounterType, _state.Floor));
+        _enemies.AddRange(EnemyEncounterBuilder.BuildEncounter(_state.PendingEncounterType, _state.Floor, _state.Act, _rng));
         _isElite = _state.PendingEncounterType == MapNodeType.EliteBattle
             || _state.PendingEncounterType == MapNodeType.Boss;
+
+        // ── Relic: Philosopher's Stone (+1 Energy, enemies +1 Strength) ──
+        if (_state.HasRelic("philosopher_stone"))
+            foreach (var e in _enemies) e.Strength += 1;
+        // ── Relic: Jade Cicada (HP < 50% → start with Artifact-like block) ──
+        if (_state.HasRelic("jade_cicada") && _playerHp < _playerMaxHp / 2)
+            _playerBlock += 6;
+
+        // ── Battle background: random act-themed SVG ──
+        LoadBattleBackground(_state.Act);
+
+        // Wire audio: SFX and BGM
+        UiSfxRequested = cue => AudioManager.PlaySfx(cue);
+        var bgmId = _state.PendingEncounterType == MapNodeType.Boss ? "battle_boss"
+            : _state.PendingEncounterType == MapNodeType.EliteBattle ? "battle_elite"
+            : "battle_normal";
+        AudioManager.PlayBgm(bgmId);
 
         UpdateEnemySelectionUi();
         SyncEnemyVisualFromSelection();
@@ -627,6 +670,130 @@ public partial class BattleScene : Control
         DeckFlowResolver.ShuffleInPlace(_drawPile, _rng);
     }
 
+    private Control? _bgDrawing;
+
+    private void LoadBattleBackground(int act)
+    {
+        if (_bgDrawing != null && IsInstanceValid(_bgDrawing))
+            _bgDrawing.QueueFree();
+
+        var bgIndex = _rng.Next(1, 6);
+        var arena = GetNode<Control>("MainMargin/MainHBox/MainVBox/Arena");
+        var bg = new BattleBgControl(act, bgIndex)
+        {
+            Name = "BattleBackground",
+            AnchorRight = 1f,
+            AnchorBottom = 1f,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _bgDrawing = bg;
+        arena.AddChild(bg);
+        arena.MoveChild(bg, 0);
+    }
+
+    private partial class BattleBgControl : Control
+    {
+        private readonly int _act;
+        private readonly int _variant;
+        private readonly Color _bg, _mid, _fg, _ac;
+
+        public BattleBgControl(int act, int variant)
+        {
+            _act = act; _variant = variant;
+            MouseFilter = MouseFilterEnum.Ignore;
+            (_bg, _mid, _fg, _ac) = act switch
+            {
+                2 => (new Color("#080812"), new Color("#101028"), new Color("#181838"), new Color("#7755aa")),
+                3 => (new Color("#0a0804"), new Color("#181208"), new Color("#2a1a0c"), new Color("#cc9944")),
+                _ => (new Color("#1a0808"), new Color("#2a1010"), new Color("#3a1818"), new Color("#cc3333")),
+            };
+        }
+
+        public override void _Draw()
+        {
+            float w = GetRect().Size.X, h = GetRect().Size.Y;
+            if (w <= 10 || h <= 10) return;
+            float fy = h * 0.65f;
+            var rng = new Random(_variant * 100 + _act * 1000);
+            float TAU = Mathf.Tau;
+
+            // Sky
+            DrawRect(new Rect2(0, 0, w, fy), new Color(_bg.R, _bg.G, _bg.B, 0.85f));
+            // Floor
+            DrawRect(new Rect2(0, fy, w, h - fy), new Color(_fg.R, _fg.G, _fg.B, 0.9f));
+            // Horizon line
+            DrawLine(new Vector2(0, fy), new Vector2(w, fy), new Color(_ac.R, _ac.G, _ac.B, 0.5f));
+
+            if (_act == 1) DrawAct1(w, h, fy, rng, TAU);
+            else if (_act == 2) DrawAct2(w, h, fy, rng, TAU);
+            else DrawAct3(w, h, fy, rng, TAU);
+
+            // Subtle dark vignette
+            DrawRect(new Rect2(0, 0, w, h), new Color(0, 0, 0, 0.15f));
+        }
+
+        private void DrawAct1(float w, float h, float fy, Random rng, float TAU)
+        {
+            // Stone pillars
+            DrawRect(new Rect2(80, 200, 80, h-200), new Color(_mid.R, _mid.G, _mid.B, 0.5f));
+            DrawRect(new Rect2(w-160, 200, 80, h-200), new Color(_mid.R, _mid.G, _mid.B, 0.5f));
+            // Torches
+            foreach (var tx in new[] {160f, w - 160f})
+            {
+                DrawRect(new Rect2(tx-2, 240, 4, 40), new Color(_ac.R, _ac.G, _ac.B, 0.8f));
+                DrawCircle(new Vector2(tx, 232), 14f, new Color(_ac.R, _ac.G, _ac.B, 0.35f));
+                DrawCircle(new Vector2(tx, 232), 6f, new Color(_ac.R, _ac.G, _ac.B, 0.6f));
+            }
+            // Floor tiles
+            for (int j = 0; j < 6; j++)
+                DrawRect(new Rect2(150+j*280, fy+40+(j%2)*60, rng.Next(120,240), 70),
+                    new Color(_ac.R, _ac.G, _ac.B, 0.15f));
+            // Ritual circle center
+            float cx = w/2, cy = fy + h*0.12f;
+            DrawArc(new Vector2(cx, cy), 60f, 0, TAU, 48, new Color(_ac.R, _ac.G, _ac.B, 0.5f), 2.5f);
+            DrawArc(new Vector2(cx, cy), 35f, 0, TAU, 32, new Color(_ac.R, _ac.G, _ac.B, 0.3f), 1.5f);
+        }
+
+        private void DrawAct2(float w, float h, float fy, Random rng, float TAU)
+        {
+            // Market stalls
+            for (int j = 0; j < 4; j++)
+            {
+                float sx = 180 + j * 420;
+                DrawRect(new Rect2(sx-60, 260, 120, 140), new Color(_ac.R, _ac.G, _ac.B, 0.2f));
+            }
+            // Lanterns
+            for (int j = 0; j < 5; j++)
+            {
+                float lx = 200 + j * 380;
+                DrawLine(new Vector2(lx, 0), new Vector2(lx, 70), new Color(_ac.R, _ac.G, _ac.B, 0.3f));
+                DrawRect(new Rect2(lx-10, 70, 20, 30), new Color(_ac.R, _ac.G, _ac.B, 0.45f));
+                DrawCircle(new Vector2(lx, 85), 5f, new Color(_ac.R, _ac.G, _ac.B, 0.35f));
+            }
+            // Coins
+            for (int j = 0; j < 6; j++)
+                DrawArc(new Vector2(rng.Next(100,(int)w-100), rng.Next((int)(h/3),(int)h-100)),
+                    rng.Next(8,14), 0, TAU, 20, new Color(_ac.R, _ac.G, _ac.B, 0.35f), 2f);
+        }
+
+        private void DrawAct3(float w, float h, float fy, Random rng, float TAU)
+        {
+            // Columns
+            foreach (var cx in new[] {180f, 480f, 780f, 1080f, 1380f, 1680f})
+            {
+                DrawRect(new Rect2(cx, 120, 45, h-120), new Color(_mid.R, _mid.G, _mid.B, 0.55f));
+                DrawRect(new Rect2(cx-3, 100, 51, 20), new Color(_ac.R, _ac.G, _ac.B, 0.6f));
+            }
+            // Stained glass window
+            float gx = w/2, gy = 200;
+            DrawArc(new Vector2(gx, gy), 80f, 0, TAU, 64, new Color(_ac.R, _ac.G, _ac.B, 0.55f), 3f);
+            DrawArc(new Vector2(gx, gy), 55f, 0, TAU, 40, new Color(_ac.R, _ac.G, _ac.B, 0.35f), 2f);
+            // Dust motes
+            for (int j = 0; j < 10; j++)
+                DrawCircle(new Vector2(rng.Next(50,(int)w-50), rng.Next(50,(int)h-50)), 3f, new Color(_ac.R, _ac.G, _ac.B, 0.3f));
+        }
+    }
+
     private async Task StartPlayerTurn()
     {
         if (_battleEnded)
@@ -636,41 +803,59 @@ public partial class BattleScene : Control
 
         PushInputLock();
         ClearRelicTurnMarkers();
+        // Reset per-turn counters
+        _cardsPlayedThisTurn = 0;
+        _cardsPlayedThisTurnAttacks = 0;
+        _cardsPlayedThisTurnSkills = 0;
         await ShowTurnBanner(LocalizationService.Get("ui.battle.turn_player", "Player Turn"), new Color("38bdf8"));
 
+        // ── Relic: turn-start effects ──
         var hasLantern = _state.HasRelic("lantern");
         var hasAnchor = _state.HasRelic("anchor");
         var turnStart = TurnFlowResolver.ResolvePlayerTurnStart(_turn, MaxEnergy, hasLantern, hasAnchor);
-
         _energy = turnStart.Energy;
 
-        if (_state.HasRelic("ember_ring"))
+        // Energy relics
+        if (_state.HasRelic("ember_ring")) { _energy += 1; FlashRelic("ember_ring"); }
+        if (_turn == 1 && hasLantern) FlashRelic("lantern");
+        // Arcane Battery: +5 energy on turn 1
+        if (_turn == 1 && _state.HasRelic("arcane_battery")) { _energy += 5; FlashRelic("arcane_battery"); }
+        // Philosopher's Stone: +1 energy every turn
+        if (_state.HasRelic("philosopher_stone")) { _energy += 1; FlashRelic("philosopher_stone"); }
+        // Cursed Key: +1 energy every turn
+        if (_state.HasRelic("cursed_key")) { _energy += 1; FlashRelic("cursed_key"); }
+        // Coffee Dripper: +1 energy every turn
+        if (_state.HasRelic("coffee_dripper")) { _energy += 1; FlashRelic("coffee_dripper"); }
+
+        // Ice Cream: carried energy from previous turn
+        if (_state.HasRelic("ice_cream") && _carriedEnergy > 0)
         {
-            _energy += 1;
-            Log(LocalizationService.Get("log.battle.ember_ring", "Ember Ring grants +1 energy"), "#fb923c");
-            FlashRelic("ember_ring");
-        }
-        if (_turn == 1 && hasLantern)
-        {
-            Log(LocalizationService.Get("log.battle.lantern", "Lantern grants +1 energy"), "#facc15");
-            FlashRelic("lantern");
+            _energy += _carriedEnergy;
+            _carriedEnergy = 0;
+            FlashRelic("ice_cream");
         }
 
         _playerBlock = turnStart.PlayerBlock;
 
-        if (_state.HasRelic("iron_shell"))
-        {
-            _playerBlock += 3;
-            Log(LocalizationService.Get("log.battle.iron_shell", "Iron Shell grants 3 block"), "#93c5fd");
-            FlashRelic("iron_shell");
-        }
-        if (_turn == 1 && hasAnchor)
-        {
-            Log(LocalizationService.Get("log.battle.anchor", "Anchor grants 8 block"), "#60a5fa");
-            FlashRelic("anchor");
-        }
+        // Block relics
+        if (_state.HasRelic("iron_shell")) { _playerBlock += 3; FlashRelic("iron_shell"); }
+        if (_turn == 1 && hasAnchor) { _playerBlock += 8; FlashRelic("anchor"); }
+        // Dawn Totem: turn 1 bonus
+        if (_turn == 1 && _state.HasRelic("dawn_totem")) { _playerBlock += 4; FlashRelic("dawn_totem"); }
+        // Bottled Water: start combat with 3 block
+        if (_turn == 1 && _state.HasRelic("bottled_water")) { _playerBlock += 3; FlashRelic("bottled_water"); }
 
-        await DrawCards(5);
+        // Strength relics
+        if (_state.HasRelic("warlord_crown")) { _playerStrength += 1; FlashRelic("warlord_crown"); }
+        // Twisted Funnel: temp strength first 3 turns
+        if (_turn <= 3 && _state.HasRelic("twisted_funnel")) { _playerStrength += 1; FlashRelic("twisted_funnel"); }
+
+        var drawCount = 5;
+        if (_state.HasRelic("bandolier")) drawCount += 1;
+        if (_state.HasRelic("astrolabe")) drawCount += 1;
+        if (_turn == 1 && _state.HasRelic("dawn_totem")) drawCount += 1;
+        if (_state.HasRelic("pocket_watch") && _lastTurnCardsPlayed <= 3 && _turn > 1) drawCount += 3;
+        await DrawCards(drawCount);
         RollEnemyIntent();
 
         RefreshUi();
@@ -769,11 +954,35 @@ public partial class BattleScene : Control
     // roster gets resized accordingly.
     private float ComputeEnemyCardScale(int aliveCount) => aliveCount switch
     {
-        <= 2 => 1.00f,
-        3 => 0.92f,
-        4 => 0.88f,
-        5 => 0.82f,
-        _ => 0.76f
+        <= 1 => 2.50f,
+        2 => 2.20f,
+        3 => 1.90f,
+        4 => 1.65f,
+        5 => 1.45f,
+        _ => 1.30f
+    };
+
+    private float GetEnemySizeBonus(string archetypeId) => archetypeId switch
+    {
+        // Bosses — towering over the player
+        "boss_high_priest" => 0.70f,
+        "boss_master_thief" => 0.60f,
+        "boss_corrupted_heart" => 0.80f,
+        // Elites
+        "elite_corrupted_golem" => 0.50f,
+        "elite_ancient_dragon" => 0.45f,
+        "elite_slaver_boss" => 0.40f,
+        "elite_sentinel" => 0.30f,
+        "elite_assassin_guild" => 0.25f,
+        "elite_inquisitor" => 0.25f,
+        // Special
+        "merchant" => 0.50f,
+        "cultist_brute" => 0.25f,
+        "ancient_automaton" => 0.35f,
+        "mercenary" => 0.20f,
+        "corrupted_guardian" => 0.20f,
+        "temple_knight" => 0.20f,
+        _ => 0f
     };
 
     private int ComputeEnemyColumns(int aliveCount) => aliveCount switch
@@ -873,7 +1082,7 @@ public partial class BattleScene : Control
             isHoveredTarget,
             selectableTarget,
             IsInputLocked(),
-            cardScale);
+            cardScale + GetEnemySizeBonus(enemy.ArchetypeId));
     }
 
     private void SyncEnemyVisualFromSelection()
@@ -977,6 +1186,17 @@ public partial class BattleScene : Control
             return;
         }
 
+        // ── Relic: end-of-turn effects ──
+        _lastTurnCardsPlayed = _cardsPlayedThisTurn;
+        if (_state.HasRelic("void_hourglass") && _cardsPlayedThisTurnAttacks == 0)
+            { _playerStrength += 1; FlashRelic("void_hourglass"); }
+        if (_state.HasRelic("warding_bell") && _playerBlock == 0)
+            { _playerBlock += 6; FlashRelic("warding_bell"); }
+        if (_state.HasRelic("orichalcum") && _playerBlock == 0)
+            { _playerBlock += 4; FlashRelic("orichalcum"); }
+        if (_state.HasRelic("ice_cream") && _energy > 0)
+            { _carriedEnergy = _energy; }
+
         _turn += 1;
         TickStatuses();
         PopInputLock();
@@ -997,15 +1217,23 @@ public partial class BattleScene : Control
             {
                 case EnemyIntentType.Attack:
                 {
+                    var extraDamage = _state.HasRelic("glass_meteor") ? 1 : 0;
                     var resolution = CombatResolver.ResolveHit(
-                        enemy.IntentValue,
-                        enemy.Strength,
-                        _playerVulnerable,
-                        _playerBlock,
-                        _playerHp);
+                        enemy.IntentValue + extraDamage, enemy.Strength,
+                        _playerVulnerable, _playerBlock, _playerHp);
                     _playerBlock = resolution.RemainingBlock;
                     _playerHp = resolution.RemainingHp;
+                    // ── Relic: Tungsten Rod (reduce damage taken by 1) ──
+                    if (_state.HasRelic("tungsten_rod") && resolution.Taken > 0) { _playerHp += 1; FlashRelic("tungsten_rod"); }
+                    // ── Relic: Prayer Beads (first damage this combat -5) ──
+                    if (_state.HasRelic("prayer_beads") && !_prayerBeadsUsed && resolution.Taken > 0)
+                    { _playerHp = Math.Min(_playerMaxHp, _playerHp + 5); _prayerBeadsUsed = true; FlashRelic("prayer_beads"); }
                     Log(LocalizationService.Format("log.battle.enemy_attack", "{0} attacks {1}, blocked {2}, took {3}", CombatVisualCatalog.GetLocalizedEnemyName(enemy.ArchetypeId, enemy.Name), resolution.FinalDamage, resolution.Blocked, resolution.Taken), "#f87171");
+                    // ── Relic: Thorn Mail (deal 2 damage back) ──
+                    if (_state.HasRelic("thorn_mail") && resolution.Taken > 0) { enemy.Hp = Math.Max(0, enemy.Hp - 2); FlashRelic("thorn_mail"); }
+                    // ── Relic: Self-Repair Kit (first HP < 50% → heal 15) ──
+                    if (_state.HasRelic("self_repair_kit") && !_selfRepairUsed && _playerHp < _playerMaxHp / 2)
+                        { _playerHp = Math.Min(_playerMaxHp, _playerHp + 15); _selfRepairUsed = true; FlashRelic("self_repair_kit"); }
                     if (resolution.Taken > 0)
                     {
                         // Phase 3: enemy lunges at the player, hit lands when
@@ -1138,13 +1366,24 @@ public partial class BattleScene : Control
             return false;
         }
 
-        if (card.Cost > _energy)
+        // ── Relic: cost reduction ──
+        var actualCost = card.Cost;
+        if (_state.HasRelic("dusty_scroll") && _totalCardsPlayed == 0 && card.Kind == CardKind.Skill)
+            actualCost = 0;
+        if (_state.HasRelic("spellbook") && _cardsPlayedThisTurnSkills == 0 && card.Kind == CardKind.Skill)
+            actualCost = Math.Max(0, card.Cost - 1);
+        if (_state.HasRelic("overclock_core") && card.Kind == CardKind.Skill && (_totalCardsPlayed + 1) % 4 == 0)
+            actualCost = 0;
+        if (_state.HasRelic("shadow_step") && (_totalCardsPlayed + 1) % 4 == 0)
+            actualCost = 0;
+
+        if (actualCost > _energy)
         {
             Log(LocalizationService.Format("log.battle.not_enough_energy", "Not enough energy for {0}", card.GetLocalizedName()), "#f59e0b");
             return false;
         }
 
-        _energy -= card.Cost;
+        _energy -= actualCost;
 
         if (card.ReplayCount > 1)
         {
@@ -1155,18 +1394,74 @@ public partial class BattleScene : Control
                 card.ReplayCount), "#a5f3fc");
         }
 
-        var relicAttackBonus = _state.HasRelic("whetstone") ? 1 : 0;
-        var effectExecutor = new BattleCardEffectExecutor(this, relicAttackBonus);
-        var effectResult = CardEffectPipeline.Execute(card, effectExecutor);
+        // ── Track card play for relics ──
+        _totalCardsPlayed++;
+        _cardsPlayedThisTurn++;
+        if (card.Kind == CardKind.Attack) { _cardsPlayedThisTurnAttacks++; _totalAttacksPlayed++; }
+        if (card.Kind == CardKind.Skill) _cardsPlayedThisTurnSkills++;
+
+        // ── Relic: on-card-played effects ──
+        if (_state.HasRelic("echo_coin") && _totalCardsPlayed % 5 == 0)
+            { await DrawCards(1); FlashRelic("echo_coin"); }
+        if (_state.HasRelic("shuriken") && _cardsPlayedThisTurnAttacks > 0 && _cardsPlayedThisTurnAttacks % 3 == 0)
+            { _playerStrength += 1; FlashRelic("shuriken"); }
+        if (_state.HasRelic("storm_feather") && _cardsPlayedThisTurn == 3)
+            { _energy += 1; FlashRelic("storm_feather"); }
+        if (_state.HasRelic("bird_faced_urn") && card.Kind == CardKind.Skill)
+            { _playerHp = Math.Min(_playerMaxHp, _playerHp + 1); FlashRelic("bird_faced_urn"); }
+        if (_state.HasRelic("cracked_orb") && _cardsPlayedThisTurnAttacks > 0 && _cardsPlayedThisTurnAttacks % 3 == 0)
+            { _playerBlock += 2; FlashRelic("cracked_orb"); }
+        if (_state.HasRelic("cracked_core") && _totalCardsPlayed % 5 == 0)
+            { foreach (var e in _enemies) if (e.IsAlive) e.Hp = Math.Max(0, e.Hp - 4); FlashRelic("cracked_core"); }
+        if (_state.HasRelic("wrist_blade") && card.Cost == 0 && card.Kind == CardKind.Attack)
+            { } // +2 damage handled below
+        if (_state.HasRelic("blood_chalice") && card.HasEffect(CardEffectType.ApplyVulnerable)
+            && card.Effects.Any(e => e.Target == CardEffectTarget.Player))
+            { _playerStrength += 1; FlashRelic("blood_chalice"); }
+        if (_state.HasRelic("poison_vial") && card.HasEffect(CardEffectType.ApplyVulnerable))
+            { } // +1 vuln stack handled below
+
+        var penNibBonus = (_state.HasRelic("pen_nib") && _totalAttacksPlayed % 10 == 0) ? card.Damage : 0;
+        var frozenLensBonus = (_state.HasRelic("frozen_lens") && _cardsPlayedThisTurn == 1 && card.HasEffect(CardEffectType.ApplyVulnerable)) ? 1 : 0;
+        var poisonVialBonus = (_state.HasRelic("poison_vial") && card.HasEffect(CardEffectType.ApplyVulnerable)) ? 1 : 0;
+        var glassMeteorBonus = _state.HasRelic("glass_meteor") ? 3 : 0;
+        var hourglassBonus = _state.HasRelic("hourglass") ? 1 : 0;
+        var wristBladeBonus = (_state.HasRelic("wrist_blade") && card.Cost == 0 && card.Kind == CardKind.Attack) ? 2 : 0;
+
+        // ── Relic: Necronomicon (first 2-cost attack each turn plays twice) ──
+        var necroReplay = (_state.HasRelic("necronomicon") && card.Kind == CardKind.Attack
+            && card.Cost >= 2 && _cardsPlayedThisTurnAttacks == 1) ? 2 : 0;
+        // ── Relic: Twin Blade Badge (first attack hits twice at 60%) ──
+        var twinBladeBonus = (_state.HasRelic("twin_blade_badge") && card.Kind == CardKind.Attack
+            && _cardsPlayedThisTurnAttacks == 1) ? (int)(card.Damage * 0.6f) : 0;
+        if (twinBladeBonus > 0) FlashRelic("twin_blade_badge");
+        if (necroReplay > 0) FlashRelic("necronomicon");
+
+        var relicAttackBonus = (_state.HasRelic("whetstone") ? 1 : 0) + glassMeteorBonus + penNibBonus + hourglassBonus + wristBladeBonus + twinBladeBonus;
+        var effectExecutor = new BattleCardEffectExecutor(this, relicAttackBonus + frozenLensBonus + poisonVialBonus);
+        var effectiveCard = card;
+        if (necroReplay > 0)
+        {
+            // Execute twice
+            CardEffectPipeline.Execute(card, effectExecutor);
+        }
+        var effectResult = CardEffectPipeline.Execute(effectiveCard, effectExecutor);
 
         _hand.Remove(card);
         if (card.Keywords.Contains(CardKeyword.Exhaust))
         {
             _exhaustPile.Add(card);
-            Log(LocalizationService.Format(
-                "log.battle.exhaust",
-                "{0} is exhausted",
-                card.GetLocalizedName()), "#f9a8d4");
+            Log(LocalizationService.Format("log.battle.exhaust", "{0} is exhausted", card.GetLocalizedName()), "#f9a8d4");
+            // ── Relic: Ember Chisel (exhaust → +1 temp strength) ──
+            if (_state.HasRelic("ember_chisel")) { _playerStrength += 1; FlashRelic("ember_chisel"); }
+            // ── Relic: Dead Branch (exhaust → random card) ──
+            if (_state.HasRelic("dead_branch"))
+            {
+                var pool = CardData.RewardPoolIds();
+                var randomCard = pool[_rng.Next(pool.Count)];
+                _drawPile.Insert(0, CardData.CreateById(randomCard));
+                FlashRelic("dead_branch");
+            }
         }
         else
         {
@@ -2170,45 +2465,62 @@ public partial class BattleScene : Control
 
     private void ShowKeywordTooltip(CardView card)
     {
+        bool zh = LocalizationSettings.CurrentLanguage == GameLanguage.ZhHans;
         var lines = new List<string>();
         if (card.Card.Damage > 0)
         {
-            lines.Add("[color=#fda4af]Damage[/color]: reduced by enemy Block.");
+            lines.Add(zh
+                ? "[color=#fda4af]伤害[/color]：被敌方格挡抵消。"
+                : "[color=#fda4af]Damage[/color]: reduced by enemy Block.");
         }
 
         if (card.Card.Block > 0)
         {
-            lines.Add("[color=#93c5fd]Block[/color]: prevents incoming damage this turn.");
+            lines.Add(zh
+                ? "[color=#93c5fd]格挡[/color]：在本回合抵挡受到的伤害。"
+                : "[color=#93c5fd]Block[/color]: prevents incoming damage this turn.");
         }
 
         if (card.Card.ApplyVulnerable > 0)
         {
-            lines.Add("[color=#e9d5ff]Vulnerable[/color]: target takes 50% more damage.");
+            lines.Add(zh
+                ? "[color=#e9d5ff]易伤[/color]：目标受到的伤害增加50%。"
+                : "[color=#e9d5ff]Vulnerable[/color]: target takes 50% more damage.");
         }
 
         if (card.Card.DrawCount > 0)
         {
-            lines.Add("[color=#a5f3fc]Draw[/color]: draw extra cards now.");
+            lines.Add(zh
+                ? "[color=#a5f3fc]抽牌[/color]：立即抽取额外的卡牌。"
+                : "[color=#a5f3fc]Draw[/color]: draw extra cards now.");
         }
 
         if (card.Card.HasEffect(CardEffectType.GainStrength))
         {
-            lines.Add("[color=#d8b4fe]Strength[/color]: increases your attack damage.");
+            lines.Add(zh
+                ? "[color=#d8b4fe]力量[/color]：增加你的攻击伤害。"
+                : "[color=#d8b4fe]Strength[/color]: increases your attack damage.");
         }
 
         if (card.Card.HasEffect(CardEffectType.GainEnergy))
         {
-            lines.Add("[color=#fde68a]Energy[/color]: adds extra energy this turn.");
+            lines.Add(zh
+                ? "[color=#fde68a]能量[/color]：本回合获得额外能量。"
+                : "[color=#fde68a]Energy[/color]: adds extra energy this turn.");
         }
 
         if (card.Card.HasEffect(CardEffectType.Heal))
         {
-            lines.Add("[color=#86efac]Heal[/color]: restore HP, up to max HP.");
+            lines.Add(zh
+                ? "[color=#86efac]回复[/color]：恢复生命值，最多至最大生命。"
+                : "[color=#86efac]Heal[/color]: restore HP, up to max HP.");
         }
 
         if (lines.Count == 0)
         {
-            lines.Add("[color=#cbd5e1]No keywords.[/color]");
+            lines.Add(zh
+                ? "[color=#cbd5e1]无关键词。[/color]"
+                : "[color=#cbd5e1]No keywords.[/color]");
         }
 
         _keywordTooltipText.Text = string.Join("\n", lines);

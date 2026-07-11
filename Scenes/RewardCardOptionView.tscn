@@ -44,8 +44,8 @@ text = "Cost: 1"
 layout_mode = 2
 mouse_filter = 2
 custom_minimum_size = Vector2(180, 180)
-expand_mode = 1
-stretch_mode = 6
+expand_mode = 0
+stretch_mode = 5
 
 [node name="DescLabel" type="RichTextLabel" parent="Margin/VBox"]
 mouse_filter = 2
