@@ -73,7 +73,7 @@ public static class LocalizationService
         {
             source = resourcePath;
         }
-        else
+        else if (!ShouldSkipGodotResourceChecks())
         {
             // 2. Try project filesystem path via Godot
             try
@@ -126,7 +126,18 @@ public static class LocalizationService
         foreach (var kv in dict)
             target[kv.Key] = kv.Value;
 
-        GD.Print($"Localization loaded {language}: {dict.Count} entries from {source}");
+        if (!ShouldSkipGodotResourceChecks())
+        {
+            GD.Print($"Localization loaded {language}: {dict.Count} entries from {source}");
+        }
+    }
+
+    private static bool ShouldSkipGodotResourceChecks()
+    {
+        return string.Equals(
+            System.Environment.GetEnvironmentVariable("SLAY_HS_SKIP_GODOT_RESOURCE_CHECKS"),
+            "1",
+            StringComparison.Ordinal);
     }
 
     public static void EnsureLoaded()
