@@ -1,0 +1,32 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - master
+  push:
+    branches:
+      - develop
+      - master
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore and build
+        shell: pwsh
+        run: ./build.ps1
+
+      - name: Run combat logic tests
+        shell: pwsh
+        run: dotnet run --project ./Tests/CombatLogicTests/CombatLogicTests.csproj
