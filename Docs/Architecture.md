@@ -98,7 +98,7 @@ slay-the-hs/
 
 #### DeckPresetCatalog
 - [Scripts/Data/DeckPresetCatalog.cs](../Scripts/Data/DeckPresetCatalog.cs)
-- 7 套预设卡组原型：Balanced Starter / Infinite Cycle / Infinite Fireball / Death Legion / Berserker Slam / Fortress Control / Storm Engine。
+- 3 套预设卡组原型：Iron Vanguard / Phantom Dancer / Storm Mage。
 - 每个预设包含 Glyph（角色图标）和 Accent（主题色）用于角色选择界面。
 
 #### EnemyEncounterCatalog / EnemyUnit
@@ -184,7 +184,7 @@ slay-the-hs/
 
 #### 角色选择 (CharacterSelectScene)
 - [Scripts/Scenes/CharacterSelectScene.cs](../Scripts/Scenes/CharacterSelectScene.cs)
-- 选择 7 套预设卡组之一，或进入 DeckEditorScene 自定义卡组。
+- 选择 3 套预设卡组之一，或进入 DeckEditorScene 自定义卡组。
 - 可选的竞技场（Ascension）修饰符。
 
 #### 地图 (MapScene)
