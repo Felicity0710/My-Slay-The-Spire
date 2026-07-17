@@ -18,7 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameState="*res://Scripts/Autoload/GameState.cs"
-AppSettings="*res://Scripts/Autoload/Apings.cs"
+AppSettings="*res://Scripts/Autoload/AppSettings.cs"
 ExternalControlService="*res://Scripts/Autoload/ExternalControlService.cs"
 AudioManager="*res://Scripts/Autoload/AudioManager.cs"
 

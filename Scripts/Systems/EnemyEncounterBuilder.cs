@@ -49,7 +49,7 @@ public static class EnemyEncounterBuilder
                 _ => floor switch // NormalBattle
                 {
                     <= 3 => 1,
-                    <= 6 => rng.Next(1, 3),
+                    <= 6 => rng.Next(2, 4),
                     _    => rng.Next(2, 4),
                 }
             };

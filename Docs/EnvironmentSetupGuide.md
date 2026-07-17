@@ -35,6 +35,12 @@ cd slay-the-hs
 .\build.ps1
 ```
 
+如需构建后立即运行测试：
+
+```powershell
+.\build.ps1 -RunTests
+```
+
 也可以使用：
 
 ```powershell
@@ -44,6 +50,7 @@ cd slay-the-hs
 说明：
 
 - `build.ps1` 会自动执行 `dotnet restore` + `dotnet build -c Debug`
+- 加上 `-RunTests` 后会继续运行 `Tests/CombatLogicTests`
 - 脚本已将 `NUGET_PACKAGES` 指向用户目录，减少权限相关 NuGet 问题
 
 ## 4. 启动游戏
@@ -121,6 +128,10 @@ powershell -ExecutionPolicy Bypass -File .\build.ps1
 
 确认已安装 .NET 9 SDK，并且游戏进程已启动（桥接端口可用）。
 
-### 8.4 构建有警告
+### 8.4 控制台显示中文乱码
 
-当前项目存在一批已知 nullable warning。只要构建结果为 `成功` 且无 error，可继续开发。
+如果 PowerShell 输出中文乱码，通常是终端编码问题，不一定是文件损坏。可先执行：
+
+```powershell
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+```

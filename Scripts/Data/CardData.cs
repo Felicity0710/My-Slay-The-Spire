@@ -49,7 +49,7 @@ public static class CardUpgradeRules
             return false;
         }
 
-        return CardData.CreateById(cardId).Upgrade != null;
+        return CardData.HasUpgradeRecipe(cardId);
     }
 
     public static string MaybeUpgrade(string cardId, double chance, Random rng)
@@ -274,6 +274,13 @@ public sealed class CardData
         }
 
         throw new InvalidOperationException("No fallback card 'strike' configured in cards.json.");
+    }
+
+    public static bool HasUpgradeRecipe(string id)
+    {
+        return !string.IsNullOrEmpty(id)
+            && Catalog.CardsById.TryGetValue(id, out var card)
+            && card.Upgrade != null;
     }
 
     private static CardData BuildUpgradedClone(CardData baseCard)

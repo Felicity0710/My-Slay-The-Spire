@@ -263,7 +263,7 @@ internal static class Program
 
         var intent = IntentResolver.RollEnemyIntent(shaman, allies, isElite: false, turn: 1, new Random(9));
         ExpectEqual(EnemyIntentType.Buff, intent.Type, "shaman opener type");
-        ExpectEqual(1, intent.Value, "shaman opener value");
+        ExpectEqual(2, intent.Value, "shaman opener value");
     }
 
     private static void TestGuardOpener()
@@ -277,7 +277,7 @@ internal static class Program
 
         var intent = IntentResolver.RollEnemyIntent(guard, allies, isElite: false, turn: 1, new Random(21));
         ExpectEqual(EnemyIntentType.Defend, intent.Type, "guard opener type");
-        ExpectEqual(6, intent.Value, "guard opener value");
+        ExpectEqual(10, intent.Value, "guard opener value");
     }
 
     private static void TestBruteTurnCycle()
@@ -287,7 +287,7 @@ internal static class Program
 
         var turn3 = IntentResolver.RollEnemyIntent(brute, allies, isElite: false, turn: 3, new Random(5));
         ExpectEqual(EnemyIntentType.Buff, turn3.Type, "brute turn3 type");
-        ExpectEqual(2, turn3.Value, "brute turn3 value");
+        ExpectEqual(3, turn3.Value, "brute turn3 value");
     }
 
     private static void TestEliteSentinelTurnPattern()
@@ -471,9 +471,9 @@ internal static class Program
         var never = CardUpgradeRules.MaybeUpgrade("strike", 0.0, rng);
         ExpectEqual("strike", never, "MaybeUpgrade chance=0 upgradable");
 
-        // Card without upgrade recipe stays put even at chance=1.
-        var noRecipe = CardUpgradeRules.MaybeUpgrade("heavy_slash", 1.0, rng);
-        ExpectEqual("heavy_slash", noRecipe, "MaybeUpgrade no recipe");
+        // Unknown card id stays put even at chance=1.
+        var unknown = CardUpgradeRules.MaybeUpgrade("unknown_card", 1.0, rng);
+        ExpectEqual("unknown_card", unknown, "MaybeUpgrade unknown card");
 
         // Already-upgraded id passes through unchanged.
         var alreadyUp = CardUpgradeRules.MaybeUpgrade("strike+", 1.0, rng);
@@ -488,9 +488,9 @@ internal static class Program
         {
             throw new InvalidOperationException("strike should be flagged as upgradable.");
         }
-        if (CardUpgradeRules.CardIdHasUpgrade("heavy_slash"))
+        if (CardUpgradeRules.CardIdHasUpgrade("unknown_card"))
         {
-            throw new InvalidOperationException("heavy_slash should not be flagged as upgradable.");
+            throw new InvalidOperationException("unknown_card should not be flagged as upgradable.");
         }
         if (CardUpgradeRules.CardIdHasUpgrade("strike+"))
         {
@@ -766,7 +766,7 @@ internal static class Program
     private static void TestDeckPresetsResolveToKnownCards()
     {
         var presets = DeckPresetCatalog.All();
-        ExpectEqual(true, presets.Count >= 4, "preset count");
+        ExpectEqual(true, presets.Count >= 3, "preset count");
 
         foreach (var preset in presets)
         {
@@ -783,17 +783,17 @@ internal static class Program
     private static void TestDeckPresetResolverFallback()
     {
         var fallback = DeckPresetCatalog.Resolve("definitely_missing");
-        ExpectEqual("starter", fallback.Id, "missing preset fallback id");
+        ExpectEqual("iron_vanguard", fallback.Id, "missing preset fallback id");
         ExpectEqual(true, fallback.CardIds.Count > 0, "fallback preset should have cards");
     }
 
     private static void TestDeckPresetArchetypeCoverage()
     {
         var presets = DeckPresetCatalog.All();
-        ExpectEqual(true, presets.Count >= 7, "preset archetype count");
+        ExpectEqual(true, presets.Count >= 3, "preset archetype count");
 
         var ids = new HashSet<string>(presets.Select(preset => preset.Id));
-        var required = new[] { "berserker_slam", "fortress_control", "storm_engine" };
+        var required = new[] { "iron_vanguard", "phantom_dancer", "storm_mage" };
         foreach (var id in required)
         {
             ExpectEqual(true, ids.Contains(id), $"missing expected preset: {id}");

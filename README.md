@@ -10,6 +10,9 @@
 # 构建项目
 .\build.ps1
 
+# 构建并运行控制台测试
+.\build.ps1 -RunTests
+
 # 启动 Godot 编辑器
 Godot_v4.5.2-stable_mono_win64.exe
 
@@ -55,6 +58,7 @@ slay-the-hs/
 - **Autoload 服务**: GameState（运行状态）、AppSettings（设置）、ExternalControlService（TCP 桥接，端口 47077）
 - **Systems 层**: 纯 C# 逻辑，不依赖 Godot，可在测试中独立运行
 - **外部控制**: 游戏通过 TCP 桥接暴露完整控制接口，支持 MCP 协议的 AI Agent / Bot
+- **数据驱动**: 卡牌、敌人、遗物和多语言文本主要由 Data/*.json 配置，便于调参与扩展
 
 ## 游戏演示模式
 
